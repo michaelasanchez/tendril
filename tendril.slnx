@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="Tendril.Api/Tendril.Api.csproj" />
+  <Project Path="Tendril.Core/Tendril.Core.csproj" />
+  <Project Path="Tendril.Data/Tendril.Data.csproj" />
+  <Project Path="Tendril.Engine/Tendril.Engine.csproj" />
+  <Project Path="Tendril.Worker/Tendril.Worker.csproj" />
+</Solution>
