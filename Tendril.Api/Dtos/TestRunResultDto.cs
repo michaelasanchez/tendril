@@ -3,5 +3,5 @@
 public record TestRunResultDto(
     bool Success,
     string? ErrorMessage,
-    List<Dictionary<string, List<string>?>> RawEvents
+    List<Dictionary<string, string?>> RawEvents
 );

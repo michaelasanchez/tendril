@@ -83,21 +83,4 @@ public class ScrapersController : ControllerBase
         await _scrapers.DeleteAsync(scraper, cancellationToken);
         return NoContent();
     }
-
-    // ⭐ TEST RUN ⭐
-    [HttpPost("{id:guid}/test-run")]
-    public async Task<ActionResult<TestRunResultDto>> TestRun(Guid id, CancellationToken cancellationToken)
-    {
-        var scraper = await _scrapers.GetByIdWithDetailsAsync(id, cancellationToken);
-        if (scraper is null)
-            return NotFound();
-
-        var result = await _executor.RunScraperAsync(scraper, cancellationToken);
-
-        return Ok(new TestRunResultDto(
-            result.Success,
-            result.ErrorMessage,
-            [.. result.RawEvents.Select(e => e.Fields)]
-        ));
-    }
 }

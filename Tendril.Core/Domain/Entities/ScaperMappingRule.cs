@@ -13,11 +13,13 @@ public class ScraperMappingRule
     public ScraperDefinition ScraperDefinition { get; set; } = null!;
 
     // Raw field input (from selectors)
-    public string InputField { get; set; } = null!;
+    public string SourceField { get; set; } = null!;
 
     // Final normalized Event property name
-    public string OutputField { get; set; } = null!;
+    public string TargetField { get; set; } = null!;
     // Examples: "Title", "StartDate", "StartTime", "Category", "Url"
+
+    public string? CombineWithField { get; set; }
 
     public TransformType TransformType { get; set; }
     public string? TransformArgsJson { get; set; } // parameters for transforms

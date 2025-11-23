@@ -4,5 +4,6 @@ public record ScraperSelectorDto(
     Guid Id,
     string FieldName,
     string Selector,
-    string SelectorType
+    string SelectorType,
+    bool Outer
 );

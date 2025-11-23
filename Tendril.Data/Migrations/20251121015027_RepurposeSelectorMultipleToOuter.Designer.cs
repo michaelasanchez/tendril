@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tendril.Data;
 
@@ -11,9 +12,11 @@ using Tendril.Data;
 namespace Tendril.Data.Migrations
 {
     [DbContext(typeof(TendrilDbContext))]
-    partial class TendrilDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251121015027_RepurposeSelectorMultipleToOuter")]
+    partial class RepurposeSelectorMultipleToOuter
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -42,9 +45,6 @@ namespace Tendril.Data.Migrations
                     b.Property<string>("ImageUrl")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
-
-                    b.Property<DateTimeOffset>("ScrapedAtUtc")
-                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid>("ScraperDefinitionId")
                         .HasColumnType("uniqueidentifier");
@@ -224,9 +224,6 @@ namespace Tendril.Data.Migrations
 
                     b.Property<bool>("Outer")
                         .HasColumnType("bit");
-
-                    b.Property<int>("ReturnMode")
-                        .HasColumnType("int");
 
                     b.Property<Guid>("ScraperDefinitionId")
                         .HasColumnType("uniqueidentifier");

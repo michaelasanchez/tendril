@@ -6,5 +6,5 @@ namespace Tendril.Engine.Models;
 
 public class RawScrapedEvent
 {
-    public Dictionary<string, List<string>?> Fields { get; set; } = new();
+    public Dictionary<string, string?> Fields { get; set; } = new();
 }

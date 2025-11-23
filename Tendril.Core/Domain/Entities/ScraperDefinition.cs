@@ -16,6 +16,7 @@ public class ScraperDefinition
     // Cron or interval string
     public string Schedule { get; set; } = "0 */6 * * *"; // every 6 hours
 
+
     // Health monitoring
     public ScraperState State { get; set; } = ScraperState.Unknown;
     public DateTimeOffset? LastSuccessUtc { get; set; }

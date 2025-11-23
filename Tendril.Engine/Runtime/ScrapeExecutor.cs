@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Tendril.Engine.Runtime;
-
-using Tendril.Core.Domain.Entities;
+﻿using Tendril.Core.Domain.Entities;
 using Tendril.Engine.Abstractions;
 using Tendril.Engine.Models;
+
+namespace Tendril.Engine.Runtime;
 
 public class ScrapeExecutor : IScrapeExecutor
 {
@@ -19,9 +15,11 @@ public class ScrapeExecutor : IScrapeExecutor
 
     public async Task<ScrapeResult> RunScraperAsync(
         ScraperDefinition scraperDef,
-        CancellationToken cancellationToken)
+        bool selectorsOnly = false,
+        CancellationToken cancellationToken = default)
     {
         var scraper = _factory.CreateScraper(scraperDef);
-        return await scraper.ExecuteAsync(cancellationToken);
+
+        return await scraper.ExecuteAsync(selectorsOnly, cancellationToken);
     }
 }

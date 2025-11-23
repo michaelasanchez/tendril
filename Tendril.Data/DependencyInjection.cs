@@ -20,6 +20,7 @@ public static class DependencyInjection
         // Repository DI
         services.AddScoped<IAttemptHistoryRepository, AttemptHistoryRepository>();
         services.AddScoped<IEventRepository, EventRepository>();
+        services.AddScoped<IMappingRuleRepository, MappingRuleRepository>();
         services.AddScoped<IRawEventRepository, RawEventRepository>();
         services.AddScoped<IScraperRepository, ScraperRepository>();
         services.AddScoped<ISelectorRepository, SelectorRepository>();

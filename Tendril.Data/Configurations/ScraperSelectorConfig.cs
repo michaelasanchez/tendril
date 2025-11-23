@@ -24,7 +24,7 @@ public class ScraperSelectorConfig : IEntityTypeConfiguration<ScraperSelector>
             .HasConversion<string>()
             .IsRequired();
 
-        builder.Property(x => x.Multiple)
+        builder.Property(x => x.Outer)
             .IsRequired();
     }
 }

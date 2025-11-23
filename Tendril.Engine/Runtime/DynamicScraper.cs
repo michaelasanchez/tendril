@@ -17,7 +17,7 @@ public class DynamicScraper : BaseScraper
         _db = db;
     }
 
-    public override async Task<ScrapeResult> ExecuteAsync(CancellationToken cancellationToken = default)
+    public override async Task<ScrapeResult> ExecuteAsync(bool selectorsOnly, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -25,40 +25,52 @@ public class DynamicScraper : BaseScraper
                 .Where(x => x.ScraperDefinitionId == _def.Id)
                 .ToListAsync(cancellationToken);
 
-            if (selectors.Count == 0)
+            var innerSelectors = selectors.Where(x => !x.Outer).ToList();
+
+            if (innerSelectors.Count == 0)
                 return Fail("No selectors defined.");
+
+            var outerSelectors = selectors.Where(x => x.Outer).ToList();
+
+            if (outerSelectors.Count != 1)
+                return Fail("A single list selector is required.");
 
             var page = await PlaywrightContextFactory.CreatePageAsync();
             await page.GotoAsync(_def.BaseUrl);
 
             var results = new List<RawScrapedEvent>();
-            var raw = new RawScrapedEvent();
 
-            foreach (var sel in selectors)
+            var items = await page.QuerySelectorAllAsync(outerSelectors.Single().Selector);
+
+            foreach (var item in items)
             {
-                List<string>? values = null;
+                var raw = new RawScrapedEvent();
 
-                if (sel.SelectorType == Core.Domain.Enums.SelectorType.Css)
+                foreach (var sel in innerSelectors)
                 {
-                    var element = await page.QuerySelectorAllAsync(sel.Selector);
+                    string? value = null;
 
-                    if (element is { Count: > 0 } all)
+                    if (sel.SelectorType == Core.Domain.Enums.SelectorType.Css)
                     {
-                        values = new();
+                        var element = await item.QuerySelectorAsync(sel.Selector);
+                        
+                        var tag = await element.EvaluateAsync<string>("e => e.tagName.toLowerCase()");
 
-                        foreach (var item in all)
+                        if (tag == "a")
                         {
-                            var text = await item.InnerTextAsync();
+                            var href = await element.EvaluateAsync<string>("e => e.getAttribute('href')");
 
-                            values.Add(text);
+                            raw.Fields["Href"] = href;
                         }
+
+                        value = element is not null ? await element.InnerTextAsync() : null;
                     }
+
+                    raw.Fields[sel.FieldName] = value;
                 }
 
-                raw.Fields[sel.FieldName] = values;
+                results.Add(raw);
             }
-
-            results.Add(raw);
 
             return Success(results);
         }

@@ -53,8 +53,12 @@ public class TendrilHostedService : BackgroundService
         using var scope = _provider.CreateScope();
 
         var attemptRepo = scope.ServiceProvider.GetRequiredService<IAttemptHistoryRepository>();
+        var eventRepo = scope.ServiceProvider.GetRequiredService<IEventRepository>();
         var rawRepo = scope.ServiceProvider.GetRequiredService<IRawEventRepository>();
         var scraperRepo = scope.ServiceProvider.GetRequiredService<IScraperRepository>();
+
+        var mapper = scope.ServiceProvider.GetRequiredService<IEventMapper>();
+
         var executor = scope.ServiceProvider.GetRequiredService<IScrapeExecutor>();
 
         var scrapers = await scraperRepo.GetAllWithDetailsAsync(cancellationToken);
@@ -67,7 +71,7 @@ public class TendrilHostedService : BackgroundService
 
             var start = DateTimeOffset.UtcNow;
 
-            var result = await executor.RunScraperAsync(scraper, cancellationToken);
+            var result = await executor.RunScraperAsync(scraper, false, cancellationToken);
 
             var end = DateTimeOffset.UtcNow;
 
@@ -92,7 +96,7 @@ public class TendrilHostedService : BackgroundService
 
                 foreach (var raw in result.RawEvents)
                 {
-                    var record = new ScrapedEventRaw
+                    var rawEntity = new ScrapedEventRaw
                     {
                         Id = Guid.NewGuid(),
                         ScraperDefinitionId = scraper.Id,
@@ -100,11 +104,23 @@ public class TendrilHostedService : BackgroundService
                         RawDataJson = System.Text.Json.JsonSerializer.Serialize(raw)
                     };
 
-                    await rawRepo.AddAsync(record, cancellationToken);
+                    await rawRepo.AddAsync(rawEntity, cancellationToken);
+
+                    // Map to consolidated Event
+                    try
+                    {
+                        var mapped = mapper.Map(scraper, rawEntity);
+
+                        await eventRepo.AddAsync(mapped, cancellationToken);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to map raw event for scraper {ScraperId}", scraper.Id);
+                        // optional: rawEntity mapping failure somewhere
+                    }
                 }
 
-                // TODO: Apply mapping rules → normalized Event
-                // TODO: Prevent duplicates
+                await scraperRepo.UpdateAsync(scraper, cancellationToken);
             }
             else
             {
@@ -112,7 +128,7 @@ public class TendrilHostedService : BackgroundService
                 scraper.LastErrorMessage = result.ErrorMessage;
                 scraper.State = scraper.State == ScraperState.Healthy
                     ? ScraperState.Warning
-                    : ScraperState.Broken;
+                    : ScraperState.Unhealthy;
 
                 _logger.LogWarning(
                     "Scraper {Scraper} failed: {Error}",

@@ -16,11 +16,11 @@ public class ScraperMappingRuleConfig : IEntityTypeConfiguration<ScraperMappingR
 
         builder.HasKey(x => x.Id);
 
-        builder.Property(x => x.InputField)
+        builder.Property(x => x.SourceField)
             .IsRequired()
             .HasMaxLength(200);
 
-        builder.Property(x => x.OutputField)
+        builder.Property(x => x.TargetField)
             .IsRequired()
             .HasMaxLength(200);
 

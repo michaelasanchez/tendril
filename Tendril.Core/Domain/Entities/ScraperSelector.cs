@@ -2,6 +2,11 @@
 
 namespace Tendril.Core.Domain.Entities;
 
+public enum SelectorReturnMode
+{
+    First = 0,
+    All = 1
+}
 public class ScraperSelector
 {
     public Guid Id { get; set; }
@@ -15,5 +20,7 @@ public class ScraperSelector
     public SelectorType SelectorType { get; set; } // Css, XPath, Regex
     public string Selector { get; set; } = null!;
 
-    public bool Multiple { get; set; } // e.g., multiple performers
+    public bool Outer { get; set; }
+
+    public SelectorReturnMode ReturnMode { get; set; } = SelectorReturnMode.First;
 }

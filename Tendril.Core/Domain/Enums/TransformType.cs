@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Tendril.Core.Domain.Enums;
+﻿namespace Tendril.Core.Domain.Enums;
 
 public enum TransformType
 {
@@ -15,5 +11,6 @@ public enum TransformType
     ParseDate,
     ParseTime,
     ToLower,
-    ToUpper
+    ToUpper,
+    Currency
 }

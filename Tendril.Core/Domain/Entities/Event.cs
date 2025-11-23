@@ -24,4 +24,6 @@ public class Event
     public string? Category { get; set; }
 
     public string? ImageUrl { get; set; }
+
+    public DateTimeOffset ScrapedAtUtc { get; set; }
 }

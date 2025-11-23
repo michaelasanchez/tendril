@@ -21,7 +21,11 @@ public class SelectorsController : ControllerBase
         var list = await _selectors.GetByScraperIdAsync(scraperId, cancellationToken);
 
         return Ok(list.Select(s => new ScraperSelectorDto(
-            s.Id, s.FieldName, s.Selector, s.SelectorType.ToString()
+            s.Id,
+            s.FieldName,
+            s.Selector,
+            s.SelectorType.ToString(),
+            s.Outer
         )));
     }
 

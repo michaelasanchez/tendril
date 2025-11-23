@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Tendril.Core.Domain.Entities;
+﻿using Tendril.Core.Domain.Entities;
 using Tendril.Engine.Models;
 
 namespace Tendril.Engine.Abstractions;
 
 public interface IScrapeExecutor
 {
-    Task<ScrapeResult> RunScraperAsync(ScraperDefinition scraperDef, CancellationToken cancellationToken);
+    Task<ScrapeResult> RunScraperAsync(
+        ScraperDefinition scraperDef,
+        bool selectorsOnly = false, 
+        CancellationToken cancellationToken = default);
 }

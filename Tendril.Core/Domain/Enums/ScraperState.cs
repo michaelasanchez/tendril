@@ -9,7 +9,7 @@ public enum ScraperState
     Unknown,
     Healthy,
     Warning,
-    Broken,
+    Unhealthy,
     Blocked,
     Offline
 }
