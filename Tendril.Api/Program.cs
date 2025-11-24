@@ -22,6 +22,17 @@ builder.Services.AddAutoMapper(
     typeof(ApiMappingProfile).Assembly       // scan this assembly for profiles
 );
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowVite",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:5173")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        });
+});
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -31,6 +42,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("AllowVite");
 
 app.UseAuthorization();
 
