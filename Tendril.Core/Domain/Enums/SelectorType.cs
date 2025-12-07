@@ -2,7 +2,9 @@
 
 public enum SelectorType
 {
-    Css,
-    XPath,
-    Regex
+    Container = 0,
+    Text = 1,
+    Href = 2,
+    Click = 3,
+    Hover = 4
 }

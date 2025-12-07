@@ -1,15 +1,34 @@
 // src/pages/EventsPage.tsx
+import moment from "moment";
 import React, { useEffect, useState } from "react";
+import type { Event, View } from "react-big-calendar";
+import { Calendar, momentLocalizer } from "react-big-calendar";
 import { EventsApi } from "../api/events";
-import type { Event } from "../types/api";
 
 export const EventsPage: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
 
+  const [date, setDate] = useState<Date>(new Date());
+  const [view, setView] = useState<View>("month");
+
+  const localizer = momentLocalizer(moment);
+
   useEffect(() => {
     void (async () => {
       const data = await EventsApi.getAll();
-      setEvents(data);
+
+      const events = data?.map<Event>((e, i) => {
+        const date = new Date(e.startUtc);
+
+        return {
+          id: i,
+          title: e.title,
+          start: date,
+          end: date,
+        };
+      });
+
+      setEvents(events);
     })();
   }, []);
 
@@ -19,41 +38,21 @@ export const EventsPage: React.FC = () => {
         <h2>Events</h2>
       </div>
 
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th>Title</th>
-            <th>Venue</th>
-            <th>Start</th>
-            <th>End</th>
-            <th>Ticket URL</th>
-          </tr>
-        </thead>
-        <tbody>
-          {events.map(e => (
-            <tr key={e.id}>
-              <td>{e.title}</td>
-              <td>{e.venue?.name ?? e.venueId}</td>
-              <td>{e.startUtc}</td>
-              <td>{e.endUtc ?? "-"}</td>
-              <td>
-                {e.ticketUrl ? (
-                  <a href={e.ticketUrl} target="_blank" rel="noreferrer">
-                    Link
-                  </a>
-                ) : (
-                  "-"
-                )}
-              </td>
-            </tr>
-          ))}
-          {events.length === 0 && (
-            <tr>
-              <td colSpan={5}>No events.</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+      <Calendar
+        localizer={localizer}
+        events={events}
+        startAccessor="start"
+        endAccessor="end"
+        views={['month', 'agenda']}
+        view={view}
+        date={date}
+        onNavigate={(date, view) => {
+          setDate(date);
+          setView(view);
+        }}
+        onView={setView}
+        style={{ height: 800, width: "100vw" }}
+      />
     </section>
   );
 };

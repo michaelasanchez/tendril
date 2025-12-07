@@ -24,8 +24,9 @@ public class SelectorsController : ControllerBase
             s.Id,
             s.FieldName,
             s.Selector,
-            s.SelectorType.ToString(),
-            s.Outer
+            s.Order,
+            s.Root,
+            s.Type.ToString()
         )));
     }
 
@@ -38,7 +39,9 @@ public class SelectorsController : ControllerBase
             ScraperDefinitionId = scraperId,
             FieldName = request.FieldName,
             Selector = request.Selector,
-            SelectorType = request.SelectorType
+            Order = request.Order,
+            Root = request.Root,
+            Type = request.Type
         };
 
         await _selectors.AddAsync(selector, cancellationToken);
@@ -54,7 +57,9 @@ public class SelectorsController : ControllerBase
 
         selector.FieldName = request.FieldName ?? selector.FieldName;
         selector.Selector = request.Selector ?? selector.Selector;
-        selector.SelectorType = request.SelectorType ?? selector.SelectorType;
+        selector.Order = request.Order ?? selector.Order;
+        selector.Root = request.Root ?? selector.Root;
+        selector.Type = request.Type ?? selector.Type;
 
         await _selectors.UpdateAsync(selector, cancellationToken);
 

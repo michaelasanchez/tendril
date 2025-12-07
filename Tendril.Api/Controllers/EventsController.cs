@@ -7,21 +7,16 @@ namespace Tendril.Api.Controllers;
 
 [ApiController]
 [Route("api/events")]
-public class EventsController : ControllerBase
+public class EventsController(IEventRepository events, IMapper mapper) : ControllerBase
 {
-    private readonly IEventRepository _events;
-    private readonly IMapper _mapper;
-
-    public EventsController(IEventRepository events, IMapper mapper)
-    {
-        _events = events;
-        _mapper = mapper;
-    }
-
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<EventDto>>> GetAll(CancellationToken cancellationToken)
+    public async Task<ActionResult<IEnumerable<EventDto>>> GetAll(
+        [FromQuery] DateTimeOffset? startDate,
+        [FromQuery] DateTimeOffset? endDate,
+        CancellationToken cancellationToken)
     {
-        var list = await _events.GetAllAsync(cancellationToken);
-        return Ok(_mapper.Map<IEnumerable<EventDto>>(list));
+        var list = await events.GetAllAsync(startDate ?? DateTime.Today.AddMonths(-1), endDate, cancellationToken);
+
+        return Ok(mapper.Map<IEnumerable<EventDto>>(list));
     }
 }

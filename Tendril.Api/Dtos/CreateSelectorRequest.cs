@@ -6,5 +6,7 @@ public class CreateSelectorRequest
 {
     public string FieldName { get; set; } = null!;
     public string Selector { get; set; } = null!;
-    public SelectorType SelectorType { get; set; }
+    public int Order { get; set; }
+    public bool Root { get; set; }
+    public SelectorType Type { get; set; }
 }

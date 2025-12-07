@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 
 import "bootstrap/dist/css/bootstrap.min.css";
+import "react-big-calendar/lib/css/react-big-calendar.css"
 import "./index.css";
 
 import App from "./App.tsx";

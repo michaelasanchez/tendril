@@ -1,7 +1,6 @@
-// src/scrapers/ScraperMappingRulesTab.tsx
 import React, { useEffect, useState } from "react";
-import type { Guid, ScraperMappingRule } from "../types/api";
 import { ScrapersApi } from "../api/scrapers";
+import type { Guid, ScraperMappingRule } from "../types/api";
 
 interface Props {
   scraperId: Guid;
@@ -27,7 +26,7 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({ scraperId }) => {
       targetField: "",
       sourceField: "",
       combineWithField: "",
-      transform: "None"
+      transformType: "None",
     } as Partial<ScraperMappingRule>);
   };
 
@@ -42,21 +41,22 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({ scraperId }) => {
   };
 
   const save = async () => {
-    if (!editing.targetField || !editing.sourceField || !editing.transform) return;
+    if (!editing.targetField || !editing.sourceField || !editing.transformType)
+      return;
 
     if (isNew) {
       await ScrapersApi.createMappingRule(scraperId, {
         targetField: editing.targetField,
         sourceField: editing.sourceField,
         combineWithField: editing.combineWithField ?? null,
-        transform: editing.transform
+        transformType: editing.transformType,
       });
     } else if (editing.id) {
       await ScrapersApi.updateMappingRule(scraperId, editing.id, {
         targetField: editing.targetField,
         sourceField: editing.sourceField,
         combineWithField: editing.combineWithField,
-        transform: editing.transform
+        transformType: editing.transformType,
       });
     }
     await load();
@@ -87,12 +87,12 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({ scraperId }) => {
           </tr>
         </thead>
         <tbody>
-          {rules.map(r => (
+          {rules.map((r) => (
             <tr key={r.id}>
               <td>{r.targetField}</td>
               <td>{r.sourceField}</td>
               <td>{r.combineWithField ?? "-"}</td>
-              <td>{r.transform}</td>
+              <td>{r.transformType}</td>
               <td>
                 <button onClick={() => startEdit(r)}>Edit</button>
                 <button onClick={() => remove(r)}>Delete</button>
@@ -107,7 +107,7 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({ scraperId }) => {
         </tbody>
       </table>
 
-      {(editing.targetField !== undefined) && (
+      {editing.targetField !== undefined && (
         <div className="edit-panel">
           <h4>{isNew ? "New Mapping Rule" : "Edit Mapping Rule"}</h4>
           <div className="form-grid">
@@ -115,28 +115,36 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({ scraperId }) => {
               Target Field
               <input
                 value={editing.targetField ?? ""}
-                onChange={e => setEditing({ ...editing, targetField: e.target.value })}
+                onChange={(e) =>
+                  setEditing({ ...editing, targetField: e.target.value })
+                }
               />
             </label>
             <label>
               Source Field
               <input
                 value={editing.sourceField ?? ""}
-                onChange={e => setEditing({ ...editing, sourceField: e.target.value })}
+                onChange={(e) =>
+                  setEditing({ ...editing, sourceField: e.target.value })
+                }
               />
             </label>
             <label>
               Combine With Field
               <input
                 value={editing.combineWithField ?? ""}
-                onChange={e => setEditing({ ...editing, combineWithField: e.target.value })}
+                onChange={(e) =>
+                  setEditing({ ...editing, combineWithField: e.target.value })
+                }
               />
             </label>
             <label>
               Transform
               <input
-                value={editing.transform ?? ""}
-                onChange={e => setEditing({ ...editing, transform: e.target.value })}
+                value={editing.transformType ?? ""}
+                onChange={(e) =>
+                  setEditing({ ...editing, transformType: e.target.value })
+                }
                 placeholder="None, Trim, ParseDate, Currency..."
               />
             </label>

@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Tendril.Core.Domain.Entities;
+using Tendril.Core.Domain.Enums;
 using Tendril.Data;
 using Tendril.Engine.Models;
 using Tendril.Engine.Playwright;
@@ -25,51 +26,101 @@ public class DynamicScraper : BaseScraper
                 .Where(x => x.ScraperDefinitionId == _def.Id)
                 .ToListAsync(cancellationToken);
 
-            var innerSelectors = selectors.Where(x => !x.Outer).ToList();
+            var innerSelectors = selectors.Where(x => x.Type != SelectorType.Container).ToList();
 
             if (innerSelectors.Count == 0)
                 return Fail("No selectors defined.");
 
-            var outerSelectors = selectors.Where(x => x.Outer).ToList();
+            var outerSelectors = selectors.Where(x => x.Type == SelectorType.Container).ToList();
 
             if (outerSelectors.Count != 1)
                 return Fail("A single list selector is required.");
 
             var page = await PlaywrightContextFactory.CreatePageAsync();
+
             await page.GotoAsync(_def.BaseUrl);
+
+            var containerSelector = selectors.Single(x => x.Type == SelectorType.Container);
+
+            var pipelineSteps = selectors
+                .Where(x => x.Type != SelectorType.Container)
+                .OrderBy(x => x.Order)
+                .ToList();
 
             var results = new List<RawScrapedEvent>();
 
-            var items = await page.QuerySelectorAllAsync(outerSelectors.Single().Selector);
+            // 2. Initial Wait & Query
+            await page.WaitForSelectorAsync(containerSelector.Selector);
+
+            var items = await page.QuerySelectorAllAsync(containerSelector.Selector);
 
             foreach (var item in items)
             {
                 var raw = new RawScrapedEvent();
 
-                foreach (var sel in innerSelectors)
+                // 3. Execute the Pipeline
+                foreach (var step in pipelineSteps)
                 {
-                    string? value = null;
-
-                    if (sel.SelectorType == Core.Domain.Enums.SelectorType.Css)
+                    // 1. RESOLVE ELEMENT (The "Tasty" Switch)
+                    var element = (string.IsNullOrWhiteSpace(step.Selector), step.Root) switch
                     {
-                        var element = await item.QuerySelectorAsync(sel.Selector);
-                        
-                        var tag = await element.EvaluateAsync<string>("e => e.tagName.toLowerCase()");
+                        (true, _) => item,                                     // Self (Container)
+                        (false, true) => await page.QuerySelectorAsync(step.Selector), // Global (Root)
+                        (false, false) => await item.QuerySelectorAsync(step.Selector)  // Scoped (Child)
+                    };
 
-                        if (tag == "a")
+                    // If element is missing, skip this step (or log it)
+                    if (element is null) continue;
+
+                    // 2. EXECUTE ACTION
+                    if (step.Type == SelectorType.Click || step.Type == SelectorType.Hover)
+                    {
+                        // --- State Changes (Void) ---
+                        if (step.Type == SelectorType.Hover)
                         {
-                            var href = await element.EvaluateAsync<string>("e => e.getAttribute('href')");
-
-                            raw.Fields["Href"] = href;
+                            await element.HoverAsync();
+                        }
+                        else // Click
+                        {
+                            await element.ClickAsync();
                         }
 
-                        value = element is not null ? await element.InnerTextAsync() : null;
+                        // Optional: Add a brief wait if your DB has a "WaitAfterMs" column
+                        await page.WaitForTimeoutAsync(500);
+                        //await page.WaitForTimeoutAsync(step.WaitAfterMs);
                     }
+                    else
+                    {
+                        try
+                        {
+                            // --- Data Extraction (Returns String) ---
+                            string? value = step.Type switch
+                            {
+                                SelectorType.Text => await element.InnerTextAsync(),
+                                SelectorType.Href => await element.GetAttributeAsync("href"),
+                                //SelectorType.Attribute => await element.GetAttributeAsync(step.AttributeName),
+                                _ => null
+                            };
 
-                    raw.Fields[sel.FieldName] = value;
+                            if (!string.IsNullOrEmpty(value) && !string.IsNullOrEmpty(step.FieldName))
+                            {
+                                raw.Fields[step.FieldName] = value;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            // Log and continue
+                            Console.WriteLine($"Error processing step {step.Id}: {ex.Message}");
+                            continue;
+                        }
+                    }
                 }
 
-                results.Add(raw);
+                // Only add if we actually found data (optional validation)
+                if (raw.Fields.Count > 0)
+                {
+                    results.Add(raw);
+                }
             }
 
             return Success(results);

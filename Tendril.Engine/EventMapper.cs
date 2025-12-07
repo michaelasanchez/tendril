@@ -19,6 +19,7 @@ public class EventMapper : IEventMapper
         var evt = new Event
         {
             Id = Guid.NewGuid(),
+            ScraperDefinitionId = scraper.Id,
             VenueId = scraper.VenueId.Value,
             ScrapedAtUtc = raw.ScrapedAtUtc,
             Title = "(unmapped)" // will be overwritten by rules if configured
@@ -34,14 +35,17 @@ public class EventMapper : IEventMapper
 
     private void ApplyRule(Event evt, ScraperMappingRule rule, JsonElement root)
     {
+        if (!TryGetValue(root, "Fields", out var fields))
+            return;
+
         // Try to get source element
-        if (!TryGetValue(root, rule.SourceField, out var primary))
+        if (!TryGetValue(fields, rule.SourceField, out var primary))
             return;
 
         JsonElement? secondary = null;
         if (!string.IsNullOrWhiteSpace(rule.CombineWithField))
         {
-            if (TryGetValue(root, rule.CombineWithField!, out var combined))
+            if (TryGetValue(fields, rule.CombineWithField!, out var combined))
                 secondary = combined;
         }
 
@@ -163,7 +167,31 @@ public class EventMapper : IEventMapper
                 }
                 return null;
 
+            // TODO: hack for now
+            case TransformType.ParseDateTimeLoose:
+            {
+                if (string.IsNullOrWhiteSpace(primaryVal))
+                    return null;
+
+                // Remove weekday names
+                var cleaned = Regex.Replace(primaryVal, @"^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),\s*", "", RegexOptions.IgnoreCase);
+
+                // Remove "@"
+                cleaned = cleaned.Replace("@", "", StringComparison.OrdinalIgnoreCase);
+
+                // Normalize spacing and casing
+                cleaned = cleaned.Replace("pm", " PM", StringComparison.OrdinalIgnoreCase)
+                                 .Replace("am", " AM", StringComparison.OrdinalIgnoreCase)
+                                 .Trim();
+
+                if (DateTime.TryParse(cleaned, out var dt))
+                    return new DateTimeOffset(dt);
+
+                return null;
+            }
+
             case TransformType.Currency:
+            {
                 if (string.IsNullOrWhiteSpace(primaryVal))
                     return null;
 
@@ -173,6 +201,7 @@ public class EventMapper : IEventMapper
                 return decimal.TryParse(cleaned, out var money)
                     ? money
                     : null;
+            }
 
             default:
                 // Safe fallback

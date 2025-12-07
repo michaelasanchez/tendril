@@ -4,8 +4,11 @@ import { EventsPage } from './pages/EventsPage';
 import { ScrapersPage } from "./pages/ScrapersPage";
 import { ScraperEditorPage } from "./pages/ScraperEditorPage";
 import { VenuesPage } from "./pages/VenuesPage";
+import { useBootstrapTheme } from "./hooks/useBootstrapTheme";
 
 export default function App() {
+  useBootstrapTheme();
+  
   return (
     <Routes>
       {/* Default redirect */}
@@ -14,7 +17,7 @@ export default function App() {
       {/* Main app pages */}
       <Route path="/events" element={<EventsPage />} />
       <Route path="/scrapers" element={<ScrapersPage />} />
-      <Route path="/scrapers/:id" element={<ScraperEditorPage />} />
+      <Route path="/scrapers/:scraperId" element={<ScraperEditorPage />} />
       <Route path="/venues" element={<VenuesPage />} />
 
       {/* Catch-all */}

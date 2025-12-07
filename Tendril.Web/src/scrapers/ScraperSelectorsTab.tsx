@@ -1,13 +1,19 @@
 // src/scrapers/ScraperSelectorsTab.tsx
 import React, { useEffect, useState } from "react";
-import type { Guid, ScraperSelector, SelectorType } from "../types/api";
 import { ScrapersApi } from "../api/scrapers";
+import type { Guid, ScraperSelector, SelectorType } from "../types/api";
 
 interface Props {
   scraperId: Guid;
 }
 
-const selectorTypeOptions: SelectorType[] = ["Css", "XPath", "Regex"];
+const selectorTypeOptions: SelectorType[] = [
+  "Navigate",
+  "Text",
+  "Href",
+  "Click",
+  "Hover"
+];
 
 export const ScraperSelectorsTab: React.FC<Props> = ({ scraperId }) => {
   const [selectors, setSelectors] = useState<ScraperSelector[]>([]);
@@ -28,8 +34,9 @@ export const ScraperSelectorsTab: React.FC<Props> = ({ scraperId }) => {
     setEditing({
       fieldName: "",
       selector: "",
-      selectorType: "Css",
-      outer: false
+      order: selectors.length,
+      root: false,
+      type: "Text",
     } as Partial<ScraperSelector>);
   };
 
@@ -44,21 +51,23 @@ export const ScraperSelectorsTab: React.FC<Props> = ({ scraperId }) => {
   };
 
   const save = async () => {
-    if (!editing.fieldName || !editing.selector || !editing.selectorType) return;
+    if (!editing.fieldName || !editing.type) return;
 
     if (isNew) {
       await ScrapersApi.createSelector(scraperId, {
         fieldName: editing.fieldName,
-        selector: editing.selector,
-        selectorType: editing.selectorType,
-        outer: editing.outer ?? false
+        selector: editing.selector ?? '',
+        order: editing.order ?? selectors.length,
+        root: editing.root ?? false,
+        type: editing.type,
       });
     } else if (editing.id) {
       await ScrapersApi.updateSelector(scraperId, editing.id, {
         fieldName: editing.fieldName,
         selector: editing.selector,
-        selectorType: editing.selectorType,
-        outer: editing.outer ?? false
+        order: editing.order,
+        root: editing.root,
+        type: editing.type,
       });
     }
     await load();
@@ -83,24 +92,30 @@ export const ScraperSelectorsTab: React.FC<Props> = ({ scraperId }) => {
           <tr>
             <th>Field</th>
             <th>Selector</th>
+            <th>Order</th>
+            <th>Root</th>
             <th>Type</th>
-            <th>Outer?</th>
             <th />
           </tr>
         </thead>
         <tbody>
-          {selectors.map(s => (
-            <tr key={s.id}>
-              <td>{s.fieldName}</td>
-              <td><code>{s.selector}</code></td>
-              <td>{s.selectorType}</td>
-              <td>{s.outer ? "Yes" : "No"}</td>
-              <td>
-                <button onClick={() => startEdit(s)}>Edit</button>
-                <button onClick={() => remove(s)}>Delete</button>
-              </td>
-            </tr>
-          ))}
+          {selectors
+            .sort((a, b) => a.order - b.order)
+            .map((s) => (
+              <tr key={s.id}>
+                <td>{s.fieldName}</td>
+                <td>
+                  <code>{s.selector}</code>
+                </td>
+                <td>{s.order}</td>
+                <td>{s.root ? "Yes" : "No"}</td>
+                <td>{s.type}</td>
+                <td>
+                  <button onClick={() => startEdit(s)}>Edit</button>
+                  <button onClick={() => remove(s)}>Delete</button>
+                </td>
+              </tr>
+            ))}
           {selectors.length === 0 && (
             <tr>
               <td colSpan={5}>No selectors defined.</td>
@@ -109,7 +124,7 @@ export const ScraperSelectorsTab: React.FC<Props> = ({ scraperId }) => {
         </tbody>
       </table>
 
-      {(editing.fieldName !== undefined) && (
+      {editing.fieldName !== undefined && (
         <div className="edit-panel">
           <h4>{isNew ? "New Selector" : "Edit Selector"}</h4>
           <div className="form-grid">
@@ -117,36 +132,57 @@ export const ScraperSelectorsTab: React.FC<Props> = ({ scraperId }) => {
               Field Name
               <input
                 value={editing.fieldName ?? ""}
-                onChange={e => setEditing({ ...editing, fieldName: e.target.value })}
+                onChange={(e) =>
+                  setEditing({ ...editing, fieldName: e.target.value })
+                }
               />
             </label>
             <label>
               Selector
               <input
                 value={editing.selector ?? ""}
-                onChange={e => setEditing({ ...editing, selector: e.target.value })}
+                onChange={(e) =>
+                  setEditing({ ...editing, selector: e.target.value })
+                }
               />
             </label>
             <label>
-              Selector Type
-              <select
-                value={editing.selectorType ?? "Css"}
-                onChange={e =>
-                  setEditing({ ...editing, selectorType: e.target.value as SelectorType })
+              Order
+              <input
+                type="number"
+                value={editing.order ?? 0}
+                onChange={(e) =>
+                  setEditing({ ...editing, order: e.target.valueAsNumber })
                 }
-              >
-                {selectorTypeOptions.map(st => (
-                  <option key={st} value={st}>{st}</option>
-                ))}
-              </select>
+              />
             </label>
             <label>
-              Outer (list item)?
+              Root
               <input
                 type="checkbox"
-                checked={editing.outer ?? false}
-                onChange={e => setEditing({ ...editing, outer: e.target.checked })}
+                checked={editing.root ?? false}
+                onChange={(e) =>
+                  setEditing({ ...editing, root: e.target.checked })
+                }
               />
+            </label>
+            <label>
+              Type
+              <select
+                value={editing.type ?? "Text"}
+                onChange={(e) =>
+                  setEditing({
+                    ...editing,
+                    type: e.target.value as SelectorType,
+                  })
+                }
+              >
+                {selectorTypeOptions.map((st) => (
+                  <option key={st} value={st}>
+                    {st}
+                  </option>
+                ))}
+              </select>
             </label>
           </div>
           <div className="button-row">

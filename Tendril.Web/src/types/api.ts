@@ -23,15 +23,16 @@ export interface ScraperDefinition {
   venueId?: Guid | null;
 }
 
-export type SelectorType = "Css" | "XPath" | "Regex";
+export type SelectorType = "Navigate" | "Text" | "Href" | "Click" | "Hover";
 
 export interface ScraperSelector {
   id: Guid;
   scraperDefinitionId: Guid;
   fieldName: string;
   selector: string;
-  selectorType: SelectorType;
-  outer: boolean;
+  order: number;
+  root: boolean;
+  type: SelectorType;
   // if you later add ReturnMode, extend here
   // returnMode: "First" | "All";
 }
@@ -43,7 +44,7 @@ export interface ScraperMappingRule {
   sourceField: string;
   combineWithField?: string | null;
   // if you use enum TransformType as string in JSON:
-  transform: string;
+  transformType: string;
 }
 
 export interface Event {

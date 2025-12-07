@@ -20,11 +20,8 @@ public class ScraperSelectorConfig : IEntityTypeConfiguration<ScraperSelector>
         builder.Property(x => x.Selector)
             .IsRequired();
 
-        builder.Property(x => x.SelectorType)
+        builder.Property(x => x.Type)
             .HasConversion<string>()
-            .IsRequired();
-
-        builder.Property(x => x.Outer)
             .IsRequired();
     }
 }

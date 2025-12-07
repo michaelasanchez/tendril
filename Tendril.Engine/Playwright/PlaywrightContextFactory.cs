@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Tendril.Engine.Playwright;
+﻿namespace Tendril.Engine.Playwright;
 
 using Microsoft.Playwright;
 
@@ -13,12 +9,20 @@ public static class PlaywrightContextFactory
     public static async Task<IPage> CreatePageAsync()
     {
         _pw ??= await Playwright.CreateAsync();
+
         var browser = await _pw.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
         {
             Headless = true
         });
 
-        var context = await browser.NewContextAsync();
+        var context = await browser.NewContextAsync(new BrowserNewContextOptions
+        {
+            ViewportSize = new ViewportSize
+            {
+                Width = 1400,
+                Height = 900
+            }
+        });
         return await context.NewPageAsync();
     }
 }

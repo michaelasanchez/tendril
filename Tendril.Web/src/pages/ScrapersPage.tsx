@@ -1,8 +1,8 @@
 // src/pages/ScrapersPage.tsx
 import React, { useEffect, useState } from "react";
-import type { ScraperDefinition } from "../types/api";
-import { ScrapersApi } from "../api/scrapers";
 import { useNavigate } from "react-router-dom";
+import { ScrapersApi } from "../api/scrapers";
+import type { ScraperDefinition } from "../types/api";
 
 export const ScrapersPage: React.FC = () => {
   const [scrapers, setScrapers] = useState<ScraperDefinition[]>([]);
@@ -40,8 +40,8 @@ export const ScrapersPage: React.FC = () => {
   return (
     <section>
       <div className="page-header">
-        <h2>Scrapers</h2>
-        <button onClick={() => navigate("/scrapers/new")}>New Scraper</button>
+        <h2>Feeds</h2>
+        <button onClick={() => navigate("/scrapers/new")}>New Feed</button>
       </div>
 
       {loading && <p>Loading…</p>}
@@ -64,13 +64,7 @@ export const ScrapersPage: React.FC = () => {
               <td>
                 <button
                   className="link"
-                  onClick={() => {
-                    console.log("fucker", s.id);
-
-
-                    navigate(`/scrapers/${s.id}`)
-
-                  }}
+                  onClick={() => navigate(`/scrapers/${s.id}`)}
                 >
                   {s.name}
                 </button>

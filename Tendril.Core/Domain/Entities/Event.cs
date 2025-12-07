@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Tendril.Core.Domain.Entities;
+﻿namespace Tendril.Core.Domain.Entities;
 
 public class Event
 {
@@ -26,4 +22,5 @@ public class Event
     public string? ImageUrl { get; set; }
 
     public DateTimeOffset ScrapedAtUtc { get; set; }
+    public DateTimeOffset? UpdatedAtUtc { get; set; }
 }

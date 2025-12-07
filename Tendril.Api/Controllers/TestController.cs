@@ -38,6 +38,7 @@ public class ScraperRunsController : ControllerBase
     public async Task<ActionResult> TestSelectors(Guid scraperId)
     {
         var scraper = await _scrapers.GetByIdWithDetailsAsync(scraperId);
+
         if (scraper == null)
             return NotFound();
 
@@ -149,6 +150,7 @@ public class ScraperRunsController : ControllerBase
         scraper.State = ScraperState.Healthy;
 
         var mapped = new List<object>();
+        var inserted = 0;
 
         foreach (var raw in result.RawEvents)
         {
@@ -165,7 +167,23 @@ public class ScraperRunsController : ControllerBase
 
             // map and save event
             var mappedEvent = _mapper.Map(scraper, rawEntity);
-            await _events.AddAsync(mappedEvent);
+
+            var existing = await _events.Find(mappedEvent);
+
+            if (existing is not null)
+            {
+                if (existing.StartUtc != mappedEvent.StartUtc)
+                {
+                    existing.StartUtc = mappedEvent.StartUtc;
+                    existing.UpdatedAtUtc = DateTimeOffset.UtcNow;
+                }
+            }
+            else
+            {
+                await _events.AddAsync(mappedEvent);
+
+                inserted++;
+            }
 
             mapped.Add(mappedEvent);
         }
@@ -176,6 +194,7 @@ public class ScraperRunsController : ControllerBase
         {
             success = true,
             raw = result.RawEvents,
+            inserted,
             mapped
         });
     }

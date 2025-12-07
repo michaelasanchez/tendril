@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tendril.Data;
 
@@ -11,9 +12,11 @@ using Tendril.Data;
 namespace Tendril.Data.Migrations
 {
     [DbContext(typeof(TendrilDbContext))]
-    partial class TendrilDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251204024150_SimplifyScraperSelector")]
+    partial class SimplifyScraperSelector
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -60,9 +63,6 @@ namespace Tendril.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(300)
                         .HasColumnType("nvarchar(300)");
-
-                    b.Property<DateTimeOffset?>("UpdatedAtUtc")
-                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid?>("VenueId")
                         .HasColumnType("uniqueidentifier");
@@ -227,9 +227,6 @@ namespace Tendril.Data.Migrations
 
                     b.Property<int>("Order")
                         .HasColumnType("int");
-
-                    b.Property<bool>("Root")
-                        .HasColumnType("bit");
 
                     b.Property<Guid>("ScraperDefinitionId")
                         .HasColumnType("uniqueidentifier");

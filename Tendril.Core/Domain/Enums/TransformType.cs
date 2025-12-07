@@ -10,6 +10,7 @@ public enum TransformType
     Combine,
     ParseDate,
     ParseTime,
+    ParseDateTimeLoose,
     ToLower,
     ToUpper,
     Currency
