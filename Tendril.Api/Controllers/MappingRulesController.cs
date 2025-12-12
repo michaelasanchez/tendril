@@ -25,7 +25,11 @@ public class MappingRulesController : ControllerBase
             r.TargetField,
             r.SourceField,
             r.CombineWithField,
-            r.TransformType
+            r.Order,
+            r.TransformType,
+            r.RegexPattern,
+            r.RegexReplacement,
+            r.SplitDelimiter
         ));
 
         return Ok(dtos);
@@ -41,7 +45,11 @@ public class MappingRulesController : ControllerBase
             TargetField = request.TargetField,
             SourceField = request.SourceField,
             CombineWithField = request.CombineWithField,
-            TransformType = request.TransformType
+            Order = request.Order,
+            TransformType = request.TransformType,
+            RegexPattern = request.RegexPattern,
+            RegexReplacement = request.RegexReplacement,
+            SplitDelimiter = request.SplitDelimiter
         };
 
         await _rules.AddAsync(rule, cancellationToken);
@@ -51,7 +59,11 @@ public class MappingRulesController : ControllerBase
             rule.TargetField,
             rule.SourceField,
             rule.CombineWithField,
-            rule.TransformType
+            rule.Order,
+            rule.TransformType,
+            rule.RegexPattern,
+            rule.RegexReplacement,
+            rule.SplitDelimiter
         );
 
         return CreatedAtAction(nameof(Get), new { scraperId }, dto);
@@ -66,7 +78,11 @@ public class MappingRulesController : ControllerBase
         if (request.TargetField is not null) rule.TargetField = request.TargetField;
         if (request.SourceField is not null) rule.SourceField = request.SourceField;
         if (request.CombineWithField is not null) rule.CombineWithField = request.CombineWithField;
+        if (request.Order is not null) rule.Order = request.Order.Value;
         if (request.TransformType is not null) rule.TransformType = request.TransformType ?? Core.Domain.Enums.TransformType.None;
+        if (request.RegexPattern is not null) rule.RegexPattern = request.RegexPattern;
+        if (request.RegexReplacement is not null) rule.RegexReplacement = request.RegexReplacement;
+        if (request.SplitDelimiter is not null) rule.SplitDelimiter = request.SplitDelimiter;
 
         await _rules.UpdateAsync(rule, cancellationToken);
 

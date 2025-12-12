@@ -172,7 +172,7 @@ public class ScraperRunsController : ControllerBase
 
             if (existing is not null)
             {
-                if (existing.StartUtc != mappedEvent.StartUtc)
+                if (existing.StartUtc != mappedEvent.StartUtc && mappedEvent.StartUtc != default)
                 {
                     existing.StartUtc = mappedEvent.StartUtc;
                     existing.UpdatedAtUtc = DateTimeOffset.UtcNow;

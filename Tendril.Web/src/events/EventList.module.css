@@ -1,0 +1,10 @@
+.EventList {
+  
+  h3 {
+    margin: 1em 0 0.5em;
+  }
+
+  .EventCard + .EventCard {
+    margin-top: 1em;
+  }
+}

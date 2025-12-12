@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Tendril.Data.Configurations;
+﻿namespace Tendril.Data.Configurations;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -27,7 +23,13 @@ public class ScraperMappingRuleConfig : IEntityTypeConfiguration<ScraperMappingR
         builder.Property(x => x.TransformType)
             .HasConversion<string>();
 
-        builder.Property(x => x.TransformArgsJson)
-            .HasColumnType("nvarchar(max)");
+        builder.Property(x => x.RegexPattern)
+            .HasColumnType("nvarchar(256)");
+
+        builder.Property(x => x.RegexReplacement)
+            .HasColumnType("nvarchar(128)");
+
+        builder.Property(x => x.SplitDelimiter)
+            .HasColumnType("nvarchar(16)");
     }
 }

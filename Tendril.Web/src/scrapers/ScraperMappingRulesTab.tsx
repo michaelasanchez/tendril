@@ -1,32 +1,77 @@
 import React, { useEffect, useState } from "react";
 import { ScrapersApi } from "../api/scrapers";
-import type { Guid, ScraperMappingRule } from "../types/api";
+import type {
+  Guid,
+  ScraperMappingRule,
+  ScraperSelector,
+  TransformType,
+} from "../types/api";
 
 interface Props {
   scraperId: Guid;
+  selectors: ScraperSelector[];
 }
 
-export const ScraperMappingRulesTab: React.FC<Props> = ({ scraperId }) => {
+const transformTypeOptions: TransformType[] = [
+  "None",
+  "Trim",
+  "RegexExtract",
+  "RegexReplace",
+  "Split",
+  "Combine",
+  "ParseDate",
+  "ParseTime",
+  "ParseDateTimeLoose",
+  "ToLower",
+  "ToUpper",
+  "Currency",
+];
+
+const targetFieldOptions: string[] = [
+  "Title",
+  "Description",
+  "StartUtc",
+  "EndUtc",
+  "TicketUrl",
+  "Category",
+  "ImageUrl",
+];
+
+export const ScraperMappingRulesTab: React.FC<Props> = ({
+  scraperId,
+  selectors,
+}) => {
   const [rules, setRules] = useState<ScraperMappingRule[]>([]);
   const [editing, setEditing] = useState<Partial<ScraperMappingRule>>({});
   const [isNew, setIsNew] = useState(false);
 
+  const [sourceFieldOptions, setSourceFieldOptions] = useState<string[]>([]);
+
   const load = async () => {
-    const data = await ScrapersApi.getMappingRules(scraperId);
-    setRules(data);
+    const rules = await ScrapersApi.getMappingRules(scraperId);
+
+    setRules(rules);
   };
 
   useEffect(() => {
     void load();
   }, [scraperId]);
 
+  useEffect(() => {
+    setSourceFieldOptions(selectors.map((s) => s.fieldName));
+  }, [selectors]);
+
   const startNew = () => {
     setIsNew(true);
     setEditing({
-      targetField: "",
-      sourceField: "",
+      targetField: targetFieldOptions?.[0] ?? "",
+      sourceField: sourceFieldOptions?.[0] ?? "",
       combineWithField: "",
+      order: rules?.length ?? 0,
       transformType: "None",
+      regexPattern: "",
+      regexReplacement: "",
+      splitDelimiter: "",
     } as Partial<ScraperMappingRule>);
   };
 
@@ -41,6 +86,8 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({ scraperId }) => {
   };
 
   const save = async () => {
+    console.log("save", editing);
+
     if (!editing.targetField || !editing.sourceField || !editing.transformType)
       return;
 
@@ -49,14 +96,22 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({ scraperId }) => {
         targetField: editing.targetField,
         sourceField: editing.sourceField,
         combineWithField: editing.combineWithField ?? null,
+        order: editing.order ?? 0,
         transformType: editing.transformType,
+        regexPattern: editing.regexPattern ?? "",
+        regexReplacement: editing.regexReplacement ?? "",
+        splitDelimiter: editing.splitDelimiter ?? "",
       });
     } else if (editing.id) {
       await ScrapersApi.updateMappingRule(scraperId, editing.id, {
         targetField: editing.targetField,
         sourceField: editing.sourceField,
         combineWithField: editing.combineWithField,
+        order: editing.order,
         transformType: editing.transformType,
+        regexPattern: editing.regexPattern ?? "",
+        regexReplacement: editing.regexReplacement ?? "",
+        splitDelimiter: editing.splitDelimiter ?? "",
       });
     }
     await load();
@@ -67,6 +122,15 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({ scraperId }) => {
     if (!window.confirm(`Delete mapping rule for ${rule.targetField}?`)) return;
     await ScrapersApi.deleteMappingRule(scraperId, rule.id);
     await load();
+  };
+
+  const susan = (str: string) => {
+    return !sourceFieldOptions.includes(str) &&
+      !targetFieldOptions.includes(str) ? (
+      <i>{str}</i>
+    ) : (
+      str
+    );
   };
 
   return (
@@ -82,23 +146,33 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({ scraperId }) => {
             <th>Target Field</th>
             <th>Source Field</th>
             <th>Combine With</th>
+            <th>Order</th>
             <th>Transform</th>
+            <th>Regex Pattern</th>
+            <th>Regex Replacement</th>
+            <th>Split Delimiter</th>
             <th />
           </tr>
         </thead>
         <tbody>
-          {rules.map((r) => (
-            <tr key={r.id}>
-              <td>{r.targetField}</td>
-              <td>{r.sourceField}</td>
-              <td>{r.combineWithField ?? "-"}</td>
-              <td>{r.transformType}</td>
-              <td>
-                <button onClick={() => startEdit(r)}>Edit</button>
-                <button onClick={() => remove(r)}>Delete</button>
-              </td>
-            </tr>
-          ))}
+          {rules
+            .sort((a, b) => a.order - b.order)
+            .map((r) => (
+              <tr key={r.id}>
+                <td>{susan(r.targetField)}</td>
+                <td>{susan(r.sourceField)}</td>
+                <td>{susan(r.combineWithField ?? "-")}</td>
+                <td>{r.order}</td>
+                <td>{r.transformType}</td>
+                <td>{r.regexPattern}</td>
+                <td>{r.regexReplacement}</td>
+                <td>{r.splitDelimiter}</td>
+                <td>
+                  <button onClick={() => startEdit(r)}>Edit</button>
+                  <button onClick={() => remove(r)}>Delete</button>
+                </td>
+              </tr>
+            ))}
           {rules.length === 0 && (
             <tr>
               <td colSpan={5}>No mapping rules yet.</td>
@@ -113,41 +187,238 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({ scraperId }) => {
           <div className="form-grid">
             <label>
               Target Field
+              {/* Freeform input */}
               <input
+                type="text"
                 value={editing.targetField ?? ""}
                 onChange={(e) =>
-                  setEditing({ ...editing, targetField: e.target.value })
+                  setEditing({
+                    ...editing,
+                    targetField: e.target.value,
+                  })
                 }
+                placeholder="Enter field name..."
+                style={{ marginBottom: "4px" }}
               />
+              {/* Or choose from dropdown */}
+              <select
+                value=""
+                onChange={(e) =>
+                  setEditing({
+                    ...editing,
+                    targetField: e.target.value,
+                  })
+                }
+              >
+                <option value="" disabled>
+                  Select from event fields…
+                </option>
+                {targetFieldOptions.map((o) => (
+                  <option key={o} value={o}>
+                    {o}
+                  </option>
+                ))}
+              </select>
             </label>
+
+            {/* <label>
+              Target Field
+              <select
+                value={editing.targetField ?? ""}
+                onChange={(e) =>
+                  setEditing({
+                    ...editing,
+                    targetField: e.target.value,
+                  })
+                }
+              >
+                {targetFieldOptions.map((o) => (
+                  <option key={o} value={o}>
+                    {o}
+                  </option>
+                ))}
+              </select>
+            </label> */}
+
             <label>
               Source Field
+              {/* Freeform input */}
               <input
+                type="text"
                 value={editing.sourceField ?? ""}
                 onChange={(e) =>
-                  setEditing({ ...editing, sourceField: e.target.value })
+                  setEditing({
+                    ...editing,
+                    sourceField: e.target.value,
+                  })
                 }
+                placeholder="Enter field name..."
+                style={{ marginBottom: "4px" }}
               />
+              {/* Or choose from dropdown */}
+              <select
+                value=""
+                onChange={(e) =>
+                  setEditing({
+                    ...editing,
+                    sourceField: e.target.value,
+                  })
+                }
+              >
+                <option value="" disabled>
+                  Select from scraped fields…
+                </option>
+                {sourceFieldOptions.map((o) => (
+                  <option key={o} value={o}>
+                    {o}
+                  </option>
+                ))}
+              </select>
             </label>
+
+            {/* <label>
+              Source Field
+              <select
+                value={editing.sourceField ?? ""}
+                onChange={(e) =>
+                  setEditing({
+                    ...editing,
+                    sourceField: e.target.value,
+                  })
+                }
+              >
+                {sourceFieldOptions.map((o) => (
+                  <option key={o} value={o}>
+                    {o}
+                  </option>
+                ))}
+              </select>
+            </label> */}
             <label>
               Combine With Field
+              {/* Freeform input */}
               <input
+                type="text"
                 value={editing.combineWithField ?? ""}
                 onChange={(e) =>
-                  setEditing({ ...editing, combineWithField: e.target.value })
+                  setEditing({
+                    ...editing,
+                    combineWithField: e.target.value,
+                  })
+                }
+                placeholder="Enter field name..."
+                style={{ marginBottom: "4px" }}
+              />
+              {/* Or choose from dropdown */}
+              <select
+                value=""
+                onChange={(e) =>
+                  setEditing({
+                    ...editing,
+                    combineWithField: e.target.value,
+                  })
+                }
+              >
+                <option value="" disabled>
+                  Select from scraped fields…
+                </option>
+                {sourceFieldOptions.map((o) => (
+                  <option key={o} value={o}>
+                    {o}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {/* <label>
+              Combine With Field
+              <select
+                value={editing.combineWithField ?? ""}
+                onChange={(e) =>
+                  setEditing({
+                    ...editing,
+                    combineWithField: e.target.value,
+                  })
+                }
+              >
+                <option value=""></option>
+                {sourceFieldOptions.map((o) => (
+                  <option key={o} value={o}>
+                    {o}
+                  </option>
+                ))}
+              </select>
+            </label> */}
+            <label>
+              Order
+              <input
+                type="number"
+                value={editing.order}
+                onChange={(e) =>
+                  setEditing({ ...editing, order: parseInt(e.target.value) })
                 }
               />
             </label>
             <label>
               Transform
-              <input
-                value={editing.transformType ?? ""}
+              <select
+                value={editing.transformType ?? "None"}
                 onChange={(e) =>
-                  setEditing({ ...editing, transformType: e.target.value })
+                  setEditing({
+                    ...editing,
+                    transformType: e.target.value as TransformType,
+                  })
                 }
-                placeholder="None, Trim, ParseDate, Currency..."
-              />
+              >
+                {transformTypeOptions.map((o) => (
+                  <option key={o} value={o}>
+                    {o}
+                  </option>
+                ))}
+              </select>
             </label>
+            {(editing.transformType === "RegexReplace" ||
+              editing.transformType === "RegexExtract") && (
+              <label>
+                Regex Pattern
+                <input
+                  value={editing.regexPattern ?? ""}
+                  onChange={(e) =>
+                    setEditing({
+                      ...editing,
+                      regexPattern: e.target.value,
+                    })
+                  }
+                />
+              </label>
+            )}
+            {editing.transformType === "RegexReplace" && (
+              <label>
+                Regex Replacement
+                <input
+                  value={editing.regexReplacement ?? ""}
+                  onChange={(e) =>
+                    setEditing({
+                      ...editing,
+                      regexReplacement: e.target.value,
+                    })
+                  }
+                />
+              </label>
+            )}
+            {editing.transformType === "Split" && (
+              <label>
+                Split Delimiter
+                <input
+                  value={editing.splitDelimiter ?? ""}
+                  onChange={(e) =>
+                    setEditing({
+                      ...editing,
+                      splitDelimiter: e.target.value,
+                    })
+                  }
+                />
+              </label>
+            )}
           </div>
           <div className="button-row">
             <button onClick={save}>Save</button>

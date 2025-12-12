@@ -62,22 +62,9 @@ public class EventRepository : IEventRepository
                 x.StartUtc == mappedEvent.StartUtc);
     }
 
-    public async Task<Event?> Find(Event mappedEvent, CancellationToken cancellationToken = default)
+    public Task<Event?> Find(Event mappedEvent, CancellationToken cancellationToken = default)
     {
-        var startUtc = mappedEvent.StartUtc.Date;
-
-        var test = await _db.Events.Where(x => x.StartUtc.Date == startUtc).ToListAsync();
-
-        var test2 = await _db.Events.Where(x => x.Title == mappedEvent.Title).ToListAsync();
-
-        if (test2 is not null)
-        {
-            var yup = test2.FirstOrDefault();
-
-            var test3 = yup.StartUtc.Date == mappedEvent.StartUtc.Date;
-        }
-
-        return await _db.Events
+        return _db.Events
             .SingleOrDefaultAsync(x =>
                 x.ScraperDefinitionId == mappedEvent.ScraperDefinitionId &&
                 x.Title == mappedEvent.Title &&

@@ -17,9 +17,9 @@ public class Event
     public DateTimeOffset? EndUtc { get; set; }
 
     public string? TicketUrl { get; set; }
-    public string? Category { get; set; }
-
     public string? ImageUrl { get; set; }
+
+    public string? Category { get; set; }
 
     public DateTimeOffset ScrapedAtUtc { get; set; }
     public DateTimeOffset? UpdatedAtUtc { get; set; }

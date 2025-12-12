@@ -23,7 +23,13 @@ export interface ScraperDefinition {
   venueId?: Guid | null;
 }
 
-export type SelectorType = "Navigate" | "Text" | "Href" | "Click" | "Hover";
+export type SelectorType =
+  | "Container"
+  | "Text"
+  | "Href"
+  | "Src"
+  | "Click"
+  | "Hover";
 
 export interface ScraperSelector {
   id: Guid;
@@ -33,9 +39,21 @@ export interface ScraperSelector {
   order: number;
   root: boolean;
   type: SelectorType;
-  // if you later add ReturnMode, extend here
-  // returnMode: "First" | "All";
 }
+
+export type TransformType =
+  | "None"
+  | "Trim"
+  | "RegexExtract"
+  | "RegexReplace"
+  | "Split"
+  | "Combine"
+  | "ParseDate"
+  | "ParseTime"
+  | "ParseDateTimeLoose"
+  | "ToLower"
+  | "ToUpper"
+  | "Currency";
 
 export interface ScraperMappingRule {
   id: Guid;
@@ -43,13 +61,15 @@ export interface ScraperMappingRule {
   targetField: string;
   sourceField: string;
   combineWithField?: string | null;
-  // if you use enum TransformType as string in JSON:
-  transformType: string;
+  order: number;
+  transformType: TransformType;
+  regexPattern?: string | null;
+  regexReplacement?: string | null;
+  splitDelimiter?: string | null;
 }
 
 export interface Event {
   id: Guid;
-  venueId: Guid;
   title: string;
   description?: string;
   startUtc: string;
@@ -57,8 +77,7 @@ export interface Event {
   ticketUrl?: string | null;
   category?: string | null;
   imageUrl?: string | null;
-  scrapedAtUtc: string;
-  venue?: Venue;
+  venueName?: string | null;
 }
 
 export interface ScrapeRunResponse {

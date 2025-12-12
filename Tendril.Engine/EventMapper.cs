@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Data;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Tendril.Core.Domain.Entities;
 using Tendril.Core.Domain.Enums;
@@ -8,153 +9,249 @@ namespace Tendril.Engine;
 
 public class EventMapper : IEventMapper
 {
+    private static readonly Dictionary<string, System.Reflection.PropertyInfo> _eventProperties =
+        typeof(Event).GetProperties()
+        .Where(p => p.CanWrite)
+        .ToDictionary(p => p.Name, p => p, StringComparer.OrdinalIgnoreCase);
+
     public Event Map(ScraperDefinition scraper, ScrapedEventRaw raw)
     {
         if (scraper.VenueId is null)
             throw new InvalidOperationException("Scraper must be associated with a Venue before mapping events.");
 
-        var doc = JsonDocument.Parse(raw.RawDataJson);
-        var root = doc.RootElement;
-
-        var evt = new Event
+        var mappedEvent = new Event
         {
             Id = Guid.NewGuid(),
             ScraperDefinitionId = scraper.Id,
             VenueId = scraper.VenueId.Value,
             ScrapedAtUtc = raw.ScrapedAtUtc,
-            Title = "(unmapped)" // will be overwritten by rules if configured
+            Title = "(unmapped)"
         };
 
-        foreach (var rule in scraper.MappingRules)
+        var doc = JsonDocument.Parse(raw.RawDataJson);
+        var root = doc.RootElement;
+
+        if (!TryGetValue(root, "Fields", out var fields))
         {
-            ApplyRule(evt, rule, root);
+            return mappedEvent;
         }
 
-        return evt;
+        var scratchpad = new Dictionary<string, object?>();
+
+        foreach (var rule in scraper.MappingRules.OrderBy(x => x.Order))
+        {
+            ApplyRule(fields, rule, scratchpad);
+        }
+
+        foreach (var (targetField, value) in scratchpad)
+        {
+            AssignField(mappedEvent, targetField, value);
+        }
+
+        return mappedEvent;
     }
-
-    private void ApplyRule(Event evt, ScraperMappingRule rule, JsonElement root)
+    private static void ApplyRule(JsonElement raw, ScraperMappingRule rule, Dictionary<string, object?> scratch)
     {
-        if (!TryGetValue(root, "Fields", out var fields))
-            return;
+        object? primary;
 
-        // Try to get source element
-        if (!TryGetValue(fields, rule.SourceField, out var primary))
+        // 1. Check Scratchpad first (precedence)
+        if (scratch.TryGetValue(rule.SourceField, out var scratchVal))
+        {
+            primary = scratchVal;
+        }
+        // 2. Fallback to Raw JSON
+        else if (TryGetValue(raw, rule.SourceField, out var rawVal))
+        {
+            primary = rawVal;
+        }
+        // 3. If neither, skip
+        else
+        {
             return;
+        }
 
-        JsonElement? secondary = null;
+        object? secondary = null;
+
         if (!string.IsNullOrWhiteSpace(rule.CombineWithField))
         {
-            if (TryGetValue(fields, rule.CombineWithField!, out var combined))
-                secondary = combined;
+            // Same precedence logic for the secondary field
+            if (scratch.TryGetValue(rule.CombineWithField!, out var combinedScratch))
+            {
+                secondary = combinedScratch;
+            }
+            else if (TryGetValue(raw, rule.CombineWithField!, out var combinedRaw))
+            {
+                secondary = combinedRaw;
+            }
         }
 
-        var value = ApplyTransform(rule.TransformType, primary, secondary);
+        // Transform
+        var value = ApplyTransform(
+            rule.TransformType,
+            primary,
+            secondary,
+            rule.RegexPattern,
+            rule.RegexReplacement,
+            rule.SplitDelimiter);
 
-        // Assign to target property by name via reflection (simple & flexible)
-        var prop = typeof(Event).GetProperty(rule.TargetField);
-        if (prop == null || !prop.CanWrite)
-            return;
+        scratch[rule.TargetField] = value;
+    }
 
-        if (value is null)
+    private static void AssignField(Event evt, string targetField, object? value)
+    {
+        if (value is null) return;
+
+        if (!_eventProperties.TryGetValue(targetField, out var prop))
             return;
 
         if (prop.PropertyType == typeof(string))
         {
             prop.SetValue(evt, value.ToString());
+            return;
+        }
+
+        if (prop.PropertyType == typeof(decimal) || prop.PropertyType == typeof(decimal?))
+        {
+            try
+            {
+                var d = Convert.ToDecimal(value);
+                prop.SetValue(evt, d);
+            }
+            catch { }
+
+            return;
+        }
+        if (prop.PropertyType == typeof(int) || prop.PropertyType == typeof(int?))
+        {
+            try
+            {
+                var i = Convert.ToInt32(value);
+                prop.SetValue(evt, i);
+            }
+            catch { }
+
+            return;
         }
         else if (prop.PropertyType == typeof(DateTimeOffset) || prop.PropertyType == typeof(DateTimeOffset?))
         {
             if (value is DateTimeOffset dto)
                 prop.SetValue(evt, dto);
         }
-        else if (prop.PropertyType == typeof(decimal) || prop.PropertyType == typeof(decimal?))
-        {
-            if (value is decimal d)
-                prop.SetValue(evt, d);
-        }
         else
         {
-            // You can expand this later (e.g., List<string>, etc.)
             prop.SetValue(evt, value);
         }
     }
 
-    private static bool TryGetValue(JsonElement root, string fieldName, out JsonElement element)
-    {
-        if (root.ValueKind == JsonValueKind.Object &&
-            root.TryGetProperty(fieldName, out element))
-        {
-            return true;
-        }
-
-        element = default;
-        return false;
-    }
-    private object? ApplyTransform(
+    private static object? ApplyTransform(
         TransformType transform,
-        JsonElement primary,
-        JsonElement? secondary,
+        object? primary,
+        object? secondary,
         string? regexPattern = null,
         string? regexReplacement = null,
         string? splitDelimiter = null)
     {
+        // FIX: If no transform is needed, return the raw object to preserve its type
+        // (This keeps DateTimeOffset as DateTimeOffset, etc.)
+        if (transform == TransformType.None && secondary is null)
+        {
+            // If it's a JsonElement, we still might want to unbox it to a string/number
+            if (primary is JsonElement)
+                return GetString(primary);
+
+            return primary;
+        }
+
         var primaryVal = GetString(primary);
-        var secondaryVal = secondary.HasValue ? GetString(secondary.Value) : null;
+        var secondaryVal = GetString(secondary);
 
         switch (transform)
         {
-            case TransformType.None:
-                return primaryVal;
+            //case TransformType.None:
+            //{
+            //    return primaryVal;
+            //}
 
             case TransformType.Trim:
+            {
                 return primaryVal?.Trim();
+            }
 
             case TransformType.ToLower:
+            {
                 return primaryVal?.ToLowerInvariant();
+            }
 
             case TransformType.ToUpper:
+            {
                 return primaryVal?.ToUpperInvariant();
+            }
 
             case TransformType.Split:
+            {
                 if (string.IsNullOrWhiteSpace(primaryVal) || string.IsNullOrWhiteSpace(splitDelimiter))
+                {
                     return primaryVal;
+                }
 
-                return primaryVal.Split(splitDelimiter, StringSplitOptions.RemoveEmptyEntries)
-                                 .Select(x => x.Trim())
-                                 .ToList();
+                return primaryVal
+                    .Split(splitDelimiter, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(x => x.Trim())
+                    .ToList();
+            }
 
             case TransformType.Combine:
+            {
                 // Combine two strings (Title + Subtitle, Date + Time, etc.)
                 if (string.IsNullOrEmpty(primaryVal) && string.IsNullOrEmpty(secondaryVal))
+                {
                     return null;
+                }
 
                 return $"{primaryVal} {secondaryVal}".Trim();
+            }
 
             case TransformType.RegexExtract:
+            {
                 if (string.IsNullOrWhiteSpace(primaryVal) || string.IsNullOrWhiteSpace(regexPattern))
+                {
                     return primaryVal;
+                }
 
                 var match = Regex.Match(primaryVal, regexPattern, RegexOptions.Singleline);
+
                 return match.Success ? match.Value : null;
+            }
 
             case TransformType.RegexReplace:
+            {
                 if (string.IsNullOrWhiteSpace(primaryVal) ||
                     string.IsNullOrWhiteSpace(regexPattern) ||
                     regexReplacement is null)
+                {
                     return primaryVal;
+                }
 
                 return Regex.Replace(primaryVal, regexPattern, regexReplacement);
+            }
 
             case TransformType.ParseDate:
+            {
                 if (DateTimeOffset.TryParse(primaryVal, out var dateOnly))
+                {
                     return dateOnly;
+                }
+
                 return null;
+            }
 
             case TransformType.ParseTime:
+            {
                 // Parse ONLY the time portion, combine with today if needed
                 if (string.IsNullOrWhiteSpace(primaryVal))
+                {
                     return null;
+                }
 
                 if (DateTime.TryParse(primaryVal, out var timeOnly))
                 {
@@ -165,7 +262,9 @@ public class EventMapper : IEventMapper
                         now.Offset);
                     return combined;
                 }
+
                 return null;
+            }
 
             // TODO: hack for now
             case TransformType.ParseDateTimeLoose:
@@ -180,9 +279,10 @@ public class EventMapper : IEventMapper
                 cleaned = cleaned.Replace("@", "", StringComparison.OrdinalIgnoreCase);
 
                 // Normalize spacing and casing
-                cleaned = cleaned.Replace("pm", " PM", StringComparison.OrdinalIgnoreCase)
-                                 .Replace("am", " AM", StringComparison.OrdinalIgnoreCase)
-                                 .Trim();
+                cleaned = cleaned
+                    .Replace("pm", " PM", StringComparison.OrdinalIgnoreCase)
+                    .Replace("am", " AM", StringComparison.OrdinalIgnoreCase)
+                    .Trim();
 
                 if (DateTime.TryParse(cleaned, out var dt))
                     return new DateTimeOffset(dt);
@@ -204,29 +304,47 @@ public class EventMapper : IEventMapper
             }
 
             default:
+            {
                 // Safe fallback
                 return primaryVal;
+            }
         }
     }
-    private static string? GetString(JsonElement element)
+
+    private static bool TryGetValue(JsonElement root, string fieldName, out JsonElement element)
     {
-        return element.ValueKind switch
+        if (root.ValueKind == JsonValueKind.Object &&
+            root.TryGetProperty(fieldName, out element))
         {
-            JsonValueKind.String => element.GetString(),
-            JsonValueKind.Number => element.ToString(),
-            JsonValueKind.Null => null,
-            JsonValueKind.True => "true",
-            JsonValueKind.False => "false",
+            return true;
+        }
 
-            JsonValueKind.Array => string.Join(
-                ", ",
-                element.EnumerateArray().Select(e => GetString(e))
-            ),
+        element = default;
 
-            JsonValueKind.Object => element.ToString(), // fallback
-
-            _ => null
-        };
+        return false;
     }
 
+    private static string? GetString(object? item)
+    {
+        if (item is null) return null;
+
+        // If it came from the raw JSON, unbox and parse it
+        if (item is JsonElement element)
+        {
+            return element.ValueKind switch
+            {
+                JsonValueKind.String => element.GetString(),
+                JsonValueKind.Number => element.ToString(),
+                JsonValueKind.Null => null,
+                JsonValueKind.True => "true",
+                JsonValueKind.False => "false",
+                JsonValueKind.Array => string.Join(", ", element.EnumerateArray().Select(e => GetString(e))),
+                JsonValueKind.Object => element.ToString(),
+                _ => null
+            };
+        }
+
+        // If it came from the scratchpad (String, DateTime, Decimal, etc.)
+        return item.ToString();
+    }
 }

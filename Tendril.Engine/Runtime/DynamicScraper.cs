@@ -98,6 +98,7 @@ public class DynamicScraper : BaseScraper
                             {
                                 SelectorType.Text => await element.InnerTextAsync(),
                                 SelectorType.Href => await element.GetAttributeAsync("href"),
+                                SelectorType.Src => await element.GetAttributeAsync("src"),
                                 //SelectorType.Attribute => await element.GetAttributeAsync(step.AttributeName),
                                 _ => null
                             };

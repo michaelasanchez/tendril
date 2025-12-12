@@ -1,23 +1,25 @@
-// src/pages/EventsPage.tsx
-import moment from "moment";
-import React, { useEffect, useState } from "react";
-import type { Event, View } from "react-big-calendar";
-import { Calendar, momentLocalizer } from "react-big-calendar";
+import React, { useEffect, useMemo, useState } from "react";
 import { EventsApi } from "../api/events";
+import { EventCalendar, EventList } from "../events";
+import type { Event } from "../types/api";
+import { Container } from "react-bootstrap";
 
 export const EventsPage: React.FC = () => {
+  const [view, setView] = useState<"list" | "calendar">("list");
   const [events, setEvents] = useState<Event[]>([]);
 
-  const [date, setDate] = useState<Date>(new Date());
-  const [view, setView] = useState<View>("month");
-
-  const localizer = momentLocalizer(moment);
-
+  // Initial load
   useEffect(() => {
     void (async () => {
       const data = await EventsApi.getAll();
 
-      const events = data?.map<Event>((e, i) => {
+      setEvents(data);
+    })();
+  }, []);
+
+  const calendarEvents = useMemo(
+    () =>
+      events?.map((e, i) => {
         const date = new Date(e.startUtc);
 
         return {
@@ -26,33 +28,21 @@ export const EventsPage: React.FC = () => {
           start: date,
           end: date,
         };
-      });
-
-      setEvents(events);
-    })();
-  }, []);
+      }) ?? [],
+    [events]
+  );
 
   return (
+      <Container>
     <section>
+        
       <div className="page-header">
         <h2>Events</h2>
       </div>
 
-      <Calendar
-        localizer={localizer}
-        events={events}
-        startAccessor="start"
-        endAccessor="end"
-        views={['month', 'agenda']}
-        view={view}
-        date={date}
-        onNavigate={(date, view) => {
-          setDate(date);
-          setView(view);
-        }}
-        onView={setView}
-        style={{ height: 800, width: "100vw" }}
-      />
+      {view === "list" && <EventList events={events} />}
+      {view === "calendar" && <EventCalendar events={calendarEvents} />}
     </section>
+      </Container>
   );
 };

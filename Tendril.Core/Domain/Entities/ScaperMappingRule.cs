@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Tendril.Core.Domain.Enums;
+﻿using Tendril.Core.Domain.Enums;
 
 namespace Tendril.Core.Domain.Entities;
 
@@ -12,15 +9,16 @@ public class ScraperMappingRule
     public Guid ScraperDefinitionId { get; set; }
     public ScraperDefinition ScraperDefinition { get; set; } = null!;
 
-    // Raw field input (from selectors)
     public string SourceField { get; set; } = null!;
 
-    // Final normalized Event property name
     public string TargetField { get; set; } = null!;
-    // Examples: "Title", "StartDate", "StartTime", "Category", "Url"
 
     public string? CombineWithField { get; set; }
 
+    public int Order { get; set; } = 0;
     public TransformType TransformType { get; set; }
-    public string? TransformArgsJson { get; set; } // parameters for transforms
+
+    public string? RegexPattern { get; set; }
+    public string? RegexReplacement { get; set; }
+    public string? SplitDelimiter { get; set; }
 }

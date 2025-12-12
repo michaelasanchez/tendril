@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tendril.Data;
 
@@ -11,9 +12,11 @@ using Tendril.Data;
 namespace Tendril.Data.Migrations
 {
     [DbContext(typeof(TendrilDbContext))]
-    partial class TendrilDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251210020903_AddSelectorAttributeAndDelayAndMappingRuleOrder")]
+    partial class AddSelectorAttributeAndDelayAndMappingRuleOrder
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -190,12 +193,6 @@ namespace Tendril.Data.Migrations
                     b.Property<int>("Order")
                         .HasColumnType("int");
 
-                    b.Property<string>("RegexPattern")
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("RegexReplacement")
-                        .HasColumnType("nvarchar(128)");
-
                     b.Property<Guid>("ScraperDefinitionId")
                         .HasColumnType("uniqueidentifier");
 
@@ -204,13 +201,13 @@ namespace Tendril.Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<string>("SplitDelimiter")
-                        .HasColumnType("nvarchar(16)");
-
                     b.Property<string>("TargetField")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("TransformArgsJson")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("TransformType")
                         .IsRequired()
@@ -228,6 +225,12 @@ namespace Tendril.Data.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Attribute")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("Delay")
+                        .HasColumnType("int");
 
                     b.Property<string>("FieldName")
                         .IsRequired()

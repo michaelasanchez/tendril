@@ -1,33 +1,30 @@
 // src/scrapers/ScraperSelectorsTab.tsx
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { ScrapersApi } from "../api/scrapers";
 import type { Guid, ScraperSelector, SelectorType } from "../types/api";
 
 interface Props {
   scraperId: Guid;
+  selectors: ScraperSelector[];
+  refresh: () => Promise<void>;
 }
 
 const selectorTypeOptions: SelectorType[] = [
-  "Navigate",
+  "Container",
   "Text",
   "Href",
+  "Src",
   "Click",
-  "Hover"
+  "Hover",
 ];
 
-export const ScraperSelectorsTab: React.FC<Props> = ({ scraperId }) => {
-  const [selectors, setSelectors] = useState<ScraperSelector[]>([]);
+export const ScraperSelectorsTab: React.FC<Props> = ({
+  scraperId,
+  selectors,
+  refresh: load,
+}) => {
   const [editing, setEditing] = useState<Partial<ScraperSelector>>({});
   const [isNew, setIsNew] = useState(false);
-
-  const load = async () => {
-    const data = await ScrapersApi.getSelectors(scraperId);
-    setSelectors(data);
-  };
-
-  useEffect(() => {
-    void load();
-  }, [scraperId]);
 
   const startNew = () => {
     setIsNew(true);
@@ -56,7 +53,7 @@ export const ScraperSelectorsTab: React.FC<Props> = ({ scraperId }) => {
     if (isNew) {
       await ScrapersApi.createSelector(scraperId, {
         fieldName: editing.fieldName,
-        selector: editing.selector ?? '',
+        selector: editing.selector ?? "",
         order: editing.order ?? selectors.length,
         root: editing.root ?? false,
         type: editing.type,
