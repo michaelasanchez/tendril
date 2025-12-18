@@ -7,6 +7,8 @@ public class Event
     public Guid ScraperDefinitionId { get; set; }
     public ScraperDefinition Scraper { get; set; } = null!;
 
+    public ICollection<ScrapedEventRaw> ScrapedEventRaws { get; set; } = [];
+
     public Guid? VenueId { get; set; }
     public Venue? Venue { get; set; }
 

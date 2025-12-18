@@ -18,12 +18,14 @@ export const EventList: React.FC<EventListProps> = ({ events }) => {
           <div>
             {groups[g].map((e) => (
               <Card key={e.id} className={styles.EventCard}>
+                {e.imageUrl && <Card.Img variant="top" src={e.imageUrl} />}
                 <Card.Body>
                   <Card.Title>{e.title}</Card.Title>
                   <span className="text-muted">@</span>
                   <time>{format(new Date(e.startUtc), "hh:mm a")}</time>
 
                   <div className="text-muted">{e.venueName}</div>
+                  {e.description && <div>{e.description}</div>} 
                 </Card.Body>
               </Card>
             ))}

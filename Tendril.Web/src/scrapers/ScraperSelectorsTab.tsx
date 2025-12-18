@@ -105,7 +105,7 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
                   <code>{s.selector}</code>
                 </td>
                 <td>{s.order}</td>
-                <td>{s.root ? "Yes" : "No"}</td>
+                <td>{s.root ? "Yes" : ""}</td>
                 <td>{s.type}</td>
                 <td>
                   <button onClick={() => startEdit(s)}>Edit</button>

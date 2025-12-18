@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, type JSX } from "react";
 import { ScrapersApi } from "../api/scrapers";
 import type {
   Guid,
@@ -124,7 +124,7 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
     await load();
   };
 
-  const susan = (str: string) => {
+  const emphasizeDynamicFields = (str: string) => {
     return !sourceFieldOptions.includes(str) &&
       !targetFieldOptions.includes(str) ? (
       <i>{str}</i>
@@ -137,6 +137,16 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
     <div className="card">
       <div className="card-header">
         <h3>Mapping Rules</h3>
+        <div>
+          Remaining:{" "}
+          {targetFieldOptions
+            .filter((o) => !rules.some((r) => r.targetField === o))
+            .map((o) => <span key={o}>{o}</span>)
+            .reduce(
+              (acc, cur) => (acc.length ? [...acc, <>, </>, cur] : [cur]),
+              [] as JSX.Element[]
+            )}
+        </div>
         <button onClick={startNew}>Add Rule</button>
       </div>
 
@@ -159,9 +169,9 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
             .sort((a, b) => a.order - b.order)
             .map((r) => (
               <tr key={r.id}>
-                <td>{susan(r.targetField)}</td>
-                <td>{susan(r.sourceField)}</td>
-                <td>{susan(r.combineWithField ?? "-")}</td>
+                <td>{emphasizeDynamicFields(r.targetField)}</td>
+                <td>{emphasizeDynamicFields(r.sourceField)}</td>
+                <td>{emphasizeDynamicFields(r.combineWithField ?? "-")}</td>
                 <td>{r.order}</td>
                 <td>{r.transformType}</td>
                 <td>{r.regexPattern}</td>
@@ -221,25 +231,6 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
               </select>
             </label>
 
-            {/* <label>
-              Target Field
-              <select
-                value={editing.targetField ?? ""}
-                onChange={(e) =>
-                  setEditing({
-                    ...editing,
-                    targetField: e.target.value,
-                  })
-                }
-              >
-                {targetFieldOptions.map((o) => (
-                  <option key={o} value={o}>
-                    {o}
-                  </option>
-                ))}
-              </select>
-            </label> */}
-
             <label>
               Source Field
               {/* Freeform input */}
@@ -276,78 +267,6 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
               </select>
             </label>
 
-            {/* <label>
-              Source Field
-              <select
-                value={editing.sourceField ?? ""}
-                onChange={(e) =>
-                  setEditing({
-                    ...editing,
-                    sourceField: e.target.value,
-                  })
-                }
-              >
-                {sourceFieldOptions.map((o) => (
-                  <option key={o} value={o}>
-                    {o}
-                  </option>
-                ))}
-              </select>
-            </label> */}
-            <label>
-              Combine With Field
-              {/* Freeform input */}
-              <input
-                type="text"
-                value={editing.combineWithField ?? ""}
-                onChange={(e) =>
-                  setEditing({
-                    ...editing,
-                    combineWithField: e.target.value,
-                  })
-                }
-                placeholder="Enter field name..."
-                style={{ marginBottom: "4px" }}
-              />
-              {/* Or choose from dropdown */}
-              <select
-                value=""
-                onChange={(e) =>
-                  setEditing({
-                    ...editing,
-                    combineWithField: e.target.value,
-                  })
-                }
-              >
-                <option value="" disabled>
-                  Select from scraped fields…
-                </option>
-                {sourceFieldOptions.map((o) => (
-                  <option key={o} value={o}>
-                    {o}
-                  </option>
-                ))}
-              </select>
-            </label>
-            {/* <label>
-              Combine With Field
-              <select
-                value={editing.combineWithField ?? ""}
-                onChange={(e) =>
-                  setEditing({
-                    ...editing,
-                    combineWithField: e.target.value,
-                  })
-                }
-              >
-                <option value=""></option>
-                {sourceFieldOptions.map((o) => (
-                  <option key={o} value={o}>
-                    {o}
-                  </option>
-                ))}
-              </select>
-            </label> */}
             <label>
               Order
               <input
@@ -376,6 +295,44 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
                 ))}
               </select>
             </label>
+
+            {editing.transformType === "Combine" && (
+              <label>
+                Combine With Field
+                {/* Freeform input */}
+                <input
+                  type="text"
+                  value={editing.combineWithField ?? ""}
+                  onChange={(e) =>
+                    setEditing({
+                      ...editing,
+                      combineWithField: e.target.value,
+                    })
+                  }
+                  placeholder="Enter field name..."
+                  style={{ marginBottom: "4px" }}
+                />
+                {/* Or choose from dropdown */}
+                <select
+                  value=""
+                  onChange={(e) =>
+                    setEditing({
+                      ...editing,
+                      combineWithField: e.target.value,
+                    })
+                  }
+                >
+                  <option value="" disabled>
+                    Select from scraped fields…
+                  </option>
+                  {sourceFieldOptions.map((o) => (
+                    <option key={o} value={o}>
+                      {o}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
             {(editing.transformType === "RegexReplace" ||
               editing.transformType === "RegexExtract") && (
               <label>

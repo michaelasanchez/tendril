@@ -7,5 +7,6 @@ public record ScraperDto(
     bool IsDynamic,
     string State,
     string? LastSuccessUtc,
-    string? LastFailureUtc
+    string? LastFailureUtc,
+    Guid? venueId
 );

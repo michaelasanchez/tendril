@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Tendril.Engine.Models;
+﻿namespace Tendril.Engine.Models;
 
 public class ScrapeResult
 {

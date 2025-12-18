@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Tendril.Core.Domain.Entities;
+﻿namespace Tendril.Core.Domain.Entities;
 
 public class ScraperAttemptHistory
 {
@@ -10,6 +6,8 @@ public class ScraperAttemptHistory
 
     public Guid ScraperDefinitionId { get; set; }
     public ScraperDefinition ScraperDefinition { get; set; } = null!;
+
+    public ICollection<ScrapedEventRaw> ScrapedEventRaws { get; set; } = [];
 
     public DateTimeOffset StartTimeUtc { get; set; }
     public DateTimeOffset EndTimeUtc { get; set; }

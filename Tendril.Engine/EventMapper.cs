@@ -202,6 +202,17 @@ public class EventMapper : IEventMapper
 
             case TransformType.Combine:
             {
+                if (primary is DateTimeOffset datePart && secondary is DateTimeOffset timePart)
+                {
+                    // Take Y/M/D from the "Date" part
+                    // Take H/M/S from the "Time" part
+                    // Use the Offset from the Date part (usually safest)
+                    return new DateTimeOffset(
+                        datePart.Year, datePart.Month, datePart.Day,
+                        timePart.Hour, timePart.Minute, timePart.Second,
+                        datePart.Offset);
+                }
+
                 // Combine two strings (Title + Subtitle, Date + Time, etc.)
                 if (string.IsNullOrEmpty(primaryVal) && string.IsNullOrEmpty(secondaryVal))
                 {
@@ -239,6 +250,11 @@ public class EventMapper : IEventMapper
             {
                 if (DateTimeOffset.TryParse(primaryVal, out var dateOnly))
                 {
+                    if (dateOnly < DateTimeOffset.UtcNow.AddMonths(-3))
+                    {
+                        dateOnly = dateOnly.AddYears(1);
+                    }
+
                     return dateOnly;
                 }
 

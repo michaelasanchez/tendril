@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Tendril.Worker.Scheduling;
+﻿namespace Tendril.Worker.Scheduling;
 
 public class IntervalScheduler
 {

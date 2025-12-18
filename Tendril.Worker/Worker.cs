@@ -1,16 +1,52 @@
+using Tendril.Core.Interfaces.Repositories;
+using Tendril.Engine.Abstractions;
+
 namespace Tendril.Worker;
 
-public class Worker(ILogger<Worker> logger) : BackgroundService
+public sealed class Worker(
+    ILogger<Worker> logger,
+    IConfiguration config,
+    IEventIngestionService ingestionService,
+    IScraperRepository scrapers) : BackgroundService
 {
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    private readonly int _startHour =
+        config.GetValue<int>("ScraperSchedule:DailyStartHour");
+
+    protected override async Task ExecuteAsync(CancellationToken ct)
     {
-        while (!stoppingToken.IsCancellationRequested)
+        while (!ct.IsCancellationRequested)
         {
-            if (logger.IsEnabled(LogLevel.Information))
+            var now = DateTimeOffset.Now;
+            var nextRun = now.Date.AddHours(_startHour);
+
+            if (nextRun <= now)
+                nextRun = nextRun.AddDays(1);
+
+            logger.LogInformation(
+                "Next scraper run scheduled for {NextRun}", nextRun);
+
+            await Task.Delay(nextRun - now, ct);
+
+            logger.LogInformation("Starting scraper run");
+
+            try
             {
-                logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
+                foreach (var scraper in await scrapers.GetAllWithDetailsAsync(ct))
+                {
+                    ct.ThrowIfCancellationRequested();
+                    await ingestionService.Ingest(scraper, ct);
+                }
+
+                logger.LogInformation("Scraper run completed");
             }
-            await Task.Delay(1000, stoppingToken);
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Scraper run failed");
+            }
         }
     }
 }

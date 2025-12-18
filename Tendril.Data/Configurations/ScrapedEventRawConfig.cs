@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Tendril.Data.Configurations;
+﻿namespace Tendril.Data.Configurations;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -19,5 +15,15 @@ public class ScrapedEventRawConfig : IEntityTypeConfiguration<ScrapedEventRaw>
         builder.Property(x => x.RawDataJson)
             .IsRequired()
             .HasColumnType("nvarchar(max)");
+
+        builder.HasOne(raw => raw.ScraperAttemptHistory)
+            .WithMany(evt => evt.ScrapedEventRaws)
+            .HasForeignKey(raw => raw.ScraperAttemptHistoryId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(raw => raw.Event)
+            .WithMany(evt => evt.ScrapedEventRaws)
+            .HasForeignKey(raw => raw.EventId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
