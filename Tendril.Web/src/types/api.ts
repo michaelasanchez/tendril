@@ -26,10 +26,12 @@ export interface ScraperDefinition {
 export type SelectorType =
   | "Container"
   | "Text"
+  | "Attribute"
   | "Href"
   | "Src"
   | "Click"
-  | "Hover";
+  | "Hover"
+  | "Scroll";
 
 export interface ScraperSelector {
   id: Guid;
@@ -39,6 +41,8 @@ export interface ScraperSelector {
   order: number;
   root: boolean;
   type: SelectorType;
+  attribute: string | null;
+  delay: number | null;
 }
 
 export type TransformType =
@@ -50,22 +54,25 @@ export type TransformType =
   | "Combine"
   | "ParseDate"
   | "ParseTime"
-  | "ParseDateTimeLoose"
+  | "ParseExact"
+  | "ParseLoose"
   | "ToLower"
   | "ToUpper"
-  | "Currency";
+  | "Currency"
+  | "SrcSetToUrl";
 
 export interface ScraperMappingRule {
   id: Guid;
   scraperDefinitionId: Guid;
   targetField: string;
   sourceField: string;
-  combineWithField?: string | null;
+  combineWithField: string | null;
   order: number;
   transformType: TransformType;
-  regexPattern?: string | null;
-  regexReplacement?: string | null;
-  splitDelimiter?: string | null;
+  format: string | null;
+  regexPattern: string | null;
+  regexReplacement: string | null;
+  splitDelimiter: string | null;
 }
 
 export interface Event {

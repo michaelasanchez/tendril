@@ -3,7 +3,7 @@ using Tendril.Engine.Models;
 
 namespace Tendril.Engine.Abstractions;
 
-public interface IEventIngestionService
+public interface IIngestionService
 {
     public Task<IngestResult> Ingest(ScraperDefinition scraper, CancellationToken cancellationToken = default);
 }

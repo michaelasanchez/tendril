@@ -14,9 +14,9 @@ public class ScraperRunsController(
     IEventRepository events,
     IScrapeExecutor executor,
     IEventMapper mapper,
-    IEventIngestionService ingestionService) : ControllerBase
+    IIngestionService ingestionService) : ControllerBase
 {
-    private readonly IEventIngestionService _service;
+    private readonly IIngestionService _service;
 
     // 1️⃣ Test selectors only (no DB writes, no mapping)
     [HttpPost("test-selectors")]
@@ -91,8 +91,8 @@ public class ScraperRunsController(
         {
             result.Success,
             result.ErrorMessage,
-            raw = result.RawEvents,
-            mapped
+            Raw = result.RawEvents?.Count ?? 0,
+            Count = mapped?.Count ?? 0
         });
     }
 

@@ -18,6 +18,7 @@ public class ScraperMappingRule
     public int Order { get; set; } = 0;
     public TransformType TransformType { get; set; }
 
+    public string? Format { get; set; }
     public string? RegexPattern { get; set; }
     public string? RegexReplacement { get; set; }
     public string? SplitDelimiter { get; set; }

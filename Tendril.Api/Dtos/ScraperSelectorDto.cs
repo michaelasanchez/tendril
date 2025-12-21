@@ -6,5 +6,7 @@ public record ScraperSelectorDto(
     string Selector,
     int Order,
     bool Root,
-    string Type
+    string Type,
+    string? Attribute,
+    int? Delay
 );

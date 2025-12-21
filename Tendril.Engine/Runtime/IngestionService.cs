@@ -8,14 +8,14 @@ using Tendril.Engine.Models;
 
 namespace Tendril.Engine.Runtime;
 
-public class EventIngestionService(
-    ILogger<EventIngestionService> logger,
+public class IngestionService(
+    ILogger<IngestionService> logger,
     IAttemptHistoryRepository attemptHistories,
     IEventRepository events,
     IRawEventRepository rawEvents,
     IScraperRepository scrapers,
     IEventMapper mapper,
-    IScrapeExecutor executor) : IEventIngestionService
+    IScrapeExecutor executor) : IIngestionService
 {
     public async Task<IngestResult> Ingest(ScraperDefinition scraper, CancellationToken cancellationToken = default)
     {
@@ -68,6 +68,11 @@ public class EventIngestionService(
                 try
                 {
                     var mappedEvent = mapper.Map(scraper, rawEntity);
+
+                    if (mappedEvent.StartUtc == default)
+                    {
+                        continue;
+                    }
 
                     mapped.Add(mappedEvent);
 

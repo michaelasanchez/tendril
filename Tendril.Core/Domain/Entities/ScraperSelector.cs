@@ -16,7 +16,6 @@ public class ScraperSelector
     public bool Root { get; set; } = false;
     public SelectorType Type { get; set; } = SelectorType.Text;
 
-    // TODO: turns out this is an invalid column name
-    //public string? Attribute { get; set; }
-    //public int? Delay { get; set; }
+    public string? AttributeName { get; set; }
+    public int? Delay { get; set; }
 }

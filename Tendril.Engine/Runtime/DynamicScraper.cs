@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Playwright;
 using Tendril.Core.Domain.Entities;
 using Tendril.Core.Domain.Enums;
 using Tendril.Data;
@@ -9,6 +10,9 @@ namespace Tendril.Engine.Runtime;
 
 public class DynamicScraper : BaseScraper
 {
+    private const int DefaultClickDelay = 500;
+    private const int DefaultScrollDelay = 1000;
+
     private readonly ScraperDefinition _def;
     private readonly TendrilDbContext _db;
 
@@ -50,6 +54,8 @@ public class DynamicScraper : BaseScraper
             var results = new List<RawScrapedEvent>();
 
             // 2. Initial Wait & Query
+            await ScrollAsync(page);
+
             await page.WaitForSelectorAsync(containerSelector.Selector);
 
             var items = await page.QuerySelectorAllAsync(containerSelector.Selector);
@@ -61,45 +67,47 @@ public class DynamicScraper : BaseScraper
                 // 3. Execute the Pipeline
                 foreach (var step in pipelineSteps)
                 {
-                    // 1. RESOLVE ELEMENT (The "Tasty" Switch)
-                    var element = (string.IsNullOrWhiteSpace(step.Selector), step.Root) switch
+                    var selectorIsEmpty = string.IsNullOrWhiteSpace(step.Selector);
+                    var selectorIsRoot = step.Root;
+
+                    var element = (selectorIsEmpty, selectorIsRoot) switch
                     {
-                        (true, _) => item,                                     // Self (Container)
-                        (false, true) => await page.QuerySelectorAsync(step.Selector), // Global (Root)
-                        (false, false) => await item.QuerySelectorAsync(step.Selector)  // Scoped (Child)
+                        (true, _) => item,
+                        (false, true) => await page.QuerySelectorAsync(step.Selector),
+                        (false, false) => await item.QuerySelectorAsync(step.Selector)
                     };
 
-                    // If element is missing, skip this step (or log it)
                     if (element is null) continue;
 
-                    // 2. EXECUTE ACTION
                     if (step.Type == SelectorType.Click || step.Type == SelectorType.Hover)
                     {
-                        // --- State Changes (Void) ---
                         if (step.Type == SelectorType.Hover)
                         {
                             await element.HoverAsync();
                         }
-                        else // Click
+                        else
                         {
                             await element.ClickAsync();
                         }
 
-                        // Optional: Add a brief wait if your DB has a "WaitAfterMs" column
-                        await page.WaitForTimeoutAsync(500);
-                        //await page.WaitForTimeoutAsync(step.WaitAfterMs);
+                        await page.WaitForTimeoutAsync(step.Delay ?? DefaultClickDelay);
+                    }
+                    else if (step.Type == SelectorType.Scroll)
+                    {
+                        await ScrollAsync(page, element, step.Delay);
                     }
                     else
                     {
                         try
                         {
-                            // --- Data Extraction (Returns String) ---
                             string? value = step.Type switch
                             {
                                 SelectorType.Text => await element.InnerTextAsync(),
+                                // TODO: deprecate in favor of Attribute?
                                 SelectorType.Href => await element.GetAttributeAsync("href"),
                                 SelectorType.Src => await element.GetAttributeAsync("src"),
-                                //SelectorType.Attribute => await element.GetAttributeAsync(step.AttributeName),
+                                //
+                                SelectorType.Attribute => await element.GetAttributeAsync(step.AttributeName),
                                 _ => null
                             };
 
@@ -110,25 +118,66 @@ public class DynamicScraper : BaseScraper
                         }
                         catch (Exception ex)
                         {
-                            // Log and continue
                             Console.WriteLine($"Error processing step {step.Id}: {ex.Message}");
                             continue;
                         }
                     }
                 }
 
-                // Only add if we actually found data (optional validation)
                 if (raw.Fields.Count > 0)
                 {
                     results.Add(raw);
                 }
             }
 
+            // TODO: would be nice to add additional information on this, such as:
+            //  - scroll count
             return Success(results);
         }
         catch (Exception ex)
         {
             return Fail(ex.Message);
         }
+    }
+    private async Task<int> ScrollAsync(IPage page, IElementHandle? element = null, int? delay = null)
+    {
+        var maxScrolls = 50;
+        var scrollCount = 0;
+        long previousHeight = 0;
+
+        while (scrollCount < maxScrolls)
+        {
+            // 1. Get current scroll height
+            // If element is null, we check the document body height
+            long currentHeight = element != null
+                ? await element.EvaluateAsync<long>("el => el.scrollHeight")
+                : await page.EvaluateAsync<long>("() => document.body.scrollHeight");
+
+            // 2. If height hasn't changed since last scroll, we've hit the bottom
+            // (Note: checking > 0 ensures we don't break on the very first pass if prev is 0)
+            if (currentHeight == previousHeight)
+            {
+                break;
+            }
+
+            // 3. Scroll to the bottom
+            if (element != null)
+            {
+                await element.EvaluateAsync("el => el.scrollTo(0, el.scrollHeight)");
+            }
+            else
+            {
+                // Scroll the main window
+                await page.EvaluateAsync("() => window.scrollTo(0, document.body.scrollHeight)");
+            }
+
+            // 4. Wait for content to load
+            await page.WaitForTimeoutAsync(delay ?? DefaultScrollDelay);
+
+            previousHeight = currentHeight;
+            scrollCount++;
+        }
+
+        return scrollCount;
     }
 }

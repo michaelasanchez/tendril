@@ -26,7 +26,9 @@ public class SelectorsController : ControllerBase
             s.Selector,
             s.Order,
             s.Root,
-            s.Type.ToString()
+            s.Type.ToString(),
+            s.AttributeName,
+            s.Delay
         )));
     }
 
@@ -41,7 +43,9 @@ public class SelectorsController : ControllerBase
             Selector = request.Selector,
             Order = request.Order,
             Root = request.Root,
-            Type = request.Type
+            Type = request.Type,
+            AttributeName = request.Attribute,
+            Delay = request.Delay,
         };
 
         await _selectors.AddAsync(selector, cancellationToken);
@@ -53,6 +57,7 @@ public class SelectorsController : ControllerBase
     public async Task<ActionResult> UpdateSelector(Guid scraperId, Guid id, UpdateSelectorRequest request, CancellationToken cancellationToken)
     {
         var selector = await _selectors.GetByIdAsync(id, cancellationToken);
+
         if (selector is null) return NotFound();
 
         selector.FieldName = request.FieldName ?? selector.FieldName;
@@ -60,6 +65,8 @@ public class SelectorsController : ControllerBase
         selector.Order = request.Order ?? selector.Order;
         selector.Root = request.Root ?? selector.Root;
         selector.Type = request.Type ?? selector.Type;
+        selector.AttributeName = request.Attribute ?? selector.AttributeName;
+        selector.Delay = request.Delay ?? selector.Delay;
 
         await _selectors.UpdateAsync(selector, cancellationToken);
 

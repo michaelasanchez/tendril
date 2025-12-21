@@ -9,7 +9,7 @@ public static class DependencyInjection
     public static IServiceCollection AddEngineServices(this IServiceCollection services)
     {
         services.AddScoped<IEventMapper, EventMapper>();
-        services.AddScoped<IEventIngestionService, EventIngestionService>();
+        services.AddScoped<IIngestionService, IngestionService>();
         services.AddScoped<IScraperFactory, ScraperFactory>();
         services.AddScoped<IScrapeExecutor, ScrapeExecutor>();
 

@@ -12,10 +12,12 @@ interface Props {
 const selectorTypeOptions: SelectorType[] = [
   "Container",
   "Text",
+  "Attribute",
   "Href",
   "Src",
   "Click",
   "Hover",
+  "Scroll"
 ];
 
 export const ScraperSelectorsTab: React.FC<Props> = ({
@@ -34,6 +36,8 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
       order: selectors.length,
       root: false,
       type: "Text",
+      attribute: null,
+      delay: null,
     } as Partial<ScraperSelector>);
   };
 
@@ -57,6 +61,8 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
         order: editing.order ?? selectors.length,
         root: editing.root ?? false,
         type: editing.type,
+        attribute: Boolean(editing.attribute) ? editing.attribute ?? null : null,
+        delay: editing.delay ?? null,
       });
     } else if (editing.id) {
       await ScrapersApi.updateSelector(scraperId, editing.id, {
@@ -65,6 +71,8 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
         order: editing.order,
         root: editing.root,
         type: editing.type,
+        attribute: Boolean(editing.attribute) ? editing.attribute ?? null : null,
+        delay: editing.delay ?? null,
       });
     }
     await load();
@@ -92,6 +100,8 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
             <th>Order</th>
             <th>Root</th>
             <th>Type</th>
+            <th>Attribute</th>
+            <th>Delay</th>
             <th />
           </tr>
         </thead>
@@ -107,6 +117,8 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
                 <td>{s.order}</td>
                 <td>{s.root ? "Yes" : ""}</td>
                 <td>{s.type}</td>
+                <td>{s.attribute}</td>
+                <td>{s.delay}</td>
                 <td>
                   <button onClick={() => startEdit(s)}>Edit</button>
                   <button onClick={() => remove(s)}>Delete</button>
@@ -180,6 +192,25 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
                   </option>
                 ))}
               </select>
+            </label>
+            <label>
+              Attribute
+              <input
+                value={editing.attribute ?? ""}
+                onChange={(e) =>
+                  setEditing({ ...editing, attribute: e.target.value })
+                }
+              />
+            </label>
+            <label>
+              Delay
+              <input
+                type="number"
+                value={editing.delay ?? ""}
+                onChange={(e) =>
+                  setEditing({ ...editing, delay: e.target.valueAsNumber })
+                }
+              />
             </label>
           </div>
           <div className="button-row">

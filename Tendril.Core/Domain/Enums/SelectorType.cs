@@ -4,8 +4,10 @@ public enum SelectorType
 {
     Container,
     Text,
+    Attribute,
     Href,
     Src,
     Click,
-    Hover
+    Hover,
+    Scroll
 }

@@ -6,7 +6,7 @@ namespace Tendril.Worker;
 public sealed class Worker(
     ILogger<Worker> logger,
     IConfiguration config,
-    IEventIngestionService ingestionService,
+    IIngestionService ingestionService,
     IScraperRepository scrapers) : BackgroundService
 {
     private readonly int _startHour =

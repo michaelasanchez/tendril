@@ -7,19 +7,13 @@ namespace Tendril.Api.Controllers;
 
 [ApiController]
 [Route("api/scrapers/{scraperId:guid}/mapping-rules")]
-public class MappingRulesController : ControllerBase
+public class MappingRulesController(IMappingRuleRepository rules) : ControllerBase
 {
-    private readonly IMappingRuleRepository _rules;
-
-    public MappingRulesController(IMappingRuleRepository rules)
-    {
-        _rules = rules;
-    }
-
     [HttpGet]
     public async Task<ActionResult<IEnumerable<MappingRuleDto>>> Get(Guid scraperId, CancellationToken cancellationToken)
     {
-        var list = await _rules.GetByScraperIdAsync(scraperId, cancellationToken);
+        var list = await rules.GetByScraperIdAsync(scraperId, cancellationToken);
+
         var dtos = list.Select(r => new MappingRuleDto(
             r.Id,
             r.TargetField,
@@ -27,6 +21,7 @@ public class MappingRulesController : ControllerBase
             r.CombineWithField,
             r.Order,
             r.TransformType,
+            r.Format,
             r.RegexPattern,
             r.RegexReplacement,
             r.SplitDelimiter
@@ -47,12 +42,13 @@ public class MappingRulesController : ControllerBase
             CombineWithField = request.CombineWithField,
             Order = request.Order,
             TransformType = request.TransformType,
+            Format = request.Format,
             RegexPattern = request.RegexPattern,
             RegexReplacement = request.RegexReplacement,
             SplitDelimiter = request.SplitDelimiter
         };
 
-        await _rules.AddAsync(rule, cancellationToken);
+        await rules.AddAsync(rule, cancellationToken);
 
         var dto = new MappingRuleDto(
             rule.Id,
@@ -61,6 +57,7 @@ public class MappingRulesController : ControllerBase
             rule.CombineWithField,
             rule.Order,
             rule.TransformType,
+            rule.Format,
             rule.RegexPattern,
             rule.RegexReplacement,
             rule.SplitDelimiter
@@ -72,7 +69,7 @@ public class MappingRulesController : ControllerBase
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid scraperId, Guid id, [FromBody] UpdateMappingRuleRequest request, CancellationToken cancellationToken)
     {
-        var rule = await _rules.GetByIdAsync(id, cancellationToken);
+        var rule = await rules.GetByIdAsync(id, cancellationToken);
         if (rule is null) return NotFound();
 
         if (request.TargetField is not null) rule.TargetField = request.TargetField;
@@ -80,11 +77,12 @@ public class MappingRulesController : ControllerBase
         if (request.CombineWithField is not null) rule.CombineWithField = request.CombineWithField;
         if (request.Order is not null) rule.Order = request.Order.Value;
         if (request.TransformType is not null) rule.TransformType = request.TransformType ?? Core.Domain.Enums.TransformType.None;
+        if (request.Format is not null) rule.Format = request.Format;
         if (request.RegexPattern is not null) rule.RegexPattern = request.RegexPattern;
         if (request.RegexReplacement is not null) rule.RegexReplacement = request.RegexReplacement;
         if (request.SplitDelimiter is not null) rule.SplitDelimiter = request.SplitDelimiter;
 
-        await _rules.UpdateAsync(rule, cancellationToken);
+        await rules.UpdateAsync(rule, cancellationToken);
 
         return NoContent();
     }
@@ -92,10 +90,10 @@ public class MappingRulesController : ControllerBase
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid scraperId, Guid id, CancellationToken cancellationToken)
     {
-        var rule = await _rules.GetByIdAsync(id, cancellationToken);
+        var rule = await rules.GetByIdAsync(id, cancellationToken);
         if (rule is null) return NotFound();
 
-        await _rules.DeleteAsync(rule, cancellationToken);
+        await rules.DeleteAsync(rule, cancellationToken);
         return NoContent();
     }
 }

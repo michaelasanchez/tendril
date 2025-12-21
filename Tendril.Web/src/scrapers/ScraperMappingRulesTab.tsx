@@ -21,10 +21,12 @@ const transformTypeOptions: TransformType[] = [
   "Combine",
   "ParseDate",
   "ParseTime",
-  "ParseDateTimeLoose",
+  "ParseExact",
+  "ParseLoose",
   "ToLower",
   "ToUpper",
   "Currency",
+  "SrcSetToUrl",
 ];
 
 const targetFieldOptions: string[] = [
@@ -98,9 +100,10 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
         combineWithField: editing.combineWithField ?? null,
         order: editing.order ?? 0,
         transformType: editing.transformType,
-        regexPattern: editing.regexPattern ?? "",
-        regexReplacement: editing.regexReplacement ?? "",
-        splitDelimiter: editing.splitDelimiter ?? "",
+        format: editing.format ?? null,
+        regexPattern: editing.regexPattern ?? null,
+        regexReplacement: editing.regexReplacement ?? null,
+        splitDelimiter: editing.splitDelimiter ?? null,
       });
     } else if (editing.id) {
       await ScrapersApi.updateMappingRule(scraperId, editing.id, {
@@ -109,9 +112,10 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
         combineWithField: editing.combineWithField,
         order: editing.order,
         transformType: editing.transformType,
-        regexPattern: editing.regexPattern ?? "",
-        regexReplacement: editing.regexReplacement ?? "",
-        splitDelimiter: editing.splitDelimiter ?? "",
+        format: editing.format ?? null,
+        regexPattern: editing.regexPattern ?? null,
+        regexReplacement: editing.regexReplacement ?? null,
+        splitDelimiter: editing.splitDelimiter ?? null,
       });
     }
     await load();
@@ -158,6 +162,7 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
             <th>Combine With</th>
             <th>Order</th>
             <th>Transform</th>
+            <th>Format</th>
             <th>Regex Pattern</th>
             <th>Regex Replacement</th>
             <th>Split Delimiter</th>
@@ -331,6 +336,20 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
                     </option>
                   ))}
                 </select>
+              </label>
+            )}
+            {editing.transformType === "ParseExact" && (
+              <label>
+                Format
+                <input
+                  value={editing.format ?? ""}
+                  onChange={(e) =>
+                    setEditing({
+                      ...editing,
+                      format: e.target.value,
+                    })
+                  }
+                />
               </label>
             )}
             {(editing.transformType === "RegexReplace" ||

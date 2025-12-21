@@ -9,6 +9,7 @@ public record MappingRuleDto(
     string? CombineWithField,
     int Order,
     TransformType TransformType,
+    string? Format = null,
     string? RegexPattern = null,
     string? RegexReplacement = null,
     string? SplitDelimiter = null
@@ -21,6 +22,7 @@ public class CreateMappingRuleRequest
     public string? CombineWithField { get; set; }
     public int Order { get; set; } = 0;
     public TransformType TransformType { get; set; } = TransformType.None;
+    public string? Format { get; set; }
     public string? RegexPattern { get; set; }
     public string? RegexReplacement { get; set; }
     public string? SplitDelimiter { get; set; }
@@ -33,6 +35,7 @@ public class UpdateMappingRuleRequest
     public string? CombineWithField { get; set; }
     public int? Order { get; set; }
     public TransformType? TransformType { get; set; }
+    public string? Format { get; set; }
     public string? RegexPattern { get; set; }
     public string? RegexReplacement { get; set; }
     public string? SplitDelimiter { get; set; }

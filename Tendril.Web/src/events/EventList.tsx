@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { useMemo, useState } from "react";
 import { Card } from "react-bootstrap";
 import type { Event } from "../types/api";
 import styles from "./EventList.module.css";
@@ -8,10 +9,39 @@ interface EventListProps {
 }
 
 export const EventList: React.FC<EventListProps> = ({ events }) => {
-  const groups = groupEventsByDay(events);
+  const [venueFilter, setVenueFilter] = useState<string | null>(null);
+
+  const venueOptions = useMemo(
+    () => Array.from(new Set(events.map((e) => e.venueName))),
+    [events]
+  ) as string[];
+
+  const groups = useMemo(() => {
+    const filtered = !!venueFilter
+      ? events.filter((e) => e.venueName == venueFilter)
+      : events;
+
+    return groupEventsByDay(filtered);
+  }, [venueFilter, events]);
 
   return (
     <div className={styles.EventList}>
+      <div>
+        <label>
+          Venue
+          <select
+            value={venueFilter ?? ""}
+            onChange={(e) => setVenueFilter(e.target.value)}
+          >
+            <option value=""></option>
+            {venueOptions.map((o) => (
+              <option key={o} value={o}>
+                {o}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
       {Object.keys(groups).map((g) => (
         <div key={g}>
           <h3>{format(new Date(g), "MMM dd")}</h3>
@@ -25,7 +55,7 @@ export const EventList: React.FC<EventListProps> = ({ events }) => {
                   <time>{format(new Date(e.startUtc), "hh:mm a")}</time>
 
                   <div className="text-muted">{e.venueName}</div>
-                  {e.description && <div>{e.description}</div>} 
+                  {e.description && <div>{e.description}</div>}
                 </Card.Body>
               </Card>
             ))}

@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Globalization;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Tendril.Core.Domain.Entities;
@@ -90,6 +91,7 @@ public class EventMapper : IEventMapper
             rule.TransformType,
             primary,
             secondary,
+            rule.Format,
             rule.RegexPattern,
             rule.RegexReplacement,
             rule.SplitDelimiter);
@@ -147,6 +149,7 @@ public class EventMapper : IEventMapper
         TransformType transform,
         object? primary,
         object? secondary,
+        string? dateFormat = null,
         string? regexPattern = null,
         string? regexReplacement = null,
         string? splitDelimiter = null)
@@ -157,7 +160,9 @@ public class EventMapper : IEventMapper
         {
             // If it's a JsonElement, we still might want to unbox it to a string/number
             if (primary is JsonElement)
+            {
                 return GetString(primary);
+            }
 
             return primary;
         }
@@ -202,24 +207,26 @@ public class EventMapper : IEventMapper
 
             case TransformType.Combine:
             {
-                if (primary is DateTimeOffset datePart && secondary is DateTimeOffset timePart)
+                if (primary is DateTimeOffset datePart)
                 {
-                    // Take Y/M/D from the "Date" part
-                    // Take H/M/S from the "Time" part
-                    // Use the Offset from the Date part (usually safest)
-                    return new DateTimeOffset(
-                        datePart.Year, datePart.Month, datePart.Day,
-                        timePart.Hour, timePart.Minute, timePart.Second,
-                        datePart.Offset);
+                    if (secondary is DateTimeOffset timePart)
+                    {
+                        return new DateTimeOffset(
+                            datePart.Year, datePart.Month, datePart.Day,
+                            timePart.Hour, timePart.Minute, timePart.Second,
+                            datePart.Offset);
+                    }
+
+                    return datePart;
                 }
 
-                // Combine two strings (Title + Subtitle, Date + Time, etc.)
-                if (string.IsNullOrEmpty(primaryVal) && string.IsNullOrEmpty(secondaryVal))
+                return (primaryVal, secondaryVal) switch
                 {
-                    return null;
-                }
-
-                return $"{primaryVal} {secondaryVal}".Trim();
+                    (string p, string s) => $"{p} {s}",
+                    (string p, null) => p,
+                    (null, string s) => s,
+                    _ => null
+                };
             }
 
             case TransformType.RegexExtract:
@@ -282,8 +289,26 @@ public class EventMapper : IEventMapper
                 return null;
             }
 
+            case TransformType.ParseExact:
+            {
+                if (primaryVal is null || dateFormat is null)
+                    return null;
+
+                if (DateTimeOffset.TryParseExact(
+                    primaryVal,
+                    dateFormat,
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.AssumeLocal,
+                    out var parsed))
+                {
+                    return parsed;
+                }
+
+                return null;
+            }
+
             // TODO: hack for now
-            case TransformType.ParseDateTimeLoose:
+            case TransformType.ParseLoose:
             {
                 if (string.IsNullOrWhiteSpace(primaryVal))
                     return null;
@@ -317,6 +342,11 @@ public class EventMapper : IEventMapper
                 return decimal.TryParse(cleaned, out var money)
                     ? money
                     : null;
+            }
+
+            case TransformType.SrcSetToUrl:
+            {
+                return ExtractBestImageFromSrcSet(primaryVal);
             }
 
             default:
@@ -362,5 +392,37 @@ public class EventMapper : IEventMapper
 
         // If it came from the scratchpad (String, DateTime, Decimal, etc.)
         return item.ToString();
+    }
+
+    private static string? ExtractBestImageFromSrcSet(string? srcSet)
+    {
+        if (string.IsNullOrWhiteSpace(srcSet)) return null;
+
+        // 1. Split the srcset by comma to get the list of variants
+        //    Format: "url1 100w, url2 200w, url3 500w"
+        var variants = srcSet.Split(',');
+
+        // 2. Get the last variant. 
+        //    Conventionally, srcset lists are ordered by size, so the last one is the largest.
+        var bestVariant = variants.Last().Trim();
+
+        // 3. Isolate the URL from the width descriptor (remove the " 1319w" part)
+        var rawUrl = bestVariant.Split(' ')[0];
+
+        // 4. Decode Next.js / Proxy URLs
+        //    Pattern looks for ?url=... or &url=...
+        if (rawUrl.Contains("url="))
+        {
+            // We use Regex here to avoid adding a dependency on System.Web
+            var match = Regex.Match(rawUrl, @"[?&]url=([^&]+)");
+            if (match.Success)
+            {
+                // Decode the URL (e.g. https%3A%2F%2F... -> https://...)
+                // System.Net.WebUtility is standard in .NET Core+
+                return System.Net.WebUtility.UrlDecode(match.Groups[1].Value);
+            }
+        }
+
+        return rawUrl;
     }
 }
