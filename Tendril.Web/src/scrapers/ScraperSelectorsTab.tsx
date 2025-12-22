@@ -1,6 +1,9 @@
 // src/scrapers/ScraperSelectorsTab.tsx
 import React, { useState } from "react";
+import { Card, Form, Table } from "react-bootstrap";
 import { ScrapersApi } from "../api/scrapers";
+import { FormCheck, FormInput, FormSelect } from "../components/form";
+import formStyles from "../components/form/Form.module.css";
 import type { Guid, ScraperSelector, SelectorType } from "../types/api";
 
 interface Props {
@@ -9,7 +12,7 @@ interface Props {
   refresh: () => Promise<void>;
 }
 
-const selectorTypeOptions: SelectorType[] = [
+const selectorTypeOptions = [
   "Container",
   "Text",
   "Attribute",
@@ -17,8 +20,8 @@ const selectorTypeOptions: SelectorType[] = [
   "Src",
   "Click",
   "Hover",
-  "Scroll"
-];
+  "Scroll",
+].map((type) => ({ value: type, label: type }));
 
 export const ScraperSelectorsTab: React.FC<Props> = ({
   scraperId,
@@ -61,7 +64,9 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
         order: editing.order ?? selectors.length,
         root: editing.root ?? false,
         type: editing.type,
-        attribute: Boolean(editing.attribute) ? editing.attribute ?? null : null,
+        attribute: Boolean(editing.attribute)
+          ? editing.attribute ?? null
+          : null,
         delay: editing.delay ?? null,
       });
     } else if (editing.id) {
@@ -71,7 +76,9 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
         order: editing.order,
         root: editing.root,
         type: editing.type,
-        attribute: Boolean(editing.attribute) ? editing.attribute ?? null : null,
+        attribute: Boolean(editing.attribute)
+          ? editing.attribute ?? null
+          : null,
         delay: editing.delay ?? null,
       });
     }
@@ -86,139 +93,117 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
   };
 
   return (
-    <div className="card">
-      <div className="card-header">
-        <h3>Selectors</h3>
-        <button onClick={startNew}>Add Selector</button>
-      </div>
-
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th>Field</th>
-            <th>Selector</th>
-            <th>Order</th>
-            <th>Root</th>
-            <th>Type</th>
-            <th>Attribute</th>
-            <th>Delay</th>
-            <th />
-          </tr>
-        </thead>
-        <tbody>
-          {selectors
-            .sort((a, b) => a.order - b.order)
-            .map((s) => (
-              <tr key={s.id}>
-                <td>{s.fieldName}</td>
-                <td>
-                  <code>{s.selector}</code>
-                </td>
-                <td>{s.order}</td>
-                <td>{s.root ? "Yes" : ""}</td>
-                <td>{s.type}</td>
-                <td>{s.attribute}</td>
-                <td>{s.delay}</td>
-                <td>
-                  <button onClick={() => startEdit(s)}>Edit</button>
-                  <button onClick={() => remove(s)}>Delete</button>
-                </td>
-              </tr>
-            ))}
-          {selectors.length === 0 && (
-            <tr>
-              <td colSpan={5}>No selectors defined.</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-
-      {editing.fieldName !== undefined && (
-        <div className="edit-panel">
-          <h4>{isNew ? "New Selector" : "Edit Selector"}</h4>
-          <div className="form-grid">
-            <label>
-              Field Name
-              <input
-                value={editing.fieldName ?? ""}
-                onChange={(e) =>
-                  setEditing({ ...editing, fieldName: e.target.value })
-                }
-              />
-            </label>
-            <label>
-              Selector
-              <input
-                value={editing.selector ?? ""}
-                onChange={(e) =>
-                  setEditing({ ...editing, selector: e.target.value })
-                }
-              />
-            </label>
-            <label>
-              Order
-              <input
-                type="number"
-                value={editing.order ?? 0}
-                onChange={(e) =>
-                  setEditing({ ...editing, order: e.target.valueAsNumber })
-                }
-              />
-            </label>
-            <label>
-              Root
-              <input
-                type="checkbox"
-                checked={editing.root ?? false}
-                onChange={(e) =>
-                  setEditing({ ...editing, root: e.target.checked })
-                }
-              />
-            </label>
-            <label>
-              Type
-              <select
-                value={editing.type ?? "Text"}
-                onChange={(e) =>
-                  setEditing({
-                    ...editing,
-                    type: e.target.value as SelectorType,
-                  })
-                }
-              >
-                {selectorTypeOptions.map((st) => (
-                  <option key={st} value={st}>
-                    {st}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Attribute
-              <input
-                value={editing.attribute ?? ""}
-                onChange={(e) =>
-                  setEditing({ ...editing, attribute: e.target.value })
-                }
-              />
-            </label>
-            <label>
-              Delay
-              <input
-                type="number"
-                value={editing.delay ?? ""}
-                onChange={(e) =>
-                  setEditing({ ...editing, delay: e.target.valueAsNumber })
-                }
-              />
-            </label>
-          </div>
-          <div className="button-row">
-            <button onClick={save}>Save</button>
-            <button onClick={cancelEdit}>Cancel</button>
-          </div>
+    <Card>
+      <Card.Body>
+        <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <h3>Selectors</h3>
+          <button onClick={startNew}>Add Selector</button>
         </div>
-      )}
-    </div>
+      </Card.Body>
+      <Card.Body>
+        <Table className="data-table" hover>
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Selector</th>
+              <th>Order</th>
+              <th>Root</th>
+              <th>Type</th>
+              <th>Attribute</th>
+              <th>Delay</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            {selectors
+              .sort((a, b) => a.order - b.order)
+              .map((s) => (
+                <tr key={s.id}>
+                  <td>{s.fieldName}</td>
+                  <td>
+                    <code>{s.selector}</code>
+                  </td>
+                  <td>{s.order}</td>
+                  <td>{s.root ? "Yes" : ""}</td>
+                  <td>{s.type}</td>
+                  <td>{s.attribute}</td>
+                  <td>{s.delay}</td>
+                  <td>
+                    <button onClick={() => startEdit(s)}>Edit</button>
+                    <button onClick={() => remove(s)}>Delete</button>
+                  </td>
+                </tr>
+              ))}
+            {selectors.length === 0 && (
+              <tr>
+                <td colSpan={5}>No selectors defined.</td>
+              </tr>
+            )}
+          </tbody>
+        </Table>
+
+        {editing.fieldName !== undefined && (
+          <div className="edit-panel">
+            <h4>{isNew ? "New Selector" : "Edit Selector"}</h4>
+            <Form className={formStyles.form}>
+              <FormInput
+                label="Field Name"
+                value={editing.fieldName ?? ""}
+                onChange={(fieldName) => setEditing({ ...editing, fieldName })}
+              />
+              <FormInput
+                label="Selector"
+                value={editing.selector ?? ""}
+                onChange={(selector) => setEditing({ ...editing, selector })}
+              />
+              <FormInput
+                type="number"
+                label="Order"
+                value={editing.order?.toString() ?? "0"}
+                onChange={(order) =>
+                  setEditing({ ...editing, order: parseInt(order) })
+                }
+              />
+              <FormCheck
+                label="Root"
+                checked={editing.root ?? false}
+                onChange={(checked) =>
+                  setEditing({ ...editing, root: checked })
+                }
+              />
+              <FormSelect
+                label="Type"
+                value={editing.type ?? "Text"}
+                onChange={(value) =>
+                  setEditing({ ...editing, type: value as SelectorType })
+                }
+                options={selectorTypeOptions}
+              />
+              {editing.type === "Attribute" && (
+                <FormInput
+                  label="Attribute"
+                  value={editing.attribute ?? ""}
+                  onChange={(attribute) =>
+                    setEditing({ ...editing, attribute })
+                  }
+                />
+              )}
+              <FormInput
+                type="number"
+                label="Delay"
+                value={editing.delay?.toString() ?? ""}
+                onChange={(delay) =>
+                  setEditing({ ...editing, delay: parseInt(delay) })
+                }
+              />
+              <div className={formStyles.buttonRow}>
+                <button onClick={save}>Save</button>
+                <button onClick={cancelEdit}>Cancel</button>
+              </div>
+            </Form>
+          </div>
+        )}
+      </Card.Body>
+    </Card>
   );
 };

@@ -75,6 +75,18 @@ export interface ScraperMappingRule {
   splitDelimiter: string | null;
 }
 
+export interface ScraperAttemptHistory {
+  id: Guid;
+  startTimeUtc: string;
+  endTimeUtc: string | null;
+  success: boolean;
+  extracted: number;
+  mapped: number;
+  created: number;
+  updated: number;
+  errorMessage: string;
+}
+
 export interface Event {
   id: Guid;
   title: string;

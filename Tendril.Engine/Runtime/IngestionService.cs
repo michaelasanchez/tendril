@@ -35,15 +35,15 @@ public class IngestionService(
             StartTimeUtc = start,
             EndTimeUtc = end,
             Success = result.Success,
-            ExtractedCount = result.RawEvents.Count,
+            Extracted = result.RawEvents.Count,
             ErrorMessage = result.ErrorMessage
         };
 
-        await attemptHistories.AddAsync(attempt, cancellationToken);
+        await attemptHistories.Add(attempt, cancellationToken);
 
         var scraped = new List<ScrapedEventRaw>();
         var mapped = new List<Event>();
-        var inserted = 0;
+        int created = 0, updated = 0;
 
         if (result.Success)
         {
@@ -80,18 +80,20 @@ public class IngestionService(
 
                     if (existingEvent is not null)
                     {
-                        var updated = false;
+                        var dirty = false;
 
-                        existingEvent.Title = UpdateIfChanged(existingEvent.Title, mappedEvent.Title, ref updated);
-                        existingEvent.Description = UpdateIfChanged(existingEvent.Description, mappedEvent.Description, ref updated);
-                        existingEvent.StartUtc = UpdateIfChanged(existingEvent.StartUtc, mappedEvent.StartUtc, ref updated);
-                        existingEvent.EndUtc = UpdateIfChanged(existingEvent.EndUtc, mappedEvent.EndUtc, ref updated);
-                        existingEvent.TicketUrl = UpdateIfChanged(existingEvent.TicketUrl, mappedEvent.TicketUrl, ref updated);
-                        existingEvent.ImageUrl = UpdateIfChanged(existingEvent.ImageUrl, mappedEvent.ImageUrl, ref updated);
-                        existingEvent.Category = UpdateIfChanged(existingEvent.Category, mappedEvent.Category, ref updated);
+                        existingEvent.Title = UpdateIfChanged(existingEvent.Title, mappedEvent.Title, ref dirty);
+                        existingEvent.Description = UpdateIfChanged(existingEvent.Description, mappedEvent.Description, ref dirty);
+                        existingEvent.StartUtc = UpdateIfChanged(existingEvent.StartUtc, mappedEvent.StartUtc, ref dirty);
+                        existingEvent.EndUtc = UpdateIfChanged(existingEvent.EndUtc, mappedEvent.EndUtc, ref dirty);
+                        existingEvent.TicketUrl = UpdateIfChanged(existingEvent.TicketUrl, mappedEvent.TicketUrl, ref dirty);
+                        existingEvent.ImageUrl = UpdateIfChanged(existingEvent.ImageUrl, mappedEvent.ImageUrl, ref dirty);
+                        existingEvent.Category = UpdateIfChanged(existingEvent.Category, mappedEvent.Category, ref dirty);
 
-                        if (updated)
+                        if (dirty)
                         {
+                            updated++;
+
                             existingEvent.UpdatedAtUtc = DateTimeOffset.UtcNow;
 
                             rawEntity.ScraperAttemptHistoryId = attempt.Id;
@@ -102,7 +104,7 @@ public class IngestionService(
                     {
                         await events.AddAsync(mappedEvent, cancellationToken);
 
-                        inserted++;
+                        created++;
 
                         rawEntity.ScraperAttemptHistoryId = attempt.Id;
                         rawEntity.EventId = mappedEvent.Id;
@@ -131,6 +133,10 @@ public class IngestionService(
         }
 
         await scrapers.UpdateAsync(scraper, cancellationToken);
+
+        attempt.Mapped = mapped.Count;
+        attempt.Created = created;
+        attempt.Updated = updated;
 
         return new IngestResult
         {

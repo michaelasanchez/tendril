@@ -13,6 +13,10 @@ public class ScraperAttemptHistory
     public DateTimeOffset EndTimeUtc { get; set; }
 
     public bool Success { get; set; }
-    public int ExtractedCount { get; set; }
+    public int Extracted { get; set; }
+    public int Mapped { get; set; }
+    public int Created { get; set; }
+    public int Updated { get; set; }
+
     public string? ErrorMessage { get; set; }
 }

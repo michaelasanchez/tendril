@@ -1,17 +1,21 @@
 // src/pages/ScraperEditorPage.tsx
 import React, { useEffect, useState } from "react";
+import { Card, Form, Nav, Tab } from "react-bootstrap";
 import { useNavigate, useParams } from "react-router-dom";
 import { ScrapersApi } from "../api/scrapers";
 import { VenuesApi } from "../api/venues";
+import { FormInput, FormSelect } from "../components/form";
 import { ScraperMappingRulesTab } from "../scrapers/ScraperMappingRulesTab";
 import { ScraperRunsTab } from "../scrapers/ScraperRunsTab";
 import { ScraperSelectorsTab } from "../scrapers/ScraperSelectorsTab";
+import formStyles from "../components/form/Form.module.css";
 import type {
   Guid,
   ScraperDefinition,
   ScraperSelector,
   Venue,
 } from "../types/api";
+import styles from "./ScraperEditorPage.module.css";
 
 type TabKey = "general" | "selectors" | "mapping" | "runs";
 
@@ -20,7 +24,6 @@ export const ScraperEditorPage: React.FC = () => {
   const navigate = useNavigate();
   const [scraper, setScraper] = useState<ScraperDefinition | null>(null);
   const [venues, setVenues] = useState<Venue[]>([]);
-  const [tab, setTab] = useState<TabKey>("general");
   const [error, setError] = useState<string | null>(null);
   const isNew = scraperId === "new";
 
@@ -102,123 +105,101 @@ export const ScraperEditorPage: React.FC = () => {
 
   return (
     <section>
-      <div className="page-header">
+      <div className={styles.pageHeader}>
         <h2>{isNew ? "New Scraper" : `Edit Scraper – ${scraper.name}`}</h2>
         <button onClick={() => navigate("/scrapers")}>Back</button>
       </div>
 
-      <div className="tabs">
-        <button
-          className={tab === "general" ? "tab active" : "tab"}
-          onClick={() => setTab("general")}
-        >
-          General
-        </button>
-        <button
-          className={tab === "selectors" ? "tab active" : "tab"}
-          onClick={() => setTab("selectors")}
-          disabled={isNew}
-        >
-          Selectors
-        </button>
-        <button
-          className={tab === "mapping" ? "tab active" : "tab"}
-          onClick={() => setTab("mapping")}
-          disabled={isNew}
-        >
-          Mapping Rules
-        </button>
-        <button
-          className={tab === "runs" ? "tab active" : "tab"}
-          onClick={() => setTab("runs")}
-          disabled={isNew}
-        >
-          Runs
-        </button>
-      </div>
+      <Tab.Container defaultActiveKey="general">
+        <Nav variant="pills" className={styles.tabs}>
+          <button disabled={isNew}>
+            <Nav.Link eventKey="general">General</Nav.Link>
+          </button>
+          <button disabled={isNew}>
+            <Nav.Link eventKey="selectors">Selectors</Nav.Link>
+          </button>
+          <button disabled={isNew}>
+            <Nav.Link eventKey="mapping">Mapping Rules</Nav.Link>
+          </button>
+          <button disabled={isNew}>
+            <Nav.Link eventKey="runs">Runs</Nav.Link>
+          </button>
+        </Nav>
 
-      {tab === "general" && (
-        <div className="card">
-          <div className="form-grid">
-            <label>
-              Name
-              <input
-                value={scraper.name}
-                onChange={(e) =>
-                  setScraper({ ...scraper, name: e.target.value })
-                }
-              />
-            </label>
-            <label>
-              Base URL
-              <input
-                value={scraper.baseUrl}
-                onChange={(e) =>
-                  setScraper({ ...scraper, baseUrl: e.target.value })
-                }
-              />
-            </label>
-            <label>
-              Schedule (cron)
-              <input
+        <Tab.Content>
+          <Tab.Pane eventKey="general">
+            <Card>
+              <Card.Body>
+                <Form className={formStyles.form}>
+                  <FormInput
+                    label="Name"
+                    value={scraper.name}
+                    onChange={(value) =>
+                      setScraper({ ...scraper, name: value })
+                    }
+                  />
+                  <FormInput
+                    label="Base URL"
+                    value={scraper.baseUrl}
+                    onChange={(value) =>
+                      setScraper({ ...scraper, baseUrl: value })
+                    }
+                  />
+                  {/* <FormInput
+                label="Schedule (cron)"
                 value={scraper.schedule}
-                onChange={(e) =>
-                  setScraper({ ...scraper, schedule: e.target.value })
+                onChange={(value) =>
+                  setScraper({ ...scraper, schedule: value })
                 }
-              />
-            </label>
-            <label>
-              Venue
-              <select
-                value={scraper.venueId ?? ""}
-                onChange={(e) =>
-                  setScraper({
-                    ...scraper,
-                    venueId: e.target.value ? (e.target.value as Guid) : null,
-                  })
-                }
-              >
-                <option value="">(none)</option>
-                {venues.map((v) => (
-                  <option key={v.id} value={v.id}>
-                    {v.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Dynamic?
-              <input
-                type="checkbox"
+              /> */}
+                  <FormSelect
+                    label="Venue"
+                    value={scraper.venueId ?? ""}
+                    onChange={(venueId) =>
+                      setScraper({
+                        ...scraper,
+                        venueId: venueId ? (venueId as Guid) : null,
+                      })
+                    }
+                    options={[{ value: "", label: "(none)" }].concat(
+                      venues.map((v) => ({ value: v.id, label: v.name }))
+                    )}
+                  />
+                  {/* <FormCheck
+                label="Dynamic"
                 checked={scraper.isDynamic}
-                onChange={(e) =>
-                  setScraper({ ...scraper, isDynamic: e.target.checked })
+                onChange={(checked) =>
+                  setScraper({ ...scraper, isDynamic: checked })
                 }
-              />
-            </label>
-          </div>
-          <button onClick={handleSaveGeneral}>Save</button>
-        </div>
-      )}
+              /> */}
+                  <div>
+                    <button onClick={handleSaveGeneral}>Save</button>
+                  </div>
+                </Form>
+              </Card.Body>
+            </Card>
+          </Tab.Pane>
 
-      {tab === "selectors" && !isNew && (
-        <ScraperSelectorsTab
-          scraperId={scraperId as Guid}
-          selectors={selectors}
-          refresh={loadSelectors}
-        />
-      )}
+          <Tab.Pane eventKey="selectors">
+            <ScraperSelectorsTab
+              scraperId={scraperId as Guid}
+              selectors={selectors}
+              refresh={loadSelectors}
+            />
+          </Tab.Pane>
 
-      {tab === "mapping" && !isNew && (
-        <ScraperMappingRulesTab
-          scraperId={scraperId as Guid}
-          selectors={selectors}
-        />
-      )}
+          <Tab.Pane eventKey="mapping">
+            <ScraperMappingRulesTab
+              scraperId={scraperId as Guid}
+              selectors={selectors}
+            />
+          </Tab.Pane>
 
-      {tab === "runs" && !isNew && (
-        <ScraperRunsTab scraperId={scraperId as Guid} />
-      )}
+          <Tab.Pane eventKey="runs">
+            <ScraperRunsTab scraperId={scraperId as Guid} />
+          </Tab.Pane>
+        </Tab.Content>
+      </Tab.Container>
     </section>
   );
 };

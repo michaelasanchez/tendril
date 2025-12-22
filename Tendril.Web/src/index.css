@@ -4,7 +4,6 @@
 }
 
 #root {
-  
 }
 
 a {
@@ -40,6 +39,26 @@ button {
   background-color: #1a1a1a;
   cursor: pointer;
   transition: border-color 0.25s;
+
+  &:has(a) {
+    padding: 0;
+  }
+}
+
+.nav {
+  --bs-nav-link-color: #646cff;
+}
+
+.nav-pills a.nav-link.active {
+  background-color: #646cff;
+}
+
+.nav-link {
+  color: white;
+}
+
+.nav-link:hover {
+  color: #646cff;
 }
 
 button:hover {
@@ -51,9 +70,7 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
-
-
-html[data-bs-theme=dark] {
+html[data-bs-theme="dark"] {
   .rbc-toolbar button:not(.rbc-active) {
     color: var(--bs-btn-color);
   }

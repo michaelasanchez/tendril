@@ -1,21 +1,24 @@
-﻿using Tendril.Core.Domain.Entities;
+﻿using Microsoft.EntityFrameworkCore;
+using Tendril.Core.Domain.Entities;
 using Tendril.Core.Interfaces.Repositories;
-using Tendril.Data;
 
 namespace Tendril.Data.Repositories;
 
-public class AttemptHistoryRepository : IAttemptHistoryRepository
+public class AttemptHistoryRepository(TendrilDbContext db) : IAttemptHistoryRepository
 {
-    private readonly TendrilDbContext _db;
-
-    public AttemptHistoryRepository(TendrilDbContext db)
+    public async Task Add(ScraperAttemptHistory attempt, CancellationToken cancellationToken = default)
     {
-        _db = db;
+        db.AttemptHistory.Add(attempt);
+
+        await db.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task AddAsync(ScraperAttemptHistory attempt, CancellationToken cancellationToken = default)
+    public Task<List<ScraperAttemptHistory>> GetAttemptHistories(Guid scraperId, CancellationToken ct = default)
     {
-        _db.AttemptHistory.Add(attempt);
-        await _db.SaveChangesAsync(cancellationToken);
+        return db.AttemptHistory
+            .AsNoTracking()
+            .Where(a => a.ScraperDefinitionId == scraperId)
+            .OrderByDescending(a => a.StartTimeUtc)
+            .ToListAsync(ct);
     }
 }

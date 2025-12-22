@@ -1,12 +1,13 @@
 // src/api/scrapers.ts
-import { apiGet, apiPost, apiPut, apiDelete } from "./client";
 import type {
+  Guid,
+  ScraperAttemptHistory,
   ScraperDefinition,
-  ScraperSelector,
   ScraperMappingRule,
-  ScrapeRunResponse,
-  Guid
+  ScraperSelector,
+  ScrapeRunResponse
 } from "../types/api";
+import { apiDelete, apiGet, apiPost, apiPut } from "./client";
 
 export interface CreateScraperRequest {
   name: string;
@@ -71,6 +72,11 @@ export const ScrapersApi = {
 
   deleteMappingRule(scraperId: Guid, ruleId: Guid): Promise<void> {
     return apiDelete(`/api/scrapers/${scraperId}/mapping-rules/${ruleId}`);
+  },
+
+  // Attempt Histories
+  getAttemptHistories(scraperId: Guid): Promise<ScraperAttemptHistory[]> {
+    return apiGet(`/api/scrapers/${scraperId}/attempt-histories`);
   },
 
   // Runs

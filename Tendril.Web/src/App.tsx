@@ -11,7 +11,8 @@ export default function App() {
   useBootstrapTheme();
 
   return (
-    <Routes>
+    <Container>
+      <Routes>
         {/* Default redirect */}
         <Route path="/" element={<Navigate to="/events" replace />} />
 
@@ -23,6 +24,7 @@ export default function App() {
 
         {/* Catch-all */}
         <Route path="*" element={<Navigate to="/events" replace />} />
-    </Routes>
+      </Routes>
+    </Container>
   );
 }

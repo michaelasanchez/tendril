@@ -1,21 +1,18 @@
 import { format } from "date-fns";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Card } from "react-bootstrap";
 import type { Event } from "../types/api";
 import styles from "./EventList.module.css";
 
 interface EventListProps {
   events: Event[];
+  venueFilter?: string | null;
 }
 
-export const EventList: React.FC<EventListProps> = ({ events }) => {
-  const [venueFilter, setVenueFilter] = useState<string | null>(null);
-
-  const venueOptions = useMemo(
-    () => Array.from(new Set(events.map((e) => e.venueName))),
-    [events]
-  ) as string[];
-
+export const EventList: React.FC<EventListProps> = ({
+  events,
+  venueFilter = null,
+}) => {
   const groups = useMemo(() => {
     const filtered = !!venueFilter
       ? events.filter((e) => e.venueName == venueFilter)
@@ -26,22 +23,6 @@ export const EventList: React.FC<EventListProps> = ({ events }) => {
 
   return (
     <div className={styles.EventList}>
-      <div>
-        <label>
-          Venue
-          <select
-            value={venueFilter ?? ""}
-            onChange={(e) => setVenueFilter(e.target.value)}
-          >
-            <option value=""></option>
-            {venueOptions.map((o) => (
-              <option key={o} value={o}>
-                {o}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
       {Object.keys(groups).map((g) => (
         <div key={g}>
           <h3>{format(new Date(g), "MMM dd")}</h3>

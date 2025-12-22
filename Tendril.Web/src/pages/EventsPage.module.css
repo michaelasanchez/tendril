@@ -1,0 +1,33 @@
+.pageHeader {
+  float: left;
+  margin: 0.5em 0;
+}
+
+.pageControls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 3rem;
+
+  position: sticky;
+  top: 0;
+  z-index: 2;
+
+  opacity: 0.5;
+
+  transition: opacity 100ms;
+
+  &:hover {
+    opacity: 1;
+  }
+
+  &.withFilter {
+    opacity: 1;
+  }
+  
+  label {
+    display: flex;
+    gap: 0.5em;
+  }
+
+}

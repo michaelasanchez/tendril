@@ -1,0 +1,11 @@
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+
+  padding: 1rem 0;
+}
+
+td.center {
+  text-align: center;
+  vertical-align: middle;
+}

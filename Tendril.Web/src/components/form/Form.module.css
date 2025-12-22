@@ -1,0 +1,20 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+}
+
+.inline {
+  display: flex;
+  gap: 0.5em;
+}
+
+.formGroup {
+  display: flex;
+  gap: 1em;
+}
+
+.buttonRow {
+  display: flex;
+  gap: 0.5em;
+}
