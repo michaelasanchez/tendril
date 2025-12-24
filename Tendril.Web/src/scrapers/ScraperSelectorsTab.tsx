@@ -149,6 +149,7 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
               <FormInput
                 label="Field Name"
                 value={editing.fieldName ?? ""}
+                autoFocus={true}
                 onChange={(fieldName) => setEditing({ ...editing, fieldName })}
               />
               <FormInput
@@ -196,11 +197,12 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
                   setEditing({ ...editing, delay: parseInt(delay) })
                 }
               />
-              <div className={formStyles.buttonRow}>
-                <button onClick={save}>Save</button>
-                <button onClick={cancelEdit}>Cancel</button>
-              </div>
             </Form>
+
+            <div className={formStyles.buttonRow}>
+              <button onClick={save}>Save</button>
+              <button onClick={cancelEdit}>Cancel</button>
+            </div>
           </div>
         )}
       </Card.Body>

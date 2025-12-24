@@ -7,6 +7,7 @@ export interface FormInputProps {
   type?: "text" | "number" | "password" | "email";
   placeholder?: string;
   disabled?: boolean;
+  autoFocus?: boolean;
 }
 
 export interface FormCheckProps {

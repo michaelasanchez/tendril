@@ -138,6 +138,8 @@ public class IngestionService(
         attempt.Created = created;
         attempt.Updated = updated;
 
+        await attemptHistories.UpdateAsync(attempt, cancellationToken);
+
         return new IngestResult
         {
             Success = result.Success,

@@ -9,6 +9,7 @@ export const EventsPage: React.FC = () => {
   const [view, setView] = useState<"list" | "calendar">("list");
   const [events, setEvents] = useState<Event[]>([]);
   const [venueFilter, setVenueFilter] = useState<string | null>(null);
+  const [from, setFrom] = useState<Date>(new Date());
 
   // Initial load
   useEffect(() => {
@@ -39,13 +40,6 @@ export const EventsPage: React.FC = () => {
     [events]
   ) as string[];
 
-  console.log(
-    "venue",
-    venueFilter,
-    Boolean(venueFilter),
-    Boolean(venueFilter) && styles.withFilter
-  );
-
   return (
     <Container>
       <section>
@@ -71,7 +65,7 @@ export const EventsPage: React.FC = () => {
         </div>
 
         {view === "list" && (
-          <EventList events={events} venueFilter={venueFilter} />
+          <EventList events={events} from={from} venueFilter={venueFilter} />
         )}
         {view === "calendar" && <EventCalendar events={calendarEvents} />}
       </section>

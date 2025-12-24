@@ -7,7 +7,39 @@
     background: var(--bs-body-bg);
   }
 
-  .EventCard + .EventCard {
-    margin-top: 1em;
+  .CardBody {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+
+    .CardContent {
+      flex-grow: 1;
+    }
+
+    .CardActions {
+      display: flex;
+      justify-content: flex-end;
+    }
   }
+
+  .NoImage {
+    padding: 3em;
+
+    background-color: rgb(255, 255, 255, 0.05);
+    border-top-left-radius: var(--bs-card-inner-border-radius);
+    border-top-right-radius: var(--bs-card-inner-border-radius);
+
+    img {
+      opacity: 0.75;
+    }
+  }
+
+  .DayGroup {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-auto-flow: row;
+    gap: 1rem;
+    place-items: stretch;
+  }
+
 }

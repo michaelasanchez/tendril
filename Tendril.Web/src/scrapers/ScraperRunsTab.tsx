@@ -20,8 +20,10 @@ export const ScraperRunsTab: React.FC<Props> = ({ scraperId }) => {
   const [attempts, setAttempts] = useState<ScraperAttemptHistory[]>([]);
 
   const load = async () => {
-    const attempts = await ScrapersApi.getAttemptHistories(scraperId);
-    setAttempts(attempts);
+    if (scraperId !== "new") {
+      const attempts = await ScrapersApi.getAttemptHistories(scraperId);
+      setAttempts(attempts);
+    }
   };
 
   useEffect(() => {

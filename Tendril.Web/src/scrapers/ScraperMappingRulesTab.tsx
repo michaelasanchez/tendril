@@ -58,9 +58,11 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
   );
 
   const load = async () => {
-    const rules = await ScrapersApi.getMappingRules(scraperId);
+    if (scraperId !== 'new') {
+      const rules = await ScrapersApi.getMappingRules(scraperId);
 
-    setRules(rules);
+      setRules(rules);
+    }
   };
 
   useEffect(() => {
@@ -163,7 +165,14 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
             .filter((o) => !rules.some((r) => r.targetField === o.value))
             .map((o) => <em key={o.value}>{o.label}</em>)
             .reduce(
-              (acc, cur) => (acc.length ? [...acc, <>, </>, cur] : [cur]),
+              (acc, cur, i) =>
+                acc.length
+                  ? [
+                      ...acc,
+                      <React.Fragment key={`sep-${i}`}>, </React.Fragment>,
+                      cur,
+                    ]
+                  : [cur],
               [] as JSX.Element[]
             )}
         </div>
@@ -339,11 +348,11 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
                   }
                 />
               )}
-              <div className={formStyles.buttonRow}>
-                <button onClick={save}>Save</button>
-                <button onClick={cancelEdit}>Cancel</button>
-              </div>
             </Form>
+            <div className={formStyles.buttonRow}>
+              <button onClick={save}>Save</button>
+              <button onClick={cancelEdit}>Cancel</button>
+            </div>
           </div>
         )}
       </Card.Body>

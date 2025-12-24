@@ -45,6 +45,17 @@ button {
   }
 }
 
+.btn-outline-info {
+    --bs-btn-color: #646cff;
+    --bs-btn-border-color: #646cff;
+    --bs-btn-hover-bg: #646cff;
+    --bs-btn-hover-border-color: #646cff;
+    --bs-btn-active-bg: #646cff;
+    --bs-btn-active-border-color: #646cff;
+    --bs-btn-disabled-color: #646cff;
+    --bs-btn-disabled-border-color: #646cff;
+}
+
 .nav {
   --bs-nav-link-color: #646cff;
 }

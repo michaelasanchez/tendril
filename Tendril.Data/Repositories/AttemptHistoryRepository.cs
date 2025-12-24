@@ -21,4 +21,10 @@ public class AttemptHistoryRepository(TendrilDbContext db) : IAttemptHistoryRepo
             .OrderByDescending(a => a.StartTimeUtc)
             .ToListAsync(ct);
     }
+
+    public async Task UpdateAsync(ScraperAttemptHistory attempt, CancellationToken ct = default)
+    {
+        db.AttemptHistory.Update(attempt);
+        await db.SaveChangesAsync(ct);
+    }
 }

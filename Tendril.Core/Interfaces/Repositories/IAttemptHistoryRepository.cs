@@ -7,4 +7,5 @@ public interface IAttemptHistoryRepository
     Task Add(ScraperAttemptHistory attempt, CancellationToken ct = default);
 
     Task<List<ScraperAttemptHistory>> GetAttemptHistories(Guid scraperId, CancellationToken ct = default);
+    Task UpdateAsync(ScraperAttemptHistory attempt, CancellationToken ct = default);
 }

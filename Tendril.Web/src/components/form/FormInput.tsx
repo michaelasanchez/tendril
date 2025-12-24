@@ -8,6 +8,7 @@ export const FormInput: React.FC<FormInputProps> = ({
   type = "text",
   placeholder,
   disabled = false,
+  autoFocus = false,
 }) => (
   <Form.Group>
     <Form.Label>{label}</Form.Label>
@@ -17,6 +18,7 @@ export const FormInput: React.FC<FormInputProps> = ({
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       disabled={disabled}
+      autoFocus={autoFocus}
     />
   </Form.Group>
 );

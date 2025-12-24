@@ -5,10 +5,10 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ScrapersApi } from "../api/scrapers";
 import { VenuesApi } from "../api/venues";
 import { FormInput, FormSelect } from "../components/form";
+import formStyles from "../components/form/Form.module.css";
 import { ScraperMappingRulesTab } from "../scrapers/ScraperMappingRulesTab";
 import { ScraperRunsTab } from "../scrapers/ScraperRunsTab";
 import { ScraperSelectorsTab } from "../scrapers/ScraperSelectorsTab";
-import formStyles from "../components/form/Form.module.css";
 import type {
   Guid,
   ScraperDefinition,
@@ -37,7 +37,9 @@ export const ScraperEditorPage: React.FC = () => {
   };
 
   useEffect(() => {
-    void loadSelectors();
+    if (scraperId !== "new") {
+      void loadSelectors();
+    }
   }, [scraperId]);
   /* Selectors */
 
@@ -172,10 +174,10 @@ export const ScraperEditorPage: React.FC = () => {
                   setScraper({ ...scraper, isDynamic: checked })
                 }
               /> */}
-                  <div>
-                    <button onClick={handleSaveGeneral}>Save</button>
-                  </div>
                 </Form>
+                <div>
+                  <button onClick={handleSaveGeneral}>Save</button>
+                </div>
               </Card.Body>
             </Card>
           </Tab.Pane>
