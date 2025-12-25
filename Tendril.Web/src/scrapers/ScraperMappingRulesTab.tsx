@@ -1,7 +1,12 @@
 import React, { useEffect, useState, type JSX } from "react";
-import { Button, Card, Form, Table } from "react-bootstrap";
+import { Card, Form, Table } from "react-bootstrap";
 import { ScrapersApi } from "../api/scrapers";
-import { FormInput, FormSelect, type SelectOption } from "../components/form";
+import {
+  FormInput,
+  FormInputSelect,
+  FormSelect,
+  type SelectOption,
+} from "../components/form";
 import formStyles from "../components/form/Form.module.css";
 import type {
   Guid,
@@ -33,17 +38,14 @@ const transformTypeOptions: SelectOption[] = [
 ].map((o) => ({ value: o, label: o }));
 
 const targetFieldOptions: SelectOption[] = [
-  { value: "", label: "" },
-  ...[
-    "Title",
-    "Description",
-    "StartUtc",
-    "EndUtc",
-    "TicketUrl",
-    "Category",
-    "ImageUrl",
-  ].map((o) => ({ value: o, label: o })),
-];
+  "Title",
+  "Description",
+  "StartUtc",
+  "EndUtc",
+  "TicketUrl",
+  "Category",
+  "ImageUrl",
+].map((o) => ({ value: o, label: o }));
 
 export const ScraperMappingRulesTab: React.FC<Props> = ({
   scraperId,
@@ -70,21 +72,20 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
   }, [scraperId]);
 
   useEffect(() => {
-    const selectorFields = selectors.map((s) => s.fieldName);
+    const sourceFields = selectors.map((s) => s.fieldName);
     const ruleTargetFields = rules.map((r) => r.targetField);
     const eventTargetFields = targetFieldOptions.map((o) => o.value);
-    const tempFields = ruleTargetFields.filter(
+
+    const dynamicFields = ruleTargetFields.filter(
       (r) => !eventTargetFields.includes(r)
     );
 
-    const next = [
-      { value: "", label: "" },
-      ...[...selectorFields, ...tempFields].map((o) => ({
+    setSourceFieldOptions(
+      [...sourceFields, ...dynamicFields].map((o) => ({
         value: o,
         label: o,
-      })),
-    ];
-    setSourceFieldOptions(next);
+      }))
+    );
   }, [rules, selectors]);
 
   const startNew = () => {
@@ -234,52 +235,26 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
             <h4>{isNew ? "New Mapping Rule" : "Edit Mapping Rule"}</h4>
             <Form className={formStyles.form}>
               <div className={formStyles.formGroup}>
-                <FormInput
-                  label="Target Field"
+                <FormInputSelect
+                  label="Target"
                   value={editing.targetField ?? ""}
-                  onChange={(targetField) =>
-                    setEditing({ ...editing, targetField })
-                  }
-                />
-                <FormSelect
-                  label="Event Fields"
-                  value={editing.targetField ?? ""}
-                  onChange={(targetField) =>
-                    setEditing({ ...editing, targetField })
-                  }
                   options={targetFieldOptions}
+                  clearable
+                  onChange={(targetField) =>
+                    setEditing({ ...editing, targetField })
+                  }
                 />
-                <Button
-                  disabled={!editing.targetField}
-                  variant="outline-secondary"
-                  onClick={() => setEditing({ ...editing, targetField: "" })}
-                >
-                  x
-                </Button>
               </div>
               <div className={formStyles.formGroup}>
-                <FormInput
-                  label="Source Field"
+                <FormInputSelect
+                  label="Source"
                   value={editing.sourceField ?? ""}
-                  onChange={(sourceField) =>
-                    setEditing({ ...editing, sourceField })
-                  }
-                />
-                <FormSelect
-                  label="Selectors"
-                  value={editing.sourceField ?? ""}
-                  onChange={(sourceField) =>
-                    setEditing({ ...editing, sourceField })
-                  }
                   options={sourceFieldOptions}
+                  clearable
+                  onChange={(sourceField) =>
+                    setEditing({ ...editing, sourceField })
+                  }
                 />
-                <Button
-                  disabled={!editing.sourceField}
-                  variant="outline-secondary"
-                  onClick={() => setEditing({ ...editing, sourceField: "" })}
-                >
-                  x
-                </Button>
               </div>
               <FormInput
                 label="Order"

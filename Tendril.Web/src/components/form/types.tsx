@@ -29,5 +29,8 @@ export interface FormSelectProps {
   value: string;
   onChange: (value: string) => void;
   options: SelectOption[];
+  autoFocus?: boolean;
+  clearable?: boolean;
   disabled?: boolean;
+  placeholder?: string;
 }

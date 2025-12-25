@@ -40,6 +40,10 @@ button {
   cursor: pointer;
   transition: border-color 0.25s;
 
+  &:disabled {
+    opacity: 0.5;
+  }
+
   &:has(a) {
     padding: 0;
   }
@@ -72,7 +76,7 @@ button {
   color: #646cff;
 }
 
-button:hover {
+button:hover:not(:disabled) {
   border-color: #646cff;
 }
 

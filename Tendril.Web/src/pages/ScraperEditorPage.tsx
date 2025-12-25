@@ -70,7 +70,7 @@ export const ScraperEditorPage: React.FC = () => {
           }
         );
       } catch (e: any) {
-        setError(e.message ?? "Error loading scraper.");
+        setError(e.message ?? "Error loading feed.");
       }
     };
     void load();
@@ -109,13 +109,13 @@ export const ScraperEditorPage: React.FC = () => {
   return (
     <section>
       <div className={pageStyles.pageHeader}>
-        <h2>{isNew ? "New Scraper" : `Edit Scraper – ${scraper.name}`}</h2>
+        <h2>{isNew ? "New Feed" : `Edit Feed – ${scraper.name}`}</h2>
         <button onClick={() => navigate("/scrapers")}>Back</button>
       </div>
 
       <Tab.Container defaultActiveKey="general">
         <Nav variant="pills" className={styles.tabs}>
-          <button disabled={isNew}>
+          <button>
             <Nav.Link eventKey="general">General</Nav.Link>
           </button>
           <button disabled={isNew}>
