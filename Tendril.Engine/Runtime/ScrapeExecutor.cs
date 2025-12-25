@@ -15,11 +15,10 @@ public class ScrapeExecutor : IScrapeExecutor
 
     public async Task<ScrapeResult> RunScraperAsync(
         ScraperDefinition scraperDef,
-        bool selectorsOnly = false,
         CancellationToken cancellationToken = default)
     {
         var scraper = _factory.CreateScraper(scraperDef);
 
-        return await scraper.ExecuteAsync(selectorsOnly, cancellationToken);
+        return await scraper.ExecuteAsync(cancellationToken);
     }
 }

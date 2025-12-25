@@ -9,15 +9,11 @@ namespace Tendril.Api.Controllers;
 [Route("api/scrapers/{scraperId:guid}/runs")]
 public class ScraperRunsController(
     IScraperRepository scrapers,
-    IAttemptHistoryRepository attempts,
     IRawEventRepository rawEvents,
-    IEventRepository events,
     IScrapeExecutor executor,
     IEventMapper mapper,
     IIngestionService ingestionService) : ControllerBase
 {
-    private readonly IIngestionService _service;
-
     // 1️⃣ Test selectors only (no DB writes, no mapping)
     [HttpPost("test-selectors")]
     public async Task<ActionResult> TestSelectors(Guid scraperId)
@@ -27,7 +23,7 @@ public class ScraperRunsController(
         if (scraper == null)
             return NotFound();
 
-        var result = await executor.RunScraperAsync(scraper, selectorsOnly: true);
+        var result = await executor.RunScraperAsync(scraper);
 
         return Ok(new
         {

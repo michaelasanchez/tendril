@@ -15,6 +15,7 @@ import type {
   ScraperSelector,
   Venue,
 } from "../types/api";
+import pageStyles from "./Page.module.css";
 import styles from "./ScraperEditorPage.module.css";
 
 type TabKey = "general" | "selectors" | "mapping" | "runs";
@@ -107,7 +108,7 @@ export const ScraperEditorPage: React.FC = () => {
 
   return (
     <section>
-      <div className={styles.pageHeader}>
+      <div className={pageStyles.pageHeader}>
         <h2>{isNew ? "New Scraper" : `Edit Scraper – ${scraper.name}`}</h2>
         <button onClick={() => navigate("/scrapers")}>Back</button>
       </div>
@@ -175,7 +176,7 @@ export const ScraperEditorPage: React.FC = () => {
                 }
               /> */}
                 </Form>
-                <div>
+                <div className={formStyles.buttonRow}>
                   <button onClick={handleSaveGeneral}>Save</button>
                 </div>
               </Card.Body>

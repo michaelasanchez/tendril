@@ -1,5 +1,5 @@
 import React, { useEffect, useState, type JSX } from "react";
-import { Card, Form, Table } from "react-bootstrap";
+import { Button, Card, Form, Table } from "react-bootstrap";
 import { ScrapersApi } from "../api/scrapers";
 import { FormInput, FormSelect, type SelectOption } from "../components/form";
 import formStyles from "../components/form/Form.module.css";
@@ -58,7 +58,7 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
   );
 
   const load = async () => {
-    if (scraperId !== 'new') {
+    if (scraperId !== "new") {
       const rules = await ScrapersApi.getMappingRules(scraperId);
 
       setRules(rules);
@@ -70,12 +70,22 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
   }, [scraperId]);
 
   useEffect(() => {
+    const selectorFields = selectors.map((s) => s.fieldName);
+    const ruleTargetFields = rules.map((r) => r.targetField);
+    const eventTargetFields = targetFieldOptions.map((o) => o.value);
+    const tempFields = ruleTargetFields.filter(
+      (r) => !eventTargetFields.includes(r)
+    );
+
     const next = [
       { value: "", label: "" },
-      ...selectors.map((s) => s.fieldName).map((o) => ({ value: o, label: o })),
+      ...[...selectorFields, ...tempFields].map((o) => ({
+        value: o,
+        label: o,
+      })),
     ];
     setSourceFieldOptions(next);
-  }, [selectors]);
+  }, [rules, selectors]);
 
   const startNew = () => {
     setIsNew(true);
@@ -102,8 +112,6 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
   };
 
   const save = async () => {
-    console.log("save", editing);
-
     if (!editing.targetField || !editing.sourceField || !editing.transformType)
       return;
 
@@ -241,6 +249,13 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
                   }
                   options={targetFieldOptions}
                 />
+                <Button
+                  disabled={!editing.targetField}
+                  variant="outline-secondary"
+                  onClick={() => setEditing({ ...editing, targetField: "" })}
+                >
+                  x
+                </Button>
               </div>
               <div className={formStyles.formGroup}>
                 <FormInput
@@ -258,6 +273,13 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
                   }
                   options={sourceFieldOptions}
                 />
+                <Button
+                  disabled={!editing.sourceField}
+                  variant="outline-secondary"
+                  onClick={() => setEditing({ ...editing, sourceField: "" })}
+                >
+                  x
+                </Button>
               </div>
               <FormInput
                 label="Order"
@@ -267,7 +289,6 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
                   setEditing({ ...editing, order: parseInt(order) })
                 }
               />
-
               <FormSelect
                 label="Tranform"
                 value={editing.transformType ?? "None"}
@@ -279,7 +300,6 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
                 }
                 options={transformTypeOptions}
               />
-
               {editing.transformType === "Combine" && (
                 <div className={formStyles.formGroup}>
                   <FormInput

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Tendril.Engine.Runtime;
+﻿namespace Tendril.Engine.Runtime;
 
 using Tendril.Core.Domain.Entities;
 using Tendril.Engine.Models;
@@ -17,7 +13,7 @@ public class StaticScraperExample : BaseScraper
         _def = def;
     }
 
-    public override async Task<ScrapeResult> ExecuteAsync(bool selectorsOnly, CancellationToken cancellationToken = default)
+    public override async Task<ScrapeResult> ExecuteAsync(CancellationToken cancellationToken = default)
     {
         // Fake data until you plug in real logic
         await Task.Delay(200, cancellationToken);

@@ -1,7 +1,11 @@
 // src/pages/VenuesPage.tsx
 import React, { useEffect, useState } from "react";
+import { Form, Table } from "react-bootstrap";
 import { VenuesApi } from "../api/venues";
+import { FormInput } from "../components/form";
+import formStyles from "../components/form/Form.module.css";
 import type { Venue } from "../types/api";
+import pageStyles from "./Page.module.css";
 
 export const VenuesPage: React.FC = () => {
   const [venues, setVenues] = useState<Venue[]>([]);
@@ -10,7 +14,11 @@ export const VenuesPage: React.FC = () => {
 
   const load = async () => {
     const data = await VenuesApi.getAll();
-    setVenues(data);
+    setVenues(
+      data.sort((a, b) =>
+        a.name.replace("The ", "").localeCompare(b.name.replace("The ", ""))
+      )
+    );
   };
 
   useEffect(() => {
@@ -38,13 +46,13 @@ export const VenuesPage: React.FC = () => {
       await VenuesApi.create({
         name: editing.name,
         address: editing.address,
-        website: editing.website
+        website: editing.website,
       });
     } else if (editing.id) {
       await VenuesApi.update(editing.id, {
         name: editing.name,
         address: editing.address,
-        website: editing.website
+        website: editing.website,
       });
     }
     await load();
@@ -59,12 +67,12 @@ export const VenuesPage: React.FC = () => {
 
   return (
     <section>
-      <div className="page-header">
+      <div className={pageStyles.pageHeader}>
         <h2>Venues</h2>
         <button onClick={startNew}>New Venue</button>
       </div>
 
-      <table className="data-table">
+      <Table className="data-table" hover>
         <thead>
           <tr>
             <th>Name</th>
@@ -74,7 +82,7 @@ export const VenuesPage: React.FC = () => {
           </tr>
         </thead>
         <tbody>
-          {venues.map(v => (
+          {venues.map((v) => (
             <tr key={v.id}>
               <td>{v.name}</td>
               <td>{v.address}</td>
@@ -99,35 +107,29 @@ export const VenuesPage: React.FC = () => {
             </tr>
           )}
         </tbody>
-      </table>
+      </Table>
 
-      {(editing.name !== undefined) && (
+      {editing.name !== undefined && (
         <div className="card edit-panel">
           <h3>{isNew ? "New Venue" : "Edit Venue"}</h3>
-          <div className="form-grid">
-            <label>
-              Name
-              <input
-                value={editing.name ?? ""}
-                onChange={e => setEditing({ ...editing, name: e.target.value })}
-              />
-            </label>
-            <label>
-              Address
-              <input
-                value={editing.address ?? ""}
-                onChange={e => setEditing({ ...editing, address: e.target.value })}
-              />
-            </label>
-            <label>
-              Website
-              <input
-                value={editing.website ?? ""}
-                onChange={e => setEditing({ ...editing, website: e.target.value })}
-              />
-            </label>
-          </div>
-          <div className="button-row">
+          <Form className={formStyles.form}>
+            <FormInput
+              label="Name"
+              value={editing.name ?? ""}
+              onChange={(name) => setEditing({ ...editing, name })}
+            />
+            <FormInput
+              label="Address"
+              value={editing.address ?? ""}
+              onChange={(address) => setEditing({ ...editing, address })}
+            />
+            <FormInput
+              label="Website"
+              value={editing.website ?? ""}
+              onChange={(website) => setEditing({ ...editing, website })}
+            />
+          </Form>
+          <div className={formStyles.buttonRow}>
             <button onClick={save}>Save</button>
             <button onClick={cancel}>Cancel</button>
           </div>

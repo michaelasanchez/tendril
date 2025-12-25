@@ -12,6 +12,7 @@
 .formGroup {
   display: flex;
   gap: 1em;
+  align-items: flex-end;
 }
 
 .buttonRow {

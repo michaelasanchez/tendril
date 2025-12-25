@@ -7,6 +7,5 @@ public interface IScrapeExecutor
 {
     Task<ScrapeResult> RunScraperAsync(
         ScraperDefinition scraperDef,
-        bool selectorsOnly = false, 
         CancellationToken cancellationToken = default);
 }

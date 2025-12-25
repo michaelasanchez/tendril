@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Table } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { ScrapersApi } from "../api/scrapers";
 import type { ScraperDefinition } from "../types/api";
 import styles from "./ScrapersPage.module.css";
+import pageStyles from "./Page.module.css";
 
 export const ScrapersPage: React.FC = () => {
   const [scrapers, setScrapers] = useState<ScraperDefinition[]>([]);
@@ -24,7 +25,12 @@ export const ScrapersPage: React.FC = () => {
     }
   };
 
+  const hasLoaded = useRef(false);
+
   useEffect(() => {
+    if (hasLoaded.current) return;
+
+    hasLoaded.current = true;
     void load();
   }, []);
 
@@ -40,7 +46,7 @@ export const ScrapersPage: React.FC = () => {
 
   return (
     <section>
-      <div className={styles.pageHeader}>
+      <div className={pageStyles.pageHeader}>
         <h2>Feeds</h2>
         <button onClick={() => navigate("/scrapers/new")}>New Feed</button>
       </div>

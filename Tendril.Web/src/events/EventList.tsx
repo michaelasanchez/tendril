@@ -43,7 +43,13 @@ export const EventList: React.FC<EventListProps> = ({
                     <Card.Title>{e.title}</Card.Title>
                     <span className="text-muted">@</span>
                     <time>{format(new Date(e.startUtc), "hh:mm a")}</time>
-
+                    {e.endUtc && (
+                      <>
+                        {" "}
+                        <span>-</span>
+                        <time> {format(new Date(e.endUtc), "hh:mm a")}</time>
+                      </>
+                    )}
                     <div className="text-muted">{e.venueName}</div>
                     {e.description && <div>{e.description}</div>}
                   </div>

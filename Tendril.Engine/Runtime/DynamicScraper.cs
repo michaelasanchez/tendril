@@ -22,7 +22,7 @@ public class DynamicScraper : BaseScraper
         _db = db;
     }
 
-    public override async Task<ScrapeResult> ExecuteAsync(bool selectorsOnly, CancellationToken cancellationToken = default)
+    public override async Task<ScrapeResult> ExecuteAsync(CancellationToken cancellationToken = default)
     {
         try
         {

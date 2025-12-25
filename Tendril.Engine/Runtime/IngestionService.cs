@@ -23,7 +23,7 @@ public class IngestionService(
 
         var start = DateTimeOffset.UtcNow;
 
-        var result = await executor.RunScraperAsync(scraper, false, cancellationToken);
+        var result = await executor.RunScraperAsync(scraper, cancellationToken);
 
         var end = DateTimeOffset.UtcNow;
 
