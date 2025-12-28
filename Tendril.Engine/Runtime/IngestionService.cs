@@ -19,135 +19,141 @@ public class IngestionService(
 {
     public async Task<IngestResult> Ingest(ScraperDefinition scraper, CancellationToken cancellationToken = default)
     {
-        logger.LogInformation("Running scraper {Scraper}", scraper.Name);
+        logger.LogInformation("Starting ingestion for {Scraper}", scraper.Name);
 
         var start = DateTimeOffset.UtcNow;
+        int created = 0, updated = 0, extracted = 0;
 
-        var result = await executor.RunScraperAsync(scraper, cancellationToken);
-
-        var end = DateTimeOffset.UtcNow;
-
-        // Log attempt
+        // 1. Create Attempt Record IMMEDIATELY (Mark as Running)
         var attempt = new ScraperAttemptHistory
         {
             Id = Guid.NewGuid(),
             ScraperDefinitionId = scraper.Id,
             StartTimeUtc = start,
-            EndTimeUtc = end,
-            Success = result.Success,
-            Extracted = result.RawEvents.Count,
-            ErrorMessage = result.ErrorMessage
+            Success = false, // Will set to true at end
+            ErrorMessage = "Running..."
         };
-
         await attemptHistories.Add(attempt, cancellationToken);
 
-        var scraped = new List<ScrapedEventRaw>();
-        var mapped = new List<Event>();
-        int created = 0, updated = 0;
+        var errors = new List<string>();
 
-        if (result.Success)
+        try
         {
-            scraper.LastSuccessUtc = end;
-            scraper.State = ScraperState.Healthy;
-
-            foreach (var raw in result.RawEvents)
+            // 2. Consume the Stream (Process 1 item at a time)
+            await foreach (var raw in executor.RunScraperAsync(scraper, cancellationToken))
             {
+                extracted++;
+
+                // A. Save Raw Event
                 var rawEntity = new ScrapedEventRaw
                 {
                     Id = Guid.NewGuid(),
                     ScraperDefinitionId = scraper.Id,
-                    ScrapedAtUtc = end,
+                    ScraperAttemptHistoryId = attempt.Id,
+                    ScrapedAtUtc = DateTimeOffset.UtcNow,
                     RawDataJson = System.Text.Json.JsonSerializer.Serialize(raw)
                 };
 
-                scraped.Add(rawEntity);
-
                 await rawEvents.AddAsync(rawEntity, cancellationToken);
 
-                // Map to consolidated Event
+                // B. Map & Upsert Event
                 try
                 {
-                    var mappedEvent = mapper.Map(scraper, rawEntity);
+                    var result = await ProcessSingleEventAsync(scraper, rawEntity);
 
-                    if (mappedEvent.StartUtc == default)
-                    {
-                        continue;
-                    }
-
-                    mapped.Add(mappedEvent);
-
-                    var existingEvent = await events.Find(mappedEvent);
-
-                    if (existingEvent is not null)
-                    {
-                        var dirty = false;
-
-                        existingEvent.Title = UpdateIfChanged(existingEvent.Title, mappedEvent.Title, ref dirty);
-                        existingEvent.Description = UpdateIfChanged(existingEvent.Description, mappedEvent.Description, ref dirty);
-                        existingEvent.StartUtc = UpdateIfChanged(existingEvent.StartUtc, mappedEvent.StartUtc, ref dirty);
-                        existingEvent.EndUtc = UpdateIfChanged(existingEvent.EndUtc, mappedEvent.EndUtc, ref dirty);
-                        existingEvent.TicketUrl = UpdateIfChanged(existingEvent.TicketUrl, mappedEvent.TicketUrl, ref dirty);
-                        existingEvent.ImageUrl = UpdateIfChanged(existingEvent.ImageUrl, mappedEvent.ImageUrl, ref dirty);
-                        existingEvent.Category = UpdateIfChanged(existingEvent.Category, mappedEvent.Category, ref dirty);
-
-                        if (dirty)
-                        {
-                            updated++;
-
-                            existingEvent.UpdatedAtUtc = DateTimeOffset.UtcNow;
-
-                            rawEntity.ScraperAttemptHistoryId = attempt.Id;
-                            rawEntity.EventId = existingEvent.Id;
-                        }
-                    }
-                    else
-                    {
-                        await events.AddAsync(mappedEvent, cancellationToken);
-
-                        created++;
-
-                        rawEntity.ScraperAttemptHistoryId = attempt.Id;
-                        rawEntity.EventId = mappedEvent.Id;
-                    }
+                    if (result == "created") created++;
+                    if (result == "updated") updated++;
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex, "Failed to map raw event for scraper {ScraperId}", scraper.Id);
+                    logger.LogError(ex, "Error mapping event");
+                    errors.Add(ex.Message);
                 }
             }
 
-            await scrapers.UpdateAsync(scraper, cancellationToken);
+            // 3. Success Completion
+            scraper.State = ScraperState.Healthy;
+            scraper.LastSuccessUtc = DateTimeOffset.UtcNow;
+            attempt.Success = true;
+            attempt.ErrorMessage = null;
         }
-        else
+        catch (Exception ex)
         {
-            scraper.LastFailureUtc = end;
-            scraper.LastErrorMessage = result.ErrorMessage;
-            scraper.State = scraper.State == ScraperState.Healthy
-                ? ScraperState.Warning
-                : ScraperState.Unhealthy;
+            // 4. Failure Completion
+            logger.LogError(ex, "Scraper job failed");
+            scraper.State = ScraperState.Unhealthy;
+            scraper.LastFailureUtc = DateTimeOffset.UtcNow;
+            scraper.LastErrorMessage = ex.Message;
 
-            logger.LogWarning(
-                "Scraper {Scraper} failed: {Error}",
-                scraper.Name,
-                result.ErrorMessage);
+            attempt.Success = false;
+            attempt.ErrorMessage = ex.Message;
         }
+        finally
+        {
+            // 5. Finalize Stats
+            attempt.EndTimeUtc = DateTimeOffset.UtcNow;
+            attempt.Extracted = extracted;
+            attempt.Created = created;
+            attempt.Updated = updated;
 
-        await scrapers.UpdateAsync(scraper, cancellationToken);
-
-        attempt.Mapped = mapped.Count;
-        attempt.Created = created;
-        attempt.Updated = updated;
-
-        await attemptHistories.UpdateAsync(attempt, cancellationToken);
+            await scrapers.UpdateAsync(scraper, cancellationToken);
+            await attemptHistories.UpdateAsync(attempt, cancellationToken);
+        }
 
         return new IngestResult
         {
-            Success = result.Success,
-            ErrorMessage = result.ErrorMessage,
-            Attempt = attempt,
-            Scraped = scraped,
-            Mapped = mapped
+            Success = attempt.Success,
+            Attempt = attempt
         };
+    }
+
+    private async Task<string> ProcessSingleEventAsync(ScraperDefinition scraper, ScrapedEventRaw rawEntity)
+    {
+        var mappedEvent = mapper.Map(scraper, rawEntity);
+
+        if (mappedEvent.StartUtc == default) return "skipped";
+
+        var existingEvent = await events.Find(mappedEvent);
+
+        if (existingEvent is not null)
+        {
+            var dirty = false;
+            // (Your existing UpdateIfChanged logic here...)
+            UpdateEventFields(existingEvent, mappedEvent, ref dirty);
+
+            if (dirty)
+            {
+                existingEvent.UpdatedAtUtc = DateTimeOffset.UtcNow;
+                rawEntity.EventId = existingEvent.Id;
+
+                // Note: EF Core tracking usually handles the update automatically 
+                // when you call SaveChanges, or if your repo has an Update method:
+                await events.UpdateAsync(existingEvent);
+                return "updated";
+            }
+            return "skipped";
+        }
+        else
+        {
+            await events.AddAsync(mappedEvent);
+
+            rawEntity.EventId = mappedEvent.Id;
+
+            return "created";
+        }
+    }
+
+    // Helper to keep the main method clean
+    private void UpdateEventFields(Event current, Event incoming, ref bool isModified)
+    {
+        current.Title = UpdateIfChanged(current.Title, incoming.Title, ref isModified);
+        current.Description = UpdateIfChanged(current.Description, incoming.Description, ref isModified);
+
+        current.StartUtc = UpdateIfChanged(current.StartUtc, incoming.StartUtc, ref isModified);
+        current.EndUtc = UpdateIfChanged(current.EndUtc, incoming.EndUtc, ref isModified);
+
+        current.TicketUrl = UpdateIfChanged(current.TicketUrl, incoming.TicketUrl, ref isModified);
+        current.ImageUrl = UpdateIfChanged(current.ImageUrl, incoming.ImageUrl, ref isModified);
     }
 
     private static T UpdateIfChanged<T>(T current, T incoming, ref bool isModified)

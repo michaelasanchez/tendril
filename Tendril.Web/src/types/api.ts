@@ -8,13 +8,15 @@ export interface Venue {
   website?: string;
 }
 
+export type PaginationType = "None" | "InfiniteScroll" | "NextButton";
+
 export type ScraperState = "Unknown" | "Healthy" | "Unhealthy";
 
 export interface ScraperDefinition {
   id: Guid;
   name: string;
   baseUrl: string;
-  isDynamic: boolean;
+  paginationType: PaginationType;
   schedule: string;
   state: ScraperState;
   lastSuccessUtc?: string | null;
@@ -31,7 +33,10 @@ export type SelectorType =
   | "Src"
   | "Click"
   | "Hover"
-  | "Scroll";
+  | "Scroll"
+  | "Input"
+  | "FollowLink"
+  | "PopupLink";
 
 export interface ScraperSelector {
   id: Guid;
@@ -43,6 +48,9 @@ export interface ScraperSelector {
   type: SelectorType;
   attribute: string | null;
   delay: number | null;
+  interactionValue: string | null;
+  childScraperId: Guid | null;
+  isPaginationTrigger: boolean;
 }
 
 export type TransformType =

@@ -8,5 +8,8 @@ public record ScraperSelectorDto(
     bool Root,
     string Type,
     string? Attribute,
-    int? Delay
+    int? Delay,
+    string? InteractionValue,
+    Guid? ChildScraperId,
+    bool IsPaginationTrigger
 );

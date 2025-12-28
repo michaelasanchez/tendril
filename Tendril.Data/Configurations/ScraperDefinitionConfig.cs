@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Tendril.Data.Configurations;
+﻿namespace Tendril.Data.Configurations;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -22,12 +18,6 @@ public class ScraperDefinitionConfig : IEntityTypeConfiguration<ScraperDefinitio
 
         builder.Property(x => x.BaseUrl)
             .IsRequired();
-
-        builder.Property(x => x.IsDynamic)
-            .IsRequired();
-
-        builder.Property(x => x.Schedule)
-            .HasMaxLength(200);
 
         builder.Property(x => x.State)
             .HasConversion<string>() // Store enum as string

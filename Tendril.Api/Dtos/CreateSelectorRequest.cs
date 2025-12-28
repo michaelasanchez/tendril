@@ -11,4 +11,7 @@ public class CreateSelectorRequest
     public SelectorType Type { get; set; }
     public string? Attribute { get; set; }
     public int? Delay { get; set; }
+    public string? InteractionValue { get; set; }
+    public Guid? ChildScraperId { get; set; }
+    public bool IsPaginationTrigger { get; set; }
 }

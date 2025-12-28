@@ -1,6 +1,7 @@
 // src/api/scrapers.ts
 import type {
   Guid,
+  PaginationType,
   ScraperAttemptHistory,
   ScraperDefinition,
   ScraperMappingRule,
@@ -12,7 +13,7 @@ import { apiDelete, apiGet, apiPost, apiPut } from "./client";
 export interface CreateScraperRequest {
   name: string;
   baseUrl: string;
-  isDynamic: boolean;
+  paginationType: PaginationType;
   venueId?: Guid | null;
   schedule?: string;
 }

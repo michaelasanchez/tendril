@@ -9,5 +9,8 @@ public enum SelectorType
     Src,
     Click,
     Hover,
-    Scroll
+    Scroll,
+    Input,
+    FollowLink,
+    PopupLink
 }

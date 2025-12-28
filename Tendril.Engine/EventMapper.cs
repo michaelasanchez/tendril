@@ -172,11 +172,6 @@ public class EventMapper : IEventMapper
 
         switch (transform)
         {
-            //case TransformType.None:
-            //{
-            //    return primaryVal;
-            //}
-
             case TransformType.Trim:
             {
                 return primaryVal?.Trim();
@@ -415,6 +410,7 @@ public class EventMapper : IEventMapper
         {
             // We use Regex here to avoid adding a dependency on System.Web
             var match = Regex.Match(rawUrl, @"[?&]url=([^&]+)");
+
             if (match.Success)
             {
                 // Decode the URL (e.g. https%3A%2F%2F... -> https://...)

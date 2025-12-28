@@ -16,11 +16,12 @@ const selectorTypeOptions = [
   "Container",
   "Text",
   "Attribute",
-  "Href",
-  "Src",
   "Click",
   "Hover",
   "Scroll",
+  "Input",
+  "FollowLink",
+  "PopupLink"
 ].map((type) => ({ value: type, label: type }));
 
 export const ScraperSelectorsTab: React.FC<Props> = ({
@@ -68,6 +69,9 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
           ? editing.attribute ?? null
           : null,
         delay: editing.delay ?? null,
+        interactionValue: editing.interactionValue ?? null,
+        childScraperId: editing.childScraperId ?? null,
+        isPaginationTrigger: editing.isPaginationTrigger ?? false,
       });
     } else if (editing.id) {
       await ScrapersApi.updateSelector(scraperId, editing.id, {
@@ -80,6 +84,9 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
           ? editing.attribute ?? null
           : null,
         delay: editing.delay ?? null,
+        interactionValue: editing.interactionValue ?? null,
+        childScraperId: editing.childScraperId ?? null,
+        isPaginationTrigger: editing.isPaginationTrigger ?? false,
       });
     }
     await load();
@@ -111,6 +118,9 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
               <th>Type</th>
               <th>Attribute</th>
               <th>Delay</th>
+              <th>Interaction</th>
+              <th>Child Scraper</th>
+              <th>Pagination Trigger</th>
               <th />
             </tr>
           </thead>
@@ -128,6 +138,9 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
                   <td>{s.type}</td>
                   <td>{s.attribute}</td>
                   <td>{s.delay}</td>
+                  <td>{s.interactionValue}</td>
+                  <td>{s.childScraperId}</td>
+                  <td>{s.isPaginationTrigger ? "Yes" : ""}</td>
                   <td>
                     <button onClick={() => startEdit(s)}>Edit</button>
                     <button onClick={() => remove(s)}>Delete</button>
@@ -165,13 +178,22 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
                   setEditing({ ...editing, order: parseInt(order) })
                 }
               />
-              <FormCheck
-                label="Root"
-                checked={editing.root ?? false}
-                onChange={(checked) =>
-                  setEditing({ ...editing, root: checked })
-                }
-              />
+              <div className={formStyles.formGroup}>
+                <FormCheck
+                  label="Root"
+                  checked={editing.root ?? false}
+                  onChange={(checked) =>
+                    setEditing({ ...editing, root: checked })
+                  }
+                />
+                <FormCheck
+                  label="Pagination Trigger"
+                  checked={editing.isPaginationTrigger ?? false}
+                  onChange={(isPaginationTrigger) =>
+                    setEditing({ ...editing, isPaginationTrigger })
+                  }
+                />
+              </div>
               <FormSelect
                 label="Type"
                 value={editing.type ?? "Text"}
@@ -197,12 +219,33 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
                   setEditing({ ...editing, delay: parseInt(delay) })
                 }
               />
+              {editing.type === "Input" && (
+                <FormInput
+                  label="Interaction Value"
+                  value={editing.interactionValue ?? ""}
+                  onChange={(interactionValue) =>
+                    setEditing({ ...editing, interactionValue })
+                  }
+                />
+              )}
+              {editing.type == "FollowLink" && (
+                <FormInput
+                  label="Child Scraper ID"
+                  value={editing.childScraperId ?? ""}
+                  onChange={(childScraperId) =>
+                    setEditing({ ...editing, childScraperId })
+                  }
+                />
+              )}
+              <div className={formStyles.buttonRow}>
+                <button type="button" onClick={save}>
+                  Save
+                </button>
+                <button type="button" onClick={cancelEdit}>
+                  Cancel
+                </button>
+              </div>
             </Form>
-
-            <div className={formStyles.buttonRow}>
-              <button onClick={save}>Save</button>
-              <button onClick={cancelEdit}>Cancel</button>
-            </div>
           </div>
         )}
       </Card.Body>

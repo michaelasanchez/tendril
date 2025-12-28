@@ -11,6 +11,7 @@ import { ScraperRunsTab } from "../scrapers/ScraperRunsTab";
 import { ScraperSelectorsTab } from "../scrapers/ScraperSelectorsTab";
 import type {
   Guid,
+  PaginationType,
   ScraperDefinition,
   ScraperSelector,
   Venue,
@@ -19,6 +20,10 @@ import pageStyles from "./Page.module.css";
 import styles from "./ScraperEditorPage.module.css";
 
 type TabKey = "general" | "selectors" | "mapping" | "runs";
+
+const paginationTypeOptions = ["None", "InfiniteScroll", "NextButton"].map(
+  (type) => ({ value: type, label: type })
+);
 
 export const ScraperEditorPage: React.FC = () => {
   const { scraperId } = useParams();
@@ -60,7 +65,7 @@ export const ScraperEditorPage: React.FC = () => {
             id: "" as Guid,
             name: "",
             baseUrl: "",
-            isDynamic: true,
+            paginationType: "None",
             schedule: "0 */6 * * *",
             state: "Unknown",
             lastSuccessUtc: null,
@@ -83,7 +88,7 @@ export const ScraperEditorPage: React.FC = () => {
         const created = await ScrapersApi.create({
           name: scraper.name,
           baseUrl: scraper.baseUrl,
-          isDynamic: scraper.isDynamic,
+          paginationType: scraper.paginationType,
           venueId: scraper.venueId ?? undefined,
           schedule: scraper.schedule,
         });
@@ -92,7 +97,7 @@ export const ScraperEditorPage: React.FC = () => {
         await ScrapersApi.update(scraperId as Guid, {
           name: scraper.name,
           baseUrl: scraper.baseUrl,
-          isDynamic: scraper.isDynamic,
+          paginationType: scraper.paginationType,
           venueId: scraper.venueId ?? undefined,
           schedule: scraper.schedule,
         });
@@ -141,20 +146,6 @@ export const ScraperEditorPage: React.FC = () => {
                       setScraper({ ...scraper, name: value })
                     }
                   />
-                  <FormInput
-                    label="Base URL"
-                    value={scraper.baseUrl}
-                    onChange={(value) =>
-                      setScraper({ ...scraper, baseUrl: value })
-                    }
-                  />
-                  {/* <FormInput
-                label="Schedule (cron)"
-                value={scraper.schedule}
-                onChange={(value) =>
-                  setScraper({ ...scraper, schedule: value })
-                }
-              /> */}
                   <FormSelect
                     label="Venue"
                     value={scraper.venueId ?? ""}
@@ -168,17 +159,30 @@ export const ScraperEditorPage: React.FC = () => {
                       venues.map((v) => ({ value: v.id, label: v.name }))
                     )}
                   />
-                  {/* <FormCheck
-                label="Dynamic"
-                checked={scraper.isDynamic}
-                onChange={(checked) =>
-                  setScraper({ ...scraper, isDynamic: checked })
-                }
-              /> */}
+                  <FormInput
+                    label="Base URL"
+                    value={scraper.baseUrl}
+                    onChange={(value) =>
+                      setScraper({ ...scraper, baseUrl: value })
+                    }
+                  />
+                  <FormSelect
+                    label="Paging"
+                    value={scraper.paginationType}
+                    onChange={(paginationType) =>
+                      setScraper({
+                        ...scraper,
+                        paginationType: paginationType as PaginationType,
+                      })
+                    }
+                    options={paginationTypeOptions}
+                  />
+                  <div className={formStyles.buttonRow}>
+                    <button type="button" onClick={handleSaveGeneral}>
+                      Save
+                    </button>
+                  </div>
                 </Form>
-                <div className={formStyles.buttonRow}>
-                  <button onClick={handleSaveGeneral}>Save</button>
-                </div>
               </Card.Body>
             </Card>
           </Tab.Pane>

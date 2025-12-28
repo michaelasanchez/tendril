@@ -2,6 +2,7 @@
 using Tendril.Core.Domain.Entities;
 using Tendril.Core.Interfaces.Repositories;
 using Tendril.Engine.Abstractions;
+using Tendril.Engine.Models;
 
 namespace Tendril.Api.Controllers;
 
@@ -14,35 +15,55 @@ public class ScraperRunsController(
     IEventMapper mapper,
     IIngestionService ingestionService) : ControllerBase
 {
-    // 1️⃣ Test selectors only (no DB writes, no mapping)
+    // 1️⃣ Test selectors only (Stream -> List in memory)
     [HttpPost("test-selectors")]
-    public async Task<ActionResult> TestSelectors(Guid scraperId)
+    public async Task<ActionResult> TestSelectors(Guid scraperId, CancellationToken ct)
     {
-        var scraper = await scrapers.GetByIdWithDetailsAsync(scraperId);
+        var scraper = await scrapers.GetByIdWithDetailsAsync(scraperId, ct);
 
         if (scraper == null)
             return NotFound();
 
-        var result = await executor.RunScraperAsync(scraper);
+        var events = new List<RawScrapedEvent>();
 
-        return Ok(new
+        try
         {
-            success = result.Success,
-            error = result.ErrorMessage,
-            raw = result.RawEvents
-        });
+            // Consume the stream
+            await foreach (var item in executor.RunScraperAsync(scraper, ct))
+            {
+                events.Add(item);
+            }
+
+            return Ok(new
+            {
+                success = true,
+                error = (string?)null,
+                count = events.Count,
+                raw = events
+            });
+        }
+        catch (Exception ex)
+        {
+            return Ok(new
+            {
+                success = false,
+                error = ex.Message,
+                count = events.Count,
+                raw = events // Return what we found before it crashed
+            });
+        }
     }
 
-    // 2️⃣ Test mapping only (takes most recent raw event)
+    // 2️⃣ Test mapping only (No changes needed, uses DB)
     [HttpPost("test-mapping")]
-    public async Task<ActionResult> TestMapping(Guid scraperId)
+    public async Task<ActionResult> TestMapping(Guid scraperId, CancellationToken ct)
     {
-        var scraper = await scrapers.GetByIdWithDetailsAsync(scraperId);
+        var scraper = await scrapers.GetByIdWithDetailsAsync(scraperId, ct);
 
         if (scraper == null)
             return NotFound();
 
-        var raw = await rawEvents.GetMostRecentForScraperAsync(scraperId);
+        var raw = await rawEvents.GetMostRecentForScraperAsync(scraperId, ct);
 
         if (raw == null)
             return BadRequest("No raw events available to test mapping.");
@@ -56,52 +77,70 @@ public class ScraperRunsController(
         });
     }
 
-    // 3️⃣ Full end-to-end test run (does NOT persist anything)
+    // 3️⃣ Full end-to-end test run (Stream -> Map -> Return JSON, no DB save)
     [HttpPost("test-run")]
-    public async Task<ActionResult> TestRun(Guid scraperId)
+    public async Task<ActionResult> TestRun(Guid scraperId, CancellationToken ct)
     {
-        var scraper = await scrapers.GetByIdWithDetailsAsync(scraperId);
+        var scraper = await scrapers.GetByIdWithDetailsAsync(scraperId, ct);
         if (scraper == null)
             return NotFound();
 
-        var result = await executor.RunScraperAsync(scraper);
+        var mappedEvents = new List<object>();
+        var rawCount = 0;
 
-        var mapped = new List<object>();
-
-        foreach (var raw in result.RawEvents)
+        try
         {
-            var rawEntity = new ScrapedEventRaw
+            await foreach (var raw in executor.RunScraperAsync(scraper, ct))
             {
-                Id = Guid.NewGuid(),
-                ScraperDefinitionId = scraper.Id,
-                ScrapedAtUtc = DateTimeOffset.UtcNow,
-                RawDataJson = System.Text.Json.JsonSerializer.Serialize(raw)
-            };
+                rawCount++;
 
-            var mappedEvent = mapper.Map(scraper, rawEntity);
+                // Simulate the Entity wrapper required by the Mapper
+                var rawEntity = new ScrapedEventRaw
+                {
+                    Id = Guid.NewGuid(),
+                    ScraperDefinitionId = scraper.Id,
+                    ScrapedAtUtc = DateTimeOffset.UtcNow,
+                    // The mapper expects the serialized JSON string
+                    RawDataJson = System.Text.Json.JsonSerializer.Serialize(raw)
+                };
 
-            mapped.Add(mappedEvent);
+                var mappedEvent = mapper.Map(scraper, rawEntity);
+                mappedEvents.Add(mappedEvent);
+            }
+
+            return Ok(new
+            {
+                success = true,
+                error = (string?)null,
+                rawCount,
+                mappedCount = mappedEvents.Count,
+                mapped = mappedEvents
+            });
         }
-
-        return Ok(new
+        catch (Exception ex)
         {
-            result.Success,
-            result.ErrorMessage,
-            Raw = result.RawEvents?.Count ?? 0,
-            Count = mapped?.Count ?? 0
-        });
+            return Ok(new
+            {
+                success = false,
+                error = ex.Message,
+                rawCount,
+                mappedCount = mappedEvents.Count,
+                mapped = mappedEvents
+            });
+        }
     }
 
-    // 4️⃣ Production run (writes raw + mapped events, same logic as the worker)
+    // 4️⃣ Production run (Delegates to IngestionService which now handles the stream)
     [HttpPost("run-now")]
-    public async Task<ActionResult> RunNow(Guid scraperId)
+    public async Task<ActionResult> RunNow(Guid scraperId, CancellationToken ct)
     {
-        var scraper = await scrapers.GetByIdWithDetailsAsync(scraperId);
+        var scraper = await scrapers.GetByIdWithDetailsAsync(scraperId, ct);
 
         if (scraper == null)
             return NotFound();
 
-        var result = await ingestionService.Ingest(scraper);
+        // The IngestionService now internally handles the Stream loop and DB saving
+        var result = await ingestionService.Ingest(scraper, ct);
 
         return Ok(result);
     }

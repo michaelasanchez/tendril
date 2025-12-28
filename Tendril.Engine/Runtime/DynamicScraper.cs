@@ -1,183 +1,308 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Playwright;
+﻿using Microsoft.Playwright;
 using Tendril.Core.Domain.Entities;
 using Tendril.Core.Domain.Enums;
-using Tendril.Data;
 using Tendril.Engine.Models;
-using Tendril.Engine.Playwright;
 
 namespace Tendril.Engine.Runtime;
 
-public class DynamicScraper : BaseScraper
+// Internal helper to pass data back to the Executor
+public record ScrapeYieldItem
 {
-    private const int DefaultClickDelay = 500;
-    private const int DefaultScrollDelay = 1000;
+    public RawScrapedEvent Data { get; init; } = new();
+    public string? ChildUrl { get; init; }
+    public Guid? ChildScraperId { get; init; }
+}
 
-    private readonly ScraperDefinition _def;
-    private readonly TendrilDbContext _db;
+public class DynamicScraper
+{
+    private const int DefaultWait = 500;
 
-    public DynamicScraper(ScraperDefinition def, TendrilDbContext db)
+    public async IAsyncEnumerable<ScrapeYieldItem> ExecuteAsync(
+        IPage page,
+        ScraperDefinition def)
     {
-        _def = def;
-        _db = db;
-    }
+        // 1. PRE-SCRAPE PHASE
+        // Run any interactions (like typing zip code) required BEFORE the list appears.
+        var container = def.Selectors.Single(x => x.Type == SelectorType.Container);
 
-    public override async Task<ScrapeResult> ExecuteAsync(CancellationToken cancellationToken = default)
-    {
+        var preActions = def.Selectors
+            .Where(x => x.Order < container.Order && x.Type != SelectorType.Container)
+            .OrderBy(x => x.Order);
+
+        foreach (var action in preActions)
+        {
+            await PerformActionAsync(page, null, action);
+        }
+
+        // 2. WAIT FOR CONTENT
         try
         {
-            var selectors = await _db.Selectors
-                .Where(x => x.ScraperDefinitionId == _def.Id)
-                .ToListAsync(cancellationToken);
+            await page.WaitForSelectorAsync(container.Selector, new() { Timeout = 10000 });
+        }
+        catch (TimeoutException)
+        {
+            // Log warning or break if list never appears
+            yield break;
+        }
 
-            var innerSelectors = selectors.Where(x => x.Type != SelectorType.Container).ToList();
+        // 3. PAGINATION LOOP
+        bool hasMore = true;
+        var processedSignatures = new HashSet<string>();
 
-            if (innerSelectors.Count == 0)
-                return Fail("No selectors defined.");
+        do
+        {
+            // A. EXTRACT VISIBLE ITEMS
+            var items = await page.QuerySelectorAllAsync(container.Selector);
 
-            var outerSelectors = selectors.Where(x => x.Type == SelectorType.Container).ToList();
-
-            if (outerSelectors.Count != 1)
-                return Fail("A single list selector is required.");
-
-            var page = await PlaywrightContextFactory.CreatePageAsync();
-
-            await page.GotoAsync(_def.BaseUrl);
-
-            var containerSelector = selectors.Single(x => x.Type == SelectorType.Container);
-
-            var pipelineSteps = selectors
-                .Where(x => x.Type != SelectorType.Container)
-                .OrderBy(x => x.Order)
-                .ToList();
-
-            var results = new List<RawScrapedEvent>();
-
-            // 2. Initial Wait & Query
-            await ScrollAsync(page);
-
-            await page.WaitForSelectorAsync(containerSelector.Selector);
-
-            var items = await page.QuerySelectorAllAsync(containerSelector.Selector);
+            var prevProcessed = processedSignatures.Count();
 
             foreach (var item in items)
             {
-                var raw = new RawScrapedEvent();
+                var result = new ScrapeYieldItem();
 
-                // 3. Execute the Pipeline
-                foreach (var step in pipelineSteps)
+                // Run extraction selectors
+                var itemSelectors = def.Selectors
+                    .Where(x => x.Type != SelectorType.Container && !x.IsPaginationTrigger) // [ENTITY REQ] IsPaginationTrigger
+                    .OrderBy(x => x.Order);
+
+                foreach (var step in itemSelectors)
                 {
-                    var selectorIsEmpty = string.IsNullOrWhiteSpace(step.Selector);
-                    var selectorIsRoot = step.Root;
-
-                    var element = (selectorIsEmpty, selectorIsRoot) switch
+                    // Check if this step triggers a child scraper (Deep Dive)
+                    if (step.ChildScraperDefinitionId.HasValue) // [ENTITY REQ] ChildScraperDefinitionId
                     {
-                        (true, _) => item,
-                        (false, true) => await page.QuerySelectorAsync(step.Selector),
-                        (false, false) => await item.QuerySelectorAsync(step.Selector)
-                    };
+                        var linkEl = string.IsNullOrEmpty(step.Selector)
+                            ? item
+                            : await item.QuerySelectorAsync(step.Selector);
 
-                    if (element is null) continue;
+                        var url = await linkEl?.GetAttributeAsync("href");
 
-                    if (step.Type == SelectorType.Click || step.Type == SelectorType.Hover)
-                    {
-                        if (step.Type == SelectorType.Hover)
+                        if (!string.IsNullOrWhiteSpace(url))
                         {
-                            await element.HoverAsync();
+                            result = result with
+                            {
+                                ChildUrl = url,
+                                ChildScraperId = step.ChildScraperDefinitionId
+                            };
                         }
-                        else
-                        {
-                            await element.ClickAsync();
-                        }
-
-                        await page.WaitForTimeoutAsync(step.Delay ?? DefaultClickDelay);
-                    }
-                    else if (step.Type == SelectorType.Scroll)
-                    {
-                        await ScrollAsync(page, element, step.Delay);
                     }
                     else
                     {
-                        try
-                        {
-                            string? value = step.Type switch
-                            {
-                                SelectorType.Text => await element.InnerTextAsync(),
-                                // TODO: deprecate in favor of Attribute?
-                                SelectorType.Href => await element.GetAttributeAsync("href"),
-                                SelectorType.Src => await element.GetAttributeAsync("src"),
-                                //
-                                SelectorType.Attribute => await element.GetAttributeAsync(step.AttributeName),
-                                _ => null
-                            };
-
-                            if (!string.IsNullOrEmpty(value) && !string.IsNullOrEmpty(step.FieldName))
-                            {
-                                raw.Fields[step.FieldName] = value;
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"Error processing step {step.Id}: {ex.Message}");
-                            continue;
-                        }
+                        // Standard data extraction
+                        await ExtractFieldAsync(page, item, step, result.Data);
                     }
                 }
 
-                if (raw.Fields.Count > 0)
+                // Dedup check (simple hash of fields)
+                var signature = result.Data.GetSignature();
+                if (processedSignatures.Add(signature))
                 {
-                    results.Add(raw);
+                    yield return result;
                 }
             }
 
-            // TODO: would be nice to add additional information on this, such as:
-            //  - scroll count
-            return Success(results);
-        }
-        catch (Exception ex)
+            // B. PAGINATION ACTION
+            hasMore = await PerformPaginationAsync(page, def);
+
+        } while (hasMore);
+    }
+    private async Task PerformActionAsync(IPage page, IElementHandle? scope, ScraperSelector action)
+    {
+        // Determine the element to act upon
+        // If 'scope' is provided, look inside it. Otherwise, look at the full page.
+        // If the selector is empty, act on the scope itself (e.g. clicking the list item).
+        var target = string.IsNullOrWhiteSpace(action.Selector)
+            ? scope
+            : (scope != null
+                ? await scope.QuerySelectorAsync(action.Selector)
+                : await page.QuerySelectorAsync(action.Selector));
+
+        if (target == null) return;
+
+        switch (action.Type)
         {
-            return Fail(ex.Message);
+            case SelectorType.Click:
+                await target.ClickAsync();
+                // Wait for potential navigation or DOM update
+                await page.WaitForTimeoutAsync(action.Delay ?? DefaultWait);
+                break;
+
+            case SelectorType.Hover:
+                await target.HoverAsync();
+                await page.WaitForTimeoutAsync(action.Delay ?? DefaultWait);
+                break;
+
+            case SelectorType.Input: // [ENTITY REQ] New InteractionType
+                if (!string.IsNullOrEmpty(action.InteractionValue))
+                {
+                    await target.FillAsync(action.InteractionValue);
+                    await page.WaitForTimeoutAsync(action.Delay ?? DefaultWait);
+                }
+                break;
+
+            case SelectorType.Scroll:
+                // Use the scroll helper on this specific element
+                await ScrollAsync(page, target, action.Delay);
+                break;
         }
     }
-    private async Task<int> ScrollAsync(IPage page, IElementHandle? element = null, int? delay = null)
+    private async Task ExtractFieldAsync(
+    IPage page,
+    IElementHandle item,
+    ScraperSelector step,
+    RawScrapedEvent rawEvent)
     {
-        var maxScrolls = 50;
-        var scrollCount = 0;
-        long previousHeight = 0;
-
-        while (scrollCount < maxScrolls)
+        try
         {
-            // 1. Get current scroll height
-            // If element is null, we check the document body height
-            long currentHeight = element != null
-                ? await element.EvaluateAsync<long>("el => el.scrollHeight")
-                : await page.EvaluateAsync<long>("() => document.body.scrollHeight");
+            // Handle "Root" selectors (e.g., a modal that exists outside the <li>)
+            // If step.Root is true, we ignore 'item' scope and query the Page directly.
+            // (Note: You might need to pass IPage into this method if you support Root selectors deeply)
+            IElementHandle? targetElement;
 
-            // 2. If height hasn't changed since last scroll, we've hit the bottom
-            // (Note: checking > 0 ensures we don't break on the very first pass if prev is 0)
-            if (currentHeight == previousHeight)
+            if (step.Root) // [ENTITY REQ] Add IsRoot to Selector
             {
-                break;
-            }
-
-            // 3. Scroll to the bottom
-            if (element != null)
-            {
-                await element.EvaluateAsync("el => el.scrollTo(0, el.scrollHeight)");
+                // Look at the whole page, not just the list item
+                targetElement = string.IsNullOrWhiteSpace(step.Selector)
+                    ? null // Root requires a selector
+                    : await page.QuerySelectorAsync(step.Selector);
             }
             else
             {
-                // Scroll the main window
-                await page.EvaluateAsync("() => window.scrollTo(0, document.body.scrollHeight)");
+                // Look inside the list item
+                targetElement = string.IsNullOrWhiteSpace(step.Selector)
+                    ? item
+                    : await item.QuerySelectorAsync(step.Selector);
             }
 
-            // 4. Wait for content to load
-            await page.WaitForTimeoutAsync(delay ?? DefaultScrollDelay);
+            // For simplicity in this snippet, assuming standard scoped selection:
+            if (string.IsNullOrWhiteSpace(step.Selector))
+            {
+                targetElement = item;
+            }
+            else
+            {
+                targetElement = await item.QuerySelectorAsync(step.Selector);
+            }
 
-            previousHeight = currentHeight;
-            scrollCount++;
+            if (targetElement == null) return;
+
+            string? value = null;
+
+            if (step.Type == SelectorType.PopupLink)
+            {
+                try
+                {
+                    // 1. Setup the listener BEFORE clicking
+                    // We ask the browser context: "Tell me when a new tab opens"
+                    var popupTask = page.Context.WaitForPageAsync();
+
+                    // 2. Click the button that triggers the popup
+                    await targetElement.ClickAsync();
+
+                    // 3. Await the new tab
+                    var popupPage = await popupTask;
+
+                    // 4. Wait for it to settle so the URL is accurate (handling redirects)
+                    await popupPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+
+                    // 5. Grab the URL
+                    value = popupPage.Url;
+
+                    // 6. Close the popup to clean up memory
+                    await popupPage.CloseAsync();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to capture popup URL: {ex.Message}");
+                }
+            }
+            else
+            {
+                value = step.Type switch
+                {
+                    SelectorType.Text => await targetElement.InnerTextAsync(),
+                    SelectorType.Href => await targetElement.GetAttributeAsync("href"),
+                    SelectorType.Src => await targetElement.GetAttributeAsync("src"),
+                    SelectorType.Attribute => await targetElement.GetAttributeAsync(step.AttributeName ?? ""),
+                    _ => null
+                };
+            }
+
+            if (!string.IsNullOrWhiteSpace(value) && !string.IsNullOrWhiteSpace(step.FieldName))
+            {
+                // Simple assignment. 
+                // The EventMapper later handles type conversion (int, date, etc.)
+                rawEvent.Fields[step.FieldName] = value.Trim();
+            }
+        }
+        catch (Exception ex)
+        {
+            // Log locally or just continue. 
+            // We don't want one missing field to crash the whole item.
+            Console.WriteLine($"Error extracting field {step.FieldName}: {ex.Message}");
+        }
+    }
+
+    private async Task<bool> PerformPaginationAsync(IPage page, ScraperDefinition def)
+    {
+        // [ENTITY REQ] PaginationType enum on Definition
+        if (def.PaginationType == PaginationType.None) return false;
+
+        if (def.PaginationType == PaginationType.InfiniteScroll)
+        {
+            return await ScrollAsync(page); // Uses your existing logic
         }
 
-        return scrollCount;
+        if (def.PaginationType == PaginationType.NextButton)
+        {
+            var nextBtnDef = def.Selectors.FirstOrDefault(s => s.IsPaginationTrigger);
+            if (nextBtnDef == null) return false;
+
+            var nextBtn = await page.QuerySelectorAsync(nextBtnDef.Selector);
+            if (nextBtn == null || await nextBtn.IsDisabledAsync()) return false;
+
+            try
+            {
+                await nextBtn.ClickAsync();
+                await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+                return true;
+            }
+            catch { return false; }
+        }
+
+        return false;
+    }
+    private async Task<bool> ScrollAsync(IPage page, IElementHandle? element = null, int? delay = null)
+    {
+        long previousHeight = 0;
+        long currentHeight = 0;
+        int attempts = 0;
+        int maxAttempts = 5; // Don't scroll forever if nothing happens
+
+        // 1. Get initial height
+        currentHeight = element != null
+            ? await element.EvaluateAsync<long>("el => el.scrollHeight")
+            : await page.EvaluateAsync<long>("() => document.body.scrollHeight");
+
+        // 2. Scroll to bottom
+        if (element != null)
+        {
+            await element.EvaluateAsync("el => el.scrollTo(0, el.scrollHeight)");
+        }
+        else
+        {
+            await page.EvaluateAsync("() => window.scrollTo(0, document.body.scrollHeight)");
+        }
+
+        // 3. Wait for load
+        await page.WaitForTimeoutAsync(delay ?? 1000);
+
+        // 4. Check new height
+        previousHeight = currentHeight;
+        currentHeight = element != null
+            ? await element.EvaluateAsync<long>("el => el.scrollHeight")
+            : await page.EvaluateAsync<long>("() => document.body.scrollHeight");
+
+        // Returns true if content grew (meaning we successfully scrolled and found new stuff)
+        return currentHeight > previousHeight;
     }
 }

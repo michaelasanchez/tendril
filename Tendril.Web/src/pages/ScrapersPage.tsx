@@ -3,13 +3,44 @@ import { Table } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { ScrapersApi } from "../api/scrapers";
 import type { ScraperDefinition } from "../types/api";
-import styles from "./ScrapersPage.module.css";
 import pageStyles from "./Page.module.css";
+import styles from "./ScrapersPage.module.css";
+
+type SortKey =
+  | "name"
+  | "baseUrl"
+  | "state"
+  | "lastSuccessUtc"
+  | "lastFailureUtc";
+
+type SortDirection = "asc" | "desc";
 
 export const ScrapersPage: React.FC = () => {
   const [scrapers, setScrapers] = useState<ScraperDefinition[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [sort, setSort] = useState<{
+    key: SortKey;
+    direction: SortDirection;
+  } | null>(null);
+
+  const onSort = (key: SortKey) => {
+    setSort((prev) => {
+      if (!prev || prev.key !== key) {
+        return { key, direction: "asc" };
+      }
+
+      return {
+        key,
+        direction: prev.direction === "asc" ? "desc" : "asc",
+      };
+    });
+  };
+
+  const sortIndicator = (key: SortKey) =>
+    sort?.key === key ? <>&nbsp;{sort.direction === "asc" ? "▲" : "▼"}</> : "";
+
   const navigate = useNavigate();
 
   const load = async () => {
@@ -34,6 +65,26 @@ export const ScrapersPage: React.FC = () => {
     void load();
   }, []);
 
+  useEffect(() => {
+    if (!sort) return;
+    setScrapers((prev) => {
+      const sorted = [...prev].sort((a, b) => {
+        var aValue = a[sort.key];
+        var bValue = b[sort.key];
+
+        if (aValue === null || aValue === undefined) return 1;
+        if (bValue === null || bValue === undefined) return -1;
+
+        if (aValue < bValue) return sort.direction === "asc" ? -1 : 1;
+        if (aValue > bValue) return sort.direction === "asc" ? 1 : -1;
+
+        return 0;
+      });
+
+      return sorted;
+    });
+  }, [sort]);
+
   const handleRunNow = async (id: string) => {
     if (!window.confirm("Run this scraper now?")) return;
     try {
@@ -57,11 +108,19 @@ export const ScrapersPage: React.FC = () => {
       <Table className="data-table" hover>
         <thead>
           <tr>
-            <th>Name</th>
-            <th>Base URL</th>
-            <th>State</th>
-            <th>Last Success</th>
-            <th>Last Failure</th>
+            <th onClick={() => onSort("name")}>Name{sortIndicator("name")}</th>
+            <th onClick={() => onSort("baseUrl")}>
+              Base URL{sortIndicator("baseUrl")}
+            </th>
+            <th onClick={() => onSort("state")}>
+              State{sortIndicator("state")}
+            </th>
+            <th onClick={() => onSort("lastSuccessUtc")}>
+              Last Success{sortIndicator("lastSuccessUtc")}
+            </th>
+            <th onClick={() => onSort("lastFailureUtc")}>
+              Last Failure{sortIndicator("lastFailureUtc")}
+            </th>
             <th />
           </tr>
         </thead>
@@ -76,7 +135,9 @@ export const ScrapersPage: React.FC = () => {
                   {s.name}
                 </button>
               </td>
-              <td>{s.baseUrl}</td>
+              <td>
+                <a href={s.baseUrl} target="_blank">{s.baseUrl}</a>
+              </td>
               <td>{s.state}</td>
               <td>{s.lastSuccessUtc ?? "-"}</td>
               <td>{s.lastFailureUtc ?? "-"}</td>

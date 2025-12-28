@@ -343,11 +343,15 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
                   }
                 />
               )}
+              <div className={formStyles.buttonRow}>
+                <button type="button" onClick={save}>
+                  Save
+                </button>
+                <button type="button" onClick={cancelEdit}>
+                  Cancel
+                </button>
+              </div>
             </Form>
-            <div className={formStyles.buttonRow}>
-              <button onClick={save}>Save</button>
-              <button onClick={cancelEdit}>Cancel</button>
-            </div>
           </div>
         )}
       </Card.Body>

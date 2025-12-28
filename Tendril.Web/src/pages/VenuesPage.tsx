@@ -128,11 +128,11 @@ export const VenuesPage: React.FC = () => {
               value={editing.website ?? ""}
               onChange={(website) => setEditing({ ...editing, website })}
             />
+            <div className={formStyles.buttonRow}>
+              <button type="button" onClick={save}>Save</button>
+              <button type="button" onClick={cancel}>Cancel</button>
+            </div>
           </Form>
-          <div className={formStyles.buttonRow}>
-            <button onClick={save}>Save</button>
-            <button onClick={cancel}>Cancel</button>
-          </div>
         </div>
       )}
     </section>

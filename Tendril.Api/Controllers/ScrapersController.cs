@@ -49,7 +49,7 @@ public class ScrapersController : ControllerBase
             Id = Guid.NewGuid(),
             Name = request.Name,
             BaseUrl = request.BaseUrl,
-            IsDynamic = request.IsDynamic,
+            PaginationType = request.PaginationType ?? Core.Domain.Enums.PaginationType.None,
             VenueId = request.VenueId
         };
 
@@ -67,7 +67,7 @@ public class ScrapersController : ControllerBase
 
         if (request.Name != null) scraper.Name = request.Name;
         if (request.BaseUrl != null) scraper.BaseUrl = request.BaseUrl;
-        if (request.IsDynamic.HasValue) scraper.IsDynamic = request.IsDynamic.Value;
+        if (request.PaginationType != null) scraper.PaginationType = request.PaginationType.Value;
         if (request.VenueId.HasValue) scraper.VenueId = request.VenueId;
 
         await _scrapers.UpdateAsync(scraper, cancellationToken);

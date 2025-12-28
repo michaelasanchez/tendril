@@ -10,8 +10,9 @@ public static class DependencyInjection
     {
         services.AddScoped<IEventMapper, EventMapper>();
         services.AddScoped<IIngestionService, IngestionService>();
-        services.AddScoped<IScraperFactory, ScraperFactory>();
         services.AddScoped<IScrapeExecutor, ScrapeExecutor>();
+
+        services.AddScoped<DynamicScraper>();
 
         return services;
     }

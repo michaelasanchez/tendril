@@ -4,25 +4,38 @@ using Microsoft.Playwright;
 
 public static class PlaywrightContextFactory
 {
-    private static IPlaywright? _pw;
+    private static IPlaywright? _playwright;
+    private static IBrowser? _browser;
 
-    public static async Task<IPage> CreatePageAsync()
+    private static readonly BrowserNewContextOptions DesktopOptions = new()
     {
-        _pw ??= await Playwright.CreateAsync();
+        ViewportSize = new ViewportSize { Width = 1400, Height = 900 },
+        UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    };
 
-        var browser = await _pw.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+    public static async Task<IBrowserContext> CreateContextAsync()
+    {
+        if (_browser == null)
         {
-            Headless = true
-        });
-
-        var context = await browser.NewContextAsync(new BrowserNewContextOptions
-        {
-            ViewportSize = new ViewportSize
+            _playwright = await Microsoft.Playwright.Playwright.CreateAsync();
+            _browser = await _playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
             {
-                Width = 1400,
-                Height = 900
-            }
-        });
-        return await context.NewPageAsync();
+                Headless = true
+            });
+        }
+
+        return await _browser.NewContextAsync(DesktopOptions);
+    }
+
+    public static async Task DisposeAsync()
+    {
+        if (_browser != null)
+        {
+            await _browser.CloseAsync();
+            await _browser.DisposeAsync();
+            _browser = null;
+        }
+        _playwright?.Dispose();
+        _playwright = null;
     }
 }
