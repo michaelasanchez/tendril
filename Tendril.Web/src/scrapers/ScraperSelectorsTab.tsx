@@ -20,8 +20,8 @@ const selectorTypeOptions = [
   "Hover",
   "Scroll",
   "Input",
-  "FollowLink",
-  "PopupLink"
+  "CaptureLink",
+  "FollowLink"
 ].map((type) => ({ value: type, label: type }));
 
 export const ScraperSelectorsTab: React.FC<Props> = ({

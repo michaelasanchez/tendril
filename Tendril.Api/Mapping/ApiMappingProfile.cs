@@ -18,6 +18,7 @@ public class ApiMappingProfile : Profile
         CreateMap<Venue, VenueDto>();
 
         CreateMap<Event, EventDto>()
-            .ForMember(d => d.VenueName, opt => opt.MapFrom(s => s.Venue!.Name));
+            .ForMember(d => d.VenueName, opt => opt.MapFrom(s => s.Venue!.Name))
+            .ForMember(d => d.VenueUrl, opt => opt.MapFrom(s => s.Venue!.Website));
     }
 }

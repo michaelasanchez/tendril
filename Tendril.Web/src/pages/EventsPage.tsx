@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Container } from "react-bootstrap";
 import { EventsApi } from "../api/events";
+import { EventModal } from "../components/modal";
 import { EventCalendar, EventList } from "../events";
 import type { Event } from "../types/api";
 import styles from "./EventsPage.module.css";
@@ -10,6 +11,9 @@ export const EventsPage: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [venueFilter, setVenueFilter] = useState<string | null>(null);
   const [from, setFrom] = useState<Date>(new Date());
+  const [activeEvent, setActiveEvent] = useState<Event | null>(null);
+
+  const handleClose = () => setActiveEvent(null);
 
   // Initial load
   useEffect(() => {
@@ -64,8 +68,19 @@ export const EventsPage: React.FC = () => {
           </label>
         </div>
 
+        <EventModal
+          event={activeEvent}
+          show={!!activeEvent}
+          onHide={handleClose}
+        />
+
         {view === "list" && (
-          <EventList events={events} from={from} venueFilter={venueFilter} />
+          <EventList
+            events={events}
+            from={from}
+            venueFilter={venueFilter}
+            onEventClick={setActiveEvent}
+          />
         )}
         {view === "calendar" && <EventCalendar events={calendarEvents} />}
       </section>

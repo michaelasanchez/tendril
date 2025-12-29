@@ -36,7 +36,7 @@ export type SelectorType =
   | "Scroll"
   | "Input"
   | "FollowLink"
-  | "PopupLink";
+  | "CaptureLink";
 
 export interface ScraperSelector {
   id: Guid;
@@ -98,13 +98,16 @@ export interface ScraperAttemptHistory {
 export interface Event {
   id: Guid;
   title: string;
+  location: string;
   description?: string;
   startUtc: string;
   endUtc?: string | null;
-  ticketUrl?: string | null;
-  category?: string | null;
   imageUrl?: string | null;
+  detailsUrl?: string | null;
+  ticketUrl?: string | null
+  category?: string | null;
   venueName?: string | null;
+  venueUrl?: string | null;
 }
 
 export interface ScrapeRunResponse {

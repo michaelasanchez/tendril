@@ -11,6 +11,6 @@ public enum SelectorType
     Hover,
     Scroll,
     Input,
-    FollowLink,
-    PopupLink
+    CaptureLink,
+    FollowLink
 }

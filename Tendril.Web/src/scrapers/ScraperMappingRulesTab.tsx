@@ -39,12 +39,14 @@ const transformTypeOptions: SelectOption[] = [
 
 const targetFieldOptions: SelectOption[] = [
   "Title",
+  "Location",
   "Description",
   "StartUtc",
   "EndUtc",
+  "ImageUrl",
+  "DetailsUrl",
   "TicketUrl",
   "Category",
-  "ImageUrl",
 ].map((o) => ({ value: o, label: o }));
 
 export const ScraperMappingRulesTab: React.FC<Props> = ({

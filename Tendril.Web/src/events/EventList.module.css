@@ -7,6 +7,15 @@
     background: var(--bs-body-bg);
   }
 
+  .EventCard {
+    cursor: pointer;
+  }
+
+  .CardImage {
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+  }
+
   .CardBody {
     display: flex;
     flex-direction: column;
@@ -14,6 +23,15 @@
 
     .CardContent {
       flex-grow: 1;
+    }
+
+    .CardRow {
+      display: flex;
+      align-items: center;
+
+      svg {
+        margin-right: 0.5em;
+      }
     }
 
     .CardActions {
@@ -25,8 +43,8 @@
   .NoImage {
     --bg-opacity: 0.1;
     --img-opacity: 0.25;
-    
-    padding: 3em;
+
+    /* padding: 3em; */
 
     background-color: rgb(255, 255, 255, var(--bg-opacity));
     border-top-left-radius: var(--bs-card-inner-border-radius);
@@ -44,5 +62,4 @@
     gap: 1rem;
     place-items: stretch;
   }
-
 }

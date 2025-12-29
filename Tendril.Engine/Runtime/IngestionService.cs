@@ -147,13 +147,15 @@ public class IngestionService(
     private void UpdateEventFields(Event current, Event incoming, ref bool isModified)
     {
         current.Title = UpdateIfChanged(current.Title, incoming.Title, ref isModified);
+        //current.Location = UpdateIfChanged(current.Location, incoming.Location, ref isModified);
         current.Description = UpdateIfChanged(current.Description, incoming.Description, ref isModified);
 
         current.StartUtc = UpdateIfChanged(current.StartUtc, incoming.StartUtc, ref isModified);
         current.EndUtc = UpdateIfChanged(current.EndUtc, incoming.EndUtc, ref isModified);
 
-        current.TicketUrl = UpdateIfChanged(current.TicketUrl, incoming.TicketUrl, ref isModified);
         current.ImageUrl = UpdateIfChanged(current.ImageUrl, incoming.ImageUrl, ref isModified);
+        //current.DetailsUrl = UpdateIfChanged(current.DetailsUrl, incoming.DetailsUrl, ref isModified);
+        current.TicketUrl = UpdateIfChanged(current.TicketUrl, incoming.TicketUrl, ref isModified);
     }
 
     private static T UpdateIfChanged<T>(T current, T incoming, ref bool isModified)

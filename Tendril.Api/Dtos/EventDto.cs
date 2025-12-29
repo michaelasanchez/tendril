@@ -1,13 +1,17 @@
 ﻿namespace Tendril.Api.Dtos;
 
-public record EventDto(
-    Guid Id,
-    string Title,
-    string? Description,
-    DateTimeOffset StartUtc,
-    DateTimeOffset? EndUtc,
-    string? TicketUrl,
-    string? Category,
-    string? ImageUrl,
-    string VenueName
-);
+public record EventDto
+{
+    public Guid Id { get; set; }
+    public string? Title { get; set; }
+    public string? Location { get; set; }
+    public string? Description { get; set; }
+    public DateTimeOffset StartUtc { get; set; }
+    public DateTimeOffset? EndUtc { get; set; }
+    public string? DetailsUrl { get; set; }
+    public string? ImageUrl { get; set; }
+    public string? TicketUrl { get; set; }
+    public string? Category { get; set; }
+    public string? VenueName { get; set; }
+    public string? VenueUrl { get; set; }
+};

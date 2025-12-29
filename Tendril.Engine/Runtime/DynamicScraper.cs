@@ -54,8 +54,6 @@ public class DynamicScraper
             // A. EXTRACT VISIBLE ITEMS
             var items = await page.QuerySelectorAllAsync(container.Selector);
 
-            var prevProcessed = processedSignatures.Count();
-
             foreach (var item in items)
             {
                 var result = new ScrapeYieldItem();
@@ -145,11 +143,11 @@ public class DynamicScraper
                 break;
         }
     }
-    private async Task ExtractFieldAsync(
-    IPage page,
-    IElementHandle item,
-    ScraperSelector step,
-    RawScrapedEvent rawEvent)
+    private static async Task ExtractFieldAsync(
+        IPage page,
+        IElementHandle item,
+        ScraperSelector step,
+        RawScrapedEvent rawEvent)
     {
         try
         {
@@ -187,7 +185,7 @@ public class DynamicScraper
 
             string? value = null;
 
-            if (step.Type == SelectorType.PopupLink)
+            if (step.Type == SelectorType.CaptureLink)
             {
                 try
                 {

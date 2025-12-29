@@ -13,13 +13,15 @@ public class Event
     public Venue? Venue { get; set; }
 
     public string Title { get; set; } = null!;
+    public string? Location { get; set; }
     public string? Description { get; set; }
 
     public DateTimeOffset StartUtc { get; set; }
     public DateTimeOffset? EndUtc { get; set; }
 
-    public string? TicketUrl { get; set; }
+    public string? DetailsUrl { get; set; }
     public string? ImageUrl { get; set; }
+    public string? TicketUrl { get; set; }
 
     public string? Category { get; set; }
 
