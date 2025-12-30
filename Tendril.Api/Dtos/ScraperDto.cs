@@ -6,9 +6,11 @@ public record ScraperDto(
     Guid Id,
     string Name,
     string BaseUrl,
-    PaginationType paginationType,
+    ExecutionMode ExecutionMode,
+    ExtractionStrategy ExtractionStrategy,
+    PaginationType PaginationType,
     string State,
     string? LastSuccessUtc,
     string? LastFailureUtc,
-    Guid? venueId
+    Guid? VenueId
 );

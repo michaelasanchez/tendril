@@ -10,6 +10,8 @@ import { ScraperMappingRulesTab } from "../scrapers/ScraperMappingRulesTab";
 import { ScraperRunsTab } from "../scrapers/ScraperRunsTab";
 import { ScraperSelectorsTab } from "../scrapers/ScraperSelectorsTab";
 import type {
+  ExecutionMode,
+  ExtractionStrategy,
   Guid,
   PaginationType,
   ScraperDefinition,
@@ -19,11 +21,23 @@ import type {
 import pageStyles from "./Page.module.css";
 import styles from "./ScraperEditorPage.module.css";
 
-type TabKey = "general" | "selectors" | "mapping" | "runs";
+const toOptions = (arr: string[]) =>
+  arr.map((item) => ({ value: item, label: item }));
 
-const paginationTypeOptions = ["None", "InfiniteScroll", "NextButton"].map(
-  (type) => ({ value: type, label: type })
-);
+const executionModeOptions = toOptions(["Static", "Dynamic"]);
+
+const extractionStrategyOptions = toOptions([
+  "Css",
+  "JsonLd",
+  "XPath",
+  "Regex",
+]);
+
+const paginationTypeOptions = toOptions([
+  "None",
+  "InfiniteScroll",
+  "NextButton",
+]);
 
 export const ScraperEditorPage: React.FC = () => {
   const { scraperId } = useParams();
@@ -65,8 +79,9 @@ export const ScraperEditorPage: React.FC = () => {
             id: "" as Guid,
             name: "",
             baseUrl: "",
+            executionMode: "Static",
+            extractionStrategy: "Css",
             paginationType: "None",
-            schedule: "0 */6 * * *",
             state: "Unknown",
             lastSuccessUtc: null,
             lastFailureUtc: null,
@@ -75,7 +90,7 @@ export const ScraperEditorPage: React.FC = () => {
           }
         );
       } catch (e: any) {
-        setError(e.message ?? "Error loading feed.");
+        setError(e.message ?? "Error loading scraper.");
       }
     };
     void load();
@@ -88,18 +103,20 @@ export const ScraperEditorPage: React.FC = () => {
         const created = await ScrapersApi.create({
           name: scraper.name,
           baseUrl: scraper.baseUrl,
+          executionMode: scraper.executionMode,
+          extractionStrategy: scraper.extractionStrategy,
           paginationType: scraper.paginationType,
           venueId: scraper.venueId ?? undefined,
-          schedule: scraper.schedule,
         });
         navigate(`/scrapers/${created.id}`);
       } else if (scraperId) {
         await ScrapersApi.update(scraperId as Guid, {
           name: scraper.name,
           baseUrl: scraper.baseUrl,
+          executionMode: scraper.executionMode,
+          extractionStrategy: scraper.extractionStrategy,
           paginationType: scraper.paginationType,
           venueId: scraper.venueId ?? undefined,
-          schedule: scraper.schedule,
         });
       }
       alert("Saved.");
@@ -114,7 +131,7 @@ export const ScraperEditorPage: React.FC = () => {
   return (
     <section>
       <div className={pageStyles.pageHeader}>
-        <h2>{isNew ? "New Feed" : `Edit Feed – ${scraper.name}`}</h2>
+        <h2>{isNew ? "New Scraper" : `Edit Scraper – ${scraper.name}`}</h2>
         <button onClick={() => navigate("/scrapers")}>Back</button>
       </div>
 
@@ -165,6 +182,30 @@ export const ScraperEditorPage: React.FC = () => {
                     onChange={(value) =>
                       setScraper({ ...scraper, baseUrl: value })
                     }
+                  />
+                  <hr />
+                  <FormSelect
+                    label="Execution Mode"
+                    value={scraper.executionMode}
+                    onChange={(executionMode) =>
+                      setScraper({
+                        ...scraper,
+                        executionMode: executionMode as ExecutionMode,
+                      })
+                    }
+                    options={executionModeOptions}
+                  />
+                  <FormSelect
+                    label="Extraction Strategy"
+                    value={scraper.extractionStrategy}
+                    onChange={(extractionStrategy) =>
+                      setScraper({
+                        ...scraper,
+                        extractionStrategy:
+                          extractionStrategy as ExtractionStrategy,
+                      })
+                    }
+                    options={extractionStrategyOptions}
                   />
                   <FormSelect
                     label="Paging"

@@ -71,10 +71,10 @@ public class SelectorsController : ControllerBase
         selector.Order = request.Order ?? selector.Order;
         selector.Root = request.Root ?? selector.Root;
         selector.Type = request.Type ?? selector.Type;
-        selector.AttributeName = request.Attribute ?? selector.AttributeName;
-        selector.Delay = request.Delay ?? selector.Delay;
-        selector.InteractionValue = request.InteractionValue ?? selector.InteractionValue;
-        selector.ChildScraperDefinitionId = request.ChildScraperId ?? selector.ChildScraperDefinitionId;
+        selector.AttributeName = request.Attribute;
+        selector.Delay = request.Delay;
+        selector.InteractionValue = request.InteractionValue;
+        selector.ChildScraperDefinitionId = request.ChildScraperId;
         selector.IsPaginationTrigger = request.IsPaginationTrigger;
 
         await _selectors.UpdateAsync(selector, cancellationToken);

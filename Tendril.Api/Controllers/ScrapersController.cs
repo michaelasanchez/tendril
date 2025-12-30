@@ -3,42 +3,31 @@ using Microsoft.AspNetCore.Mvc;
 using Tendril.Api.Dtos;
 using Tendril.Core.Domain.Entities;
 using Tendril.Core.Interfaces.Repositories;
-using Tendril.Engine.Abstractions;
 
 namespace Tendril.Api.Controllers;
 
 [ApiController]
 [Route("api/scrapers")]
-public class ScrapersController : ControllerBase
+public class ScrapersController(
+    IScraperRepository scrapers,
+    IMapper mapper) : ControllerBase
 {
-    private readonly IScraperRepository _scrapers;
-    private readonly IMapper _mapper;
-    private readonly IScrapeExecutor _executor;
-
-    public ScrapersController(
-        IScraperRepository scrapers,
-        IMapper mapper,
-        IScrapeExecutor executor)
-    {
-        _scrapers = scrapers;
-        _mapper = mapper;
-        _executor = executor;
-    }
-
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ScraperDto>>> GetAll(CancellationToken cancellationToken)
     {
-        var list = await _scrapers.GetAllAsync(cancellationToken);
-        return Ok(_mapper.Map<IEnumerable<ScraperDto>>(list));
+        var list = await scrapers.GetAllAsync(cancellationToken);
+
+        return Ok(mapper.Map<IEnumerable<ScraperDto>>(list));
     }
 
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<ScraperDto>> GetById(Guid id, CancellationToken cancellationToken)
     {
-        var scraper = await _scrapers.GetByIdWithDetailsAsync(id, cancellationToken);
+        var scraper = await scrapers.GetByIdWithDetailsAsync(id, cancellationToken);
+
         if (scraper is null) return NotFound();
 
-        return Ok(_mapper.Map<ScraperDto>(scraper));
+        return Ok(mapper.Map<ScraperDto>(scraper));
     }
 
     [HttpPost]
@@ -49,38 +38,42 @@ public class ScrapersController : ControllerBase
             Id = Guid.NewGuid(),
             Name = request.Name,
             BaseUrl = request.BaseUrl,
+            ExecutionMode = request.ExecutionMode ?? Core.Domain.Enums.ExecutionMode.Dynamic,
+            ExtractionStrategy = request.ExtractionStrategy ?? Core.Domain.Enums.ExtractionStrategy.Css,
             PaginationType = request.PaginationType ?? Core.Domain.Enums.PaginationType.None,
             VenueId = request.VenueId
         };
 
-        await _scrapers.AddAsync(scraper, cancellationToken);
+        await scrapers.AddAsync(scraper, cancellationToken);
 
         return CreatedAtAction(nameof(GetById), new { id = scraper.Id },
-            _mapper.Map<ScraperDto>(scraper));
+            mapper.Map<ScraperDto>(scraper));
     }
 
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, UpdateScraperRequest request, CancellationToken cancellationToken)
     {
-        var scraper = await _scrapers.GetByIdAsync(id, cancellationToken);
+        var scraper = await scrapers.GetByIdAsync(id, cancellationToken);
         if (scraper is null) return NotFound();
 
-        if (request.Name != null) scraper.Name = request.Name;
-        if (request.BaseUrl != null) scraper.BaseUrl = request.BaseUrl;
-        if (request.PaginationType != null) scraper.PaginationType = request.PaginationType.Value;
-        if (request.VenueId.HasValue) scraper.VenueId = request.VenueId;
+        if (request.Name is not null) scraper.Name = request.Name;
+        if (request.BaseUrl is not null) scraper.BaseUrl = request.BaseUrl;
+        if (request.ExecutionMode is not null) scraper.ExecutionMode = request.ExecutionMode.Value;
+        if (request.ExtractionStrategy is not null) scraper.ExtractionStrategy = request.ExtractionStrategy.Value;
+        if (request.PaginationType is not null) scraper.PaginationType = request.PaginationType.Value;
+        if (request.VenueId is not null) scraper.VenueId = request.VenueId;
 
-        await _scrapers.UpdateAsync(scraper, cancellationToken);
+        await scrapers.UpdateAsync(scraper, cancellationToken);
         return NoContent();
     }
 
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
-        var scraper = await _scrapers.GetByIdAsync(id, cancellationToken);
+        var scraper = await scrapers.GetByIdAsync(id, cancellationToken);
         if (scraper is null) return NotFound();
 
-        await _scrapers.DeleteAsync(scraper, cancellationToken);
+        await scrapers.DeleteAsync(scraper, cancellationToken);
         return NoContent();
     }
 }

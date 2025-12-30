@@ -6,7 +6,7 @@ using Tendril.Core.Domain.Entities;
 using Tendril.Core.Domain.Enums;
 using Tendril.Engine.Abstractions;
 
-namespace Tendril.Engine;
+namespace Tendril.Engine.Logic;
 
 public class EventMapper : IEventMapper
 {

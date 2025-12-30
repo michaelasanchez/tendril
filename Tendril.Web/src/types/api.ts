@@ -8,6 +8,10 @@ export interface Venue {
   website?: string;
 }
 
+export type ExecutionMode = "Static" | "Dynamic";
+
+export type ExtractionStrategy = "Css" | "JsonLd" | "XPath" | "Regex";
+
 export type PaginationType = "None" | "InfiniteScroll" | "NextButton";
 
 export type ScraperState = "Unknown" | "Healthy" | "Unhealthy";
@@ -16,8 +20,9 @@ export interface ScraperDefinition {
   id: Guid;
   name: string;
   baseUrl: string;
+  executionMode: ExecutionMode;
+  extractionStrategy: ExtractionStrategy;
   paginationType: PaginationType;
-  schedule: string;
   state: ScraperState;
   lastSuccessUtc?: string | null;
   lastFailureUtc?: string | null;
@@ -29,14 +34,12 @@ export type SelectorType =
   | "Container"
   | "Text"
   | "Attribute"
-  | "Href"
-  | "Src"
   | "Click"
   | "Hover"
   | "Scroll"
   | "Input"
-  | "FollowLink"
-  | "CaptureLink";
+  | "CaptureLink"
+  | "FollowLink";
 
 export interface ScraperSelector {
   id: Guid;

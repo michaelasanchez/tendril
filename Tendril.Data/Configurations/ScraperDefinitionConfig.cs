@@ -19,8 +19,20 @@ public class ScraperDefinitionConfig : IEntityTypeConfiguration<ScraperDefinitio
         builder.Property(x => x.BaseUrl)
             .IsRequired();
 
+        builder.Property(x => x.PaginationType)
+            .HasConversion<string>()
+            .IsRequired();
+
+        builder.Property(x => x.ExecutionMode)
+            .HasConversion<string>()
+            .IsRequired();
+
+        builder.Property(x => x.ExtractionStrategy)
+            .HasConversion<string>()
+            .IsRequired();
+
         builder.Property(x => x.State)
-            .HasConversion<string>() // Store enum as string
+            .HasConversion<string>()
             .IsRequired();
 
         builder.Property(x => x.LastErrorMessage)

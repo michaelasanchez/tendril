@@ -1,6 +1,8 @@
-﻿using Microsoft.Playwright;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Playwright;
 using Tendril.Core.Domain.Entities;
 using Tendril.Core.Domain.Enums;
+using Tendril.Engine.Abstractions;
 using Tendril.Engine.Models;
 
 namespace Tendril.Engine.Runtime;
@@ -13,9 +15,9 @@ public record ScrapeYieldItem
     public Guid? ChildScraperId { get; init; }
 }
 
-public class DynamicScraper
+public class DynamicScraper(IJsonLdProcessor jsonLd)
 {
-    private const int DefaultWait = 500;
+    private const int DefaultWait = 100;
 
     public async IAsyncEnumerable<ScrapeYieldItem> ExecuteAsync(
         IPage page,
@@ -43,6 +45,23 @@ public class DynamicScraper
         {
             // Log warning or break if list never appears
             yield break;
+        }
+
+        // CHECK STRATEGY
+        if (def.ExtractionStrategy is ExtractionStrategy.JsonLd)
+        {
+            // If we are here, we paid the "Playwright Tax" to render the page.
+            // Now just grab the full HTML string and use the shared parser.
+            var content = await page.ContentAsync();
+
+            // Use the same helper used in StaticScraper (you'd inject this)
+            var result = jsonLd.Extract(content, def.Selectors.FirstOrDefault()?.Selector ?? "Event");
+
+            if (result != null)
+            {
+                yield return new ScrapeYieldItem { Data = result };
+            }
+            yield break; // Done.
         }
 
         // 3. PAGINATION LOOP
@@ -103,6 +122,7 @@ public class DynamicScraper
 
         } while (hasMore);
     }
+
     private async Task PerformActionAsync(IPage page, IElementHandle? scope, ScraperSelector action)
     {
         // Determine the element to act upon
@@ -143,6 +163,7 @@ public class DynamicScraper
                 break;
         }
     }
+
     private static async Task ExtractFieldAsync(
         IPage page,
         IElementHandle item,
@@ -218,8 +239,6 @@ public class DynamicScraper
                 value = step.Type switch
                 {
                     SelectorType.Text => await targetElement.InnerTextAsync(),
-                    SelectorType.Href => await targetElement.GetAttributeAsync("href"),
-                    SelectorType.Src => await targetElement.GetAttributeAsync("src"),
                     SelectorType.Attribute => await targetElement.GetAttributeAsync(step.AttributeName ?? ""),
                     _ => null
                 };

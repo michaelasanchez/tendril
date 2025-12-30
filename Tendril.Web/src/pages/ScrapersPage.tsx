@@ -98,8 +98,8 @@ export const ScrapersPage: React.FC = () => {
   return (
     <section>
       <div className={pageStyles.pageHeader}>
-        <h2>Feeds</h2>
-        <button onClick={() => navigate("/scrapers/new")}>New Feed</button>
+        <h2>Scrapers</h2>
+        <button onClick={() => navigate("/scrapers/new")}>New Scraper</button>
       </div>
 
       {loading && <p>Loading…</p>}

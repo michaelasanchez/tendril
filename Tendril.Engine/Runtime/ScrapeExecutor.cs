@@ -1,6 +1,7 @@
 ﻿using Microsoft.Playwright;
 using System.Runtime.CompilerServices;
 using Tendril.Core.Domain.Entities;
+using Tendril.Core.Domain.Enums;
 using Tendril.Core.Interfaces.Repositories;
 using Tendril.Engine.Abstractions;
 using Tendril.Engine.Models;
@@ -8,88 +9,141 @@ using Tendril.Engine.Playwright;
 
 namespace Tendril.Engine.Runtime;
 
-public class ScrapeExecutor(DynamicScraper scraper, IScraperRepository repo) : IScrapeExecutor
+public class ScrapeExecutor(
+    DynamicScraper dynamicLogic,
+    StaticScraper staticLogic,
+    IHttpClientFactory httpClientFactory,
+    IScraperRepository repo) : IScrapeExecutor
 {
     public async IAsyncEnumerable<RawScrapedEvent> RunScraperAsync(
-    ScraperDefinition def,
-    [EnumeratorCancellation] CancellationToken ct)
+        ScraperDefinition def,
+        [EnumeratorCancellation] CancellationToken ct)
     {
-        // 1. Setup Context
-        await using var context = await PlaywrightContextFactory.CreateContextAsync();
-
-        var mainPage = await context.NewPageAsync();
-
-        await mainPage.GotoAsync(def.BaseUrl);
-
-        //var metadata = await ExtractMetaTagsAsync(mainPage);
-
-        // 2. Stream & Merge
-        await foreach (var item in scraper.ExecuteAsync(mainPage, def).WithCancellation(ct))
+        // Start the root scraper
+        if (def.ExecutionMode == ExecutionMode.Static)
         {
-            if (item.ChildUrl == null)
+            await foreach (var item in RunStaticPipelineAsync(def, null, ct)) // Context is null for root static
+                yield return item;
+        }
+        else
+        {
+            await foreach (var item in RunDynamicPipelineAsync(def, null, ct)) // Context is null, will create new
+                yield return item;
+        }
+    }
+
+    // --- PIPELINE 1: STATIC ---
+    private async IAsyncEnumerable<RawScrapedEvent> RunStaticPipelineAsync(
+        ScraperDefinition def,
+        IBrowserContext? parentContext, // Passed down just in case a child needs it
+        [EnumeratorCancellation] CancellationToken ct)
+    {
+        // Use Typed Client if you set it up, otherwise use Factory
+        var client = httpClientFactory.CreateClient("ScraperClient");
+
+        //client.DefaultRequestHeaders.UserAgent.ParseAdd(
+        //    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
+        //    "AppleWebKit/537.36 (KHTML, like Gecko) " +
+        //    "Chrome/122.0.0.0 Safari/537.36"
+        //);
+
+        var html = await client.GetStringAsync(def.BaseUrl, ct);
+
+        await foreach (var item in staticLogic.ExecuteAsync(html, def, ct))
+        {
+            if (item.ChildUrl != null)
             {
-                yield return item.Data;
+                // RECURSION: Static Parent found a child
+                var childEvent = await RunChildDispatchAsync(item, parentContext, ct);
+                if (childEvent != null) yield return MergeEvents(item.Data, childEvent);
             }
             else
             {
-                var childEvent = await RunChildScrapeAsync(context, item, ct);
-
-                if (childEvent != null) yield return childEvent;
+                yield return item.Data;
             }
         }
     }
 
-    private async Task<RawScrapedEvent?> RunChildScrapeAsync(
-        IBrowserContext context,
+    // --- PIPELINE 2: DYNAMIC ---
+    private async IAsyncEnumerable<RawScrapedEvent> RunDynamicPipelineAsync(
+        ScraperDefinition def,
+        IBrowserContext? existingContext, // Reuse if available
+        [EnumeratorCancellation] CancellationToken ct)
+    {
+        // Reuse context if passed (from a Dynamic Parent), otherwise create new
+        var context = existingContext ?? await PlaywrightContextFactory.CreateContextAsync();
+        // If we created it, we own it and must dispose it. 
+        // If it was passed in, the parent owns it.
+        bool isContextOwner = existingContext == null;
+
+        var page = await context.NewPageAsync();
+
+        try
+        {
+            await page.GotoAsync(def.BaseUrl);
+
+            await foreach (var item in dynamicLogic.ExecuteAsync(page, def).WithCancellation(ct))
+            {
+                if (item.ChildUrl != null)
+                {
+                    // RECURSION: Dynamic Parent found a child
+                    // We pass 'context' down so dynamic children can share the session
+                    var childEvent = await RunChildDispatchAsync(item, context, ct);
+                    if (childEvent != null) yield return MergeEvents(item.Data, childEvent);
+                }
+                else
+                {
+                    yield return item.Data;
+                }
+            }
+        }
+        finally
+        {
+            await page.CloseAsync(); // Close the tab
+            if (isContextOwner) await context.DisposeAsync(); // Close the browser if we opened it
+        }
+    }
+
+    // --- THE UNIFIED DISPATCHER ---
+    private async Task<RawScrapedEvent?> RunChildDispatchAsync(
         ScrapeYieldItem parentItem,
+        IBrowserContext? context,
         CancellationToken ct)
     {
-        // 1. Fetch Child Definition
         var childDef = await repo.GetByIdAsync(parentItem.ChildScraperId!.Value, ct);
-
         if (childDef == null) return null;
 
-        // 2. Open New Tab
-        var childPage = await context.NewPageAsync();
+        childDef.BaseUrl = parentItem.ChildUrl!;
 
-        await childPage.GotoAsync(parentItem.ChildUrl);
-
-        RawScrapedEvent? mergedData = null;
-
-        // 3. Execute Child Scraper
-        // We assume the child scraper yields exactly one "Full Details" item,
-        // or we take the first one if it yields multiple.
-        await foreach (var childItem in scraper.ExecuteAsync(childPage, childDef).WithCancellation(ct))
+        // DECISION POINT: Switch based on the CHILD'S mode
+        if (childDef.ExecutionMode == ExecutionMode.Static)
         {
-            // Merge Logic: Child overrides Parent
-            mergedData = MergeEvents(parentItem.Data, childItem.Data);
-
-            break; // Stop after first item (assuming 1:1 relationship)
+            try
+            {
+                // Dynamic/Static Parent -> Static Child
+                // We iterate manually to get the first item
+                await foreach (var res in RunStaticPipelineAsync(childDef, context, ct))
+                {
+                    return res; // Return first result
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+        else
+        {
+            // Dynamic/Static Parent -> Dynamic Child
+            // Note: If Parent was Static (context is null), RunDynamicPipeline will spin up a NEW browser.
+            // If Parent was Dynamic, we reuse the existing context (keeping cookies!).
+            await foreach (var res in RunDynamicPipelineAsync(childDef, context, ct))
+            {
+                return res; // Return first result
+            }
         }
 
-        await childPage.CloseAsync();
-
-        return mergedData;
-    }
-    private async Task<Dictionary<string, string?>> ExtractMetaTagsAsync(IPage page)
-    {
-        // Run a quick JS function to grab all og: tags at once
-        return await page.EvaluateAsync<Dictionary<string, string?>>(@"() => {
-        const result = {};
-        
-        // Get Open Graph tags
-        document.querySelectorAll('meta[property^=""og:""]').forEach(tag => {
-            const prop = tag.getAttribute('property');
-            const content = tag.getAttribute('content');
-            if (prop && content) result[prop] = content;
-        });
-
-        // Get standard description if og:description is missing
-        const desc = document.querySelector('meta[name=""description""]');
-        if (desc && desc.content) result['description'] = desc.content;
-
-        return result;
-    }");
+        return null;
     }
 
     private RawScrapedEvent MergeEvents(RawScrapedEvent parent, RawScrapedEvent child)

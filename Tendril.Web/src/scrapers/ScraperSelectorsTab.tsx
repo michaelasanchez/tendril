@@ -1,5 +1,5 @@
 // src/scrapers/ScraperSelectorsTab.tsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, Form, Table } from "react-bootstrap";
 import { ScrapersApi } from "../api/scrapers";
 import { FormCheck, FormInput, FormSelect } from "../components/form";
@@ -12,7 +12,10 @@ interface Props {
   refresh: () => Promise<void>;
 }
 
-const selectorTypeOptions = [
+const toOptions = (arr: string[]) =>
+  arr.map((item) => ({ value: item, label: item }));
+
+const selectorTypeOptions = toOptions([
   "Container",
   "Text",
   "Attribute",
@@ -21,8 +24,13 @@ const selectorTypeOptions = [
   "Scroll",
   "Input",
   "CaptureLink",
-  "FollowLink"
-].map((type) => ({ value: type, label: type }));
+  "FollowLink",
+]);
+
+interface Option {
+  label: string;
+  value: string;
+}
 
 export const ScraperSelectorsTab: React.FC<Props> = ({
   scraperId,
@@ -31,6 +39,23 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
 }) => {
   const [editing, setEditing] = useState<Partial<ScraperSelector>>({});
   const [isNew, setIsNew] = useState(false);
+
+  const [scraperOptions, setScraperOptions] = useState<Option[]>([]);
+
+  useEffect(() => {
+    if (
+      selectors.some((s) => s.type === "FollowLink") ||
+      editing.type === "FollowLink"
+    ) {
+      const loadScrapers = async () => {
+        const data = await ScrapersApi.getAll();
+        const options = data.map((s) => ({ label: s.name, value: s.id }));
+        setScraperOptions(options);
+      };
+
+      void loadScrapers();
+    }
+  }, [selectors, editing]);
 
   const startNew = () => {
     setIsNew(true);
@@ -65,9 +90,10 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
         order: editing.order ?? selectors.length,
         root: editing.root ?? false,
         type: editing.type,
-        attribute: Boolean(editing.attribute)
-          ? editing.attribute ?? null
-          : null,
+        attribute:
+          editing.type == "Attribute" && !!editing.attribute
+            ? editing.attribute
+            : null,
         delay: editing.delay ?? null,
         interactionValue: editing.interactionValue ?? null,
         childScraperId: editing.childScraperId ?? null,
@@ -80,9 +106,10 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
         order: editing.order,
         root: editing.root,
         type: editing.type,
-        attribute: Boolean(editing.attribute)
-          ? editing.attribute ?? null
-          : null,
+        attribute:
+          editing.type == "Attribute" && !!editing.attribute
+            ? editing.attribute
+            : null,
         delay: editing.delay ?? null,
         interactionValue: editing.interactionValue ?? null,
         childScraperId: editing.childScraperId ?? null,
@@ -139,7 +166,11 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
                   <td>{s.attribute}</td>
                   <td>{s.delay}</td>
                   <td>{s.interactionValue}</td>
-                  <td>{s.childScraperId}</td>
+                  <td>
+                    {s.childScraperId &&
+                      scraperOptions.find((o) => o.value === s.childScraperId)
+                        ?.label}
+                  </td>
                   <td>{s.isPaginationTrigger ? "Yes" : ""}</td>
                   <td>
                     <button onClick={() => startEdit(s)}>Edit</button>
@@ -229,9 +260,10 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
                 />
               )}
               {editing.type == "FollowLink" && (
-                <FormInput
-                  label="Child Scraper ID"
+                <FormSelect
+                  label="Child Scraper"
                   value={editing.childScraperId ?? ""}
+                  options={scraperOptions}
                   onChange={(childScraperId) =>
                     setEditing({ ...editing, childScraperId })
                   }

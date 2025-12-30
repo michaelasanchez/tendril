@@ -33,6 +33,7 @@ public class IngestionService(
             Success = false, // Will set to true at end
             ErrorMessage = "Running..."
         };
+
         await attemptHistories.Add(attempt, cancellationToken);
 
         var errors = new List<string>();

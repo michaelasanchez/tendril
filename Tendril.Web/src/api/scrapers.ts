@@ -1,5 +1,7 @@
 // src/api/scrapers.ts
 import type {
+  ExecutionMode,
+  ExtractionStrategy,
   Guid,
   PaginationType,
   ScraperAttemptHistory,
@@ -13,6 +15,8 @@ import { apiDelete, apiGet, apiPost, apiPut } from "./client";
 export interface CreateScraperRequest {
   name: string;
   baseUrl: string;
+  executionMode: ExecutionMode;
+  extractionStrategy: ExtractionStrategy;
   paginationType: PaginationType;
   venueId?: Guid | null;
   schedule?: string;

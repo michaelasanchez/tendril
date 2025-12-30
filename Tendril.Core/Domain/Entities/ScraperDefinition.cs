@@ -9,6 +9,8 @@ public class ScraperDefinition
     public string Name { get; set; } = null!;
     public string BaseUrl { get; set; } = null!;
 
+    public ExecutionMode ExecutionMode { get; set; } = ExecutionMode.Dynamic;
+    public ExtractionStrategy ExtractionStrategy { get; set; } = ExtractionStrategy.Css;
     public PaginationType PaginationType { get; set; } = PaginationType.None;
 
     // Health monitoring
