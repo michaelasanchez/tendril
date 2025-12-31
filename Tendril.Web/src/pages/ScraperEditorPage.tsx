@@ -5,7 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ScrapersApi } from "../api/scrapers";
 import { VenuesApi } from "../api/venues";
 import { FormInput, FormSelect } from "../components/form";
-import formStyles from "../components/form/Form.module.css";
+import formStyles from "../styles/Form.module.css";
 import { ScraperMappingRulesTab } from "../scrapers/ScraperMappingRulesTab";
 import { ScraperRunsTab } from "../scrapers/ScraperRunsTab";
 import { ScraperSelectorsTab } from "../scrapers/ScraperSelectorsTab";

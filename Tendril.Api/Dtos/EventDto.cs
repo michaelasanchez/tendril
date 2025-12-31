@@ -6,12 +6,21 @@ public record EventDto
     public string? Title { get; set; }
     public string? Location { get; set; }
     public string? Description { get; set; }
+
     public DateTimeOffset StartUtc { get; set; }
     public DateTimeOffset? EndUtc { get; set; }
+
+    public string GroupKey => StartUtc.ToString("yyyy-MM-dd");
+
+    public decimal? MinPrice { get; set; }
+    public decimal? MaxPrice { get; set; }
+
     public string? DetailsUrl { get; set; }
     public string? ImageUrl { get; set; }
     public string? TicketUrl { get; set; }
+
     public string? Category { get; set; }
+
     public string? VenueName { get; set; }
     public string? VenueUrl { get; set; }
 };

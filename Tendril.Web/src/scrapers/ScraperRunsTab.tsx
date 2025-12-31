@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { Card, Table } from "react-bootstrap";
 import { ScrapersApi } from "../api/scrapers";
-import formStyles from "../components/form/Form.module.css";
+import formStyles from "../styles/Form.module.css";
 import type {
   Guid,
   ScraperAttemptHistory,

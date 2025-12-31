@@ -1,5 +1,4 @@
-﻿using System.Net;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.RegularExpressions;
 using Tendril.Engine.Abstractions;
 using Tendril.Engine.Models;
@@ -95,10 +94,8 @@ public class JsonLdProcessor : IJsonLdProcessor
                 break;
 
             case JsonValueKind.String:
-                var rawValue = element.GetString() ?? string.Empty;
-
-                // This converts "&lsquo;" to "‘" and "&amp;" to "&"
-                fields[prefix] = WebUtility.HtmlDecode(rawValue);
+                // GetString() returns the clean string value without quotes
+                fields[prefix] = element.GetString() ?? string.Empty;
                 break;
 
             case JsonValueKind.Null:

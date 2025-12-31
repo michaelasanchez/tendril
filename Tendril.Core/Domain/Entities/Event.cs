@@ -19,6 +19,9 @@ public class Event
     public DateTimeOffset StartUtc { get; set; }
     public DateTimeOffset? EndUtc { get; set; }
 
+    public decimal? MinPrice { get; set; }
+    public decimal? MaxPrice { get; set; }
+
     public string? DetailsUrl { get; set; }
     public string? ImageUrl { get; set; }
     public string? TicketUrl { get; set; }
@@ -27,4 +30,7 @@ public class Event
 
     public DateTimeOffset ScrapedAtUtc { get; set; }
     public DateTimeOffset? UpdatedAtUtc { get; set; }
+    public DateTimeOffset? DisabledAtUtc { get; set; }
+
+    public bool Disabled { get; set; }
 }

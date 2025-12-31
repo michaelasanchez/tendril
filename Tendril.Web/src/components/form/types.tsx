@@ -1,7 +1,8 @@
 import type { FormCheckType } from "react-bootstrap/esm/FormCheck";
 
 export interface FormInputProps {
-  label: string;
+  className?: string;
+  label?: string;
   value: string;
   onChange: (value: string) => void;
   type?: "text" | "number" | "password" | "email";

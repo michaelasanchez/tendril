@@ -1,19 +1,28 @@
+import { format, parse } from "date-fns";
 import React, { useEffect, useMemo, useState } from "react";
-import { Container } from "react-bootstrap";
+import { Col, Container, Row } from "react-bootstrap";
 import { EventsApi } from "../api/events";
 import { EventModal } from "../components/modal";
-import { EventCalendar, EventList } from "../events";
+import { EventList, FiltersCard, type EventFilter } from "../events";
 import type { Event } from "../types/api";
 import styles from "./EventsPage.module.css";
 
+type View = "list" | "map" | "calendar";
+
 export const EventsPage: React.FC = () => {
-  const [view, setView] = useState<"list" | "calendar">("list");
+  const [view, setView] = useState<View>("list");
   const [events, setEvents] = useState<Event[]>([]);
-  const [venueFilter, setVenueFilter] = useState<string | null>(null);
-  const [from, setFrom] = useState<Date>(new Date());
   const [activeEvent, setActiveEvent] = useState<Event | null>(null);
 
-  const handleClose = () => setActiveEvent(null);
+  const [filter, setFilter] = useState<EventFilter>({
+    startDate: format(new Date(), "yyyy-MM-dd"),
+  });
+
+  const handleModalClose = () => setActiveEvent(null);
+
+  const handleSetFilter = (update: Partial<EventFilter>) => {
+    setFilter((prev) => ({ ...prev, ...update }));
+  };
 
   // Initial load
   useEffect(() => {
@@ -24,23 +33,53 @@ export const EventsPage: React.FC = () => {
     })();
   }, []);
 
-  const calendarEvents = useMemo(
-    () =>
-      events?.map((e, i) => {
-        const date = new Date(e.startUtc);
+  const filteredEvents = useMemo(() => {
+    const { title, startDate, endDate, location } = filter;
 
-        return {
-          id: i,
-          title: e.title,
-          start: date,
-          end: date,
-        };
-      }) ?? [],
-    [events]
-  );
+    let filtered = events;
 
-  const venueOptions = useMemo(
-    () => Array.from(new Set(events.map((e) => e.venueName))),
+    if (title) {
+      filtered = filtered.filter((e) =>
+        e.title.toLowerCase().includes(title.toLowerCase())
+      );
+    }
+
+    if (startDate) {
+      const from = parse(startDate, "yyyy-MM-dd", new Date());
+      filtered = filtered.filter((e) => from <= new Date(e.startUtc));
+    }
+
+    if (endDate) {
+      const to = parse(endDate, "yyyy-MM-dd", new Date());
+      filtered = filtered.filter((e) => to >= new Date(e.startUtc));
+    }
+
+    if (location) {
+      filtered = filtered.filter(
+        (e) => e.location === location || e.venueName === location
+      );
+    }
+
+    return filtered;
+  }, [filter]);
+
+  // const calendarEvents = useMemo(
+  //   () =>
+  //     events?.map((e, i) => {
+  //       const date = new Date(e.startUtc);
+
+  //       return {
+  //         id: i,
+  //         title: e.title,
+  //         start: date,
+  //         end: date,
+  //       };
+  //     }) ?? [],
+  //   [events]
+  // );
+
+  const locations = useMemo(
+    () => Array.from(new Set(events.map((e) => e.location ?? e.venueName))),
     [events]
   ) as string[];
 
@@ -48,41 +87,38 @@ export const EventsPage: React.FC = () => {
     <Container>
       <section>
         <div className={styles.pageHeader}>
-          <h2>Events</h2>
+          <h1>Upcoming Events</h1>
+          <p className="text-muted">
+            {filteredEvents?.length ?? 0} events found
+          </p>
         </div>
 
-        <div className={styles.pageControls}>
-          <label>
-            <span>Venue</span>
-            <select
-              value={venueFilter ?? ""}
-              onChange={(e) => setVenueFilter(e.target.value)}
-            >
-              <option value=""></option>
-              {venueOptions.map((o) => (
-                <option key={o} value={o}>
-                  {o}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
+        {view === "list" && (
+          <Row>
+            <Col lg={4}>
+              <FiltersCard
+                className={styles.FiltersCard}
+                filter={filter}
+                locations={locations}
+                onChange={handleSetFilter}
+              />
+            </Col>
+            <Col lg={8}>
+              <EventList
+                events={filteredEvents}
+                onEventClick={setActiveEvent}
+              />
+            </Col>
+          </Row>
+        )}
+
+        {/* {view === "calendar" && <EventCalendar events={calendarEvents} />} */}
 
         <EventModal
           event={activeEvent}
           show={!!activeEvent}
-          onHide={handleClose}
+          onHide={handleModalClose}
         />
-
-        {view === "list" && (
-          <EventList
-            events={events}
-            from={from}
-            venueFilter={venueFilter}
-            onEventClick={setActiveEvent}
-          />
-        )}
-        {view === "calendar" && <EventCalendar events={calendarEvents} />}
       </section>
     </Container>
   );

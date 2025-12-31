@@ -90,6 +90,7 @@ export interface ScraperAttemptHistory {
   id: Guid;
   startTimeUtc: string;
   endTimeUtc: string | null;
+  groupKey: string;
   success: boolean;
   extracted: number;
   mapped: number;
@@ -102,15 +103,17 @@ export interface Event {
   id: Guid;
   title: string;
   location: string;
-  description?: string;
+  description: string;
   startUtc: string;
-  endUtc?: string | null;
-  imageUrl?: string | null;
-  detailsUrl?: string | null;
-  ticketUrl?: string | null
-  category?: string | null;
-  venueName?: string | null;
-  venueUrl?: string | null;
+  endUtc: string | null;
+  minPrice: number | null;
+  maxPrice: number | null;
+  imageUrl: string | null;
+  detailsUrl: string | null;
+  ticketUrl: string | null;
+  category: string | null;
+  venueName: string | null;
+  venueUrl: string | null;
 }
 
 export interface ScrapeRunResponse {

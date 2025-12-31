@@ -1,5 +1,5 @@
 .EventList {
-  h3 {
+  .DayLabel {
     padding: 0.5em 0;
     position: sticky;
     top: 0;
@@ -11,32 +11,20 @@
     cursor: pointer;
   }
 
-  .CardImage {
-      aspect-ratio: 16 / 9;
-      object-fit: cover;
-  }
-
-  .CardBody {
+  .CardContent {
     display: flex;
     flex-direction: column;
-    gap: 1em;
-
-    .CardContent {
-      flex-grow: 1;
-    }
+    gap: 0.5em;
 
     .CardRow {
       display: flex;
       align-items: center;
 
+      color: var(--muted-foreground);
+
       svg {
         margin-right: 0.5em;
       }
-    }
-
-    .CardActions {
-      display: flex;
-      justify-content: flex-end;
     }
   }
 

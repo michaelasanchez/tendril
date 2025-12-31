@@ -1,0 +1,29 @@
+.FiltersCard {
+  --card-body-padding: calc(var(--spacing) * 6);
+
+  h4 {
+    svg {
+      margin-right: 0.5em;
+    }
+  }
+
+  label {
+    margin: 2em 0 0;
+  }
+
+  .NoLabel {
+    margin-top: 0.5em;
+  }
+
+  input:focus {
+    box-shadow: 0 0 0 2px rgb(119, 112, 245);
+
+    transition: box-shadow cubic-bezier(.4, 0, .2, 1) .15s;
+  }
+
+  .ButtonGroup {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5em;
+  }
+}

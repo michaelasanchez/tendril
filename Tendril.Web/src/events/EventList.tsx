@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { format, parse } from "date-fns";
 import { useMemo } from "react";
 import { EventCard } from ".";
 import type { Event } from "../types/api";
@@ -6,34 +6,27 @@ import styles from "./EventList.module.css";
 
 interface EventListProps {
   events: Event[];
-  from: Date;
-  venueFilter?: string | null;
   onEventClick?: (event: Event) => void;
+}
+
+interface EventGroup {
+  label: string;
+  events: Event[];
 }
 
 export const EventList: React.FC<EventListProps> = ({
   events,
-  from,
-  venueFilter = null,
   onEventClick,
 }) => {
-  const groups = useMemo(() => {
-    const filtered = events.filter(
-      (e) =>
-        from < new Date(e.startUtc) &&
-        (!venueFilter || e.venueName == venueFilter)
-    );
-
-    return groupEventsByDay(filtered);
-  }, [events, from, venueFilter]);
+  const groups = useMemo(() => groupEventsByDay(events), [events]);
 
   return (
     <div className={styles.EventList}>
-      {Object.keys(groups).map((g) => (
-        <div key={g}>
-          <h3>{format(new Date(g), "MMM dd")}</h3>
+      {groups.map((g, i) => (
+        <div key={i}>
+          <h3 className={styles.DayLabel}>{g.label}</h3>
           <div className={styles.DayGroup}>
-            {groups[g].map((e) => (
+            {g.events.map((e) => (
               <EventCard
                 key={e.id}
                 className={styles.EventCard}
@@ -47,20 +40,27 @@ export const EventList: React.FC<EventListProps> = ({
     </div>
   );
 
-  function getDayKey(utc: string) {
-    const d = new Date(utc);
-    return d.toISOString().slice(0, 10); // "2025-12-08"
-  }
+  function groupEventsByDay(events: Event[]): EventGroup[] {
+    const grouped = events.reduce((groups, event) => {
+      const dateKey = event.startUtc.split("T")[0];
+      if (!groups[dateKey]) {
+        groups[dateKey] = [];
+      }
 
-  function groupEventsByDay(events: Event[]) {
-    return events?.reduce((groups, e) => {
-      const key = getDayKey(e.startUtc);
-
-      if (!groups[key]) groups[key] = [];
-
-      groups[key].push(e);
+      groups[dateKey].push(event);
 
       return groups;
     }, {} as Record<string, Event[]>);
+
+    return Object.keys(grouped)
+      .sort()
+      .map((g) => {
+        const dateObj = parse(g, "yyyy-MM-dd", new Date());
+
+        return {
+          label: format(dateObj, "MMM dd"),
+          events: grouped[g],
+        };
+      });
   }
 };

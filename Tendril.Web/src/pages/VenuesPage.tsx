@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Form, Table } from "react-bootstrap";
 import { VenuesApi } from "../api/venues";
 import { FormInput } from "../components/form";
-import formStyles from "../components/form/Form.module.css";
+import formStyles from "../styles/Form.module.css";
 import type { Venue } from "../types/api";
 import pageStyles from "./Page.module.css";
 

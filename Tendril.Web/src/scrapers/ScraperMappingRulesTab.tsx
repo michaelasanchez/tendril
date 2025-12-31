@@ -7,7 +7,7 @@ import {
   FormSelect,
   type SelectOption,
 } from "../components/form";
-import formStyles from "../components/form/Form.module.css";
+import formStyles from "../styles/Form.module.css";
 import type {
   Guid,
   ScraperMappingRule,
@@ -43,6 +43,8 @@ const targetFieldOptions: SelectOption[] = [
   "Description",
   "StartUtc",
   "EndUtc",
+  "MinPrice",
+  "MaxPrice",
   "ImageUrl",
   "DetailsUrl",
   "TicketUrl",

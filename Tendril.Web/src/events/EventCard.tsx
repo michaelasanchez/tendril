@@ -2,8 +2,9 @@ import cn from "classnames";
 import { format } from "date-fns";
 import { Card } from "react-bootstrap";
 import { Icon } from "../components/Icon";
+import cardStyles from "../styles/Card.module.css";
 import type { Event } from "../types/api";
-import styles from "./EventList.module.css";
+import eventListStyles from "./EventList.module.css";
 import NoImage from "./no-image.svg";
 
 interface Props {
@@ -16,30 +17,33 @@ export const EventCard: React.FC<Props> = ({ event, className, onClick }) => {
   return (
     <Card
       key={event.id}
-      className={cn(styles.EventCard, className)}
+      className={cn(eventListStyles.EventCard, cardStyles.BgCard, className)}
       onClick={onClick}
     >
-      <div className={cn(!event.imageUrl && styles.NoImage)}>
+      <div className={cn(!event.imageUrl && eventListStyles.NoImage)}>
         <Card.Img
-          className={styles.CardImage}
+          className={cardStyles.CardImage}
           variant="top"
           src={event.imageUrl ?? NoImage}
           loading="lazy"
         />
       </div>
-      <Card.Body className={styles.CardBody}>
-        <div className={styles.CardContent}>
-          <Card.Title>{event.title}</Card.Title>
-          <div className={styles.CardRow}>
+      <Card.Body className={cardStyles.CardBody}>
+        <div className={eventListStyles.CardContent}>
+          <Card.Title as="h3">{event.title}</Card.Title>
+          <div className={eventListStyles.CardRow}>
             <Icon name="location" /> {event.location ?? event.venueName}
           </div>
-          <div className={styles.CardRow}>
+          <div className={eventListStyles.CardRow}>
             <Icon name="calendar" /> {formatDate(event.startUtc, "date")} •{" "}
             {formatDate(event.startUtc, "time")}
           </div>
-          <div className={styles.CardRow}>
-            <Icon name="ticket" /> ???
-          </div>
+          {!!event.minPrice && (
+            <div className={eventListStyles.CardRow}>
+              <Icon name="ticket" /> ${event.minPrice}
+              {event.maxPrice !== event.minPrice ? ` - $${event.maxPrice}` : ""}
+            </div>
+          )}
           {/*           
           <span className="text-muted">@</span>
           <time>{formatDate(event.startUtc)}</time>

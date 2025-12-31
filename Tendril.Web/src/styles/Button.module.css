@@ -1,0 +1,21 @@
+.Button {
+  background-color: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  
+  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 4);
+
+  transition: color calc(var(--delay) * 4), background-color var(--delay),
+    border-color calc(var(--delay) * 4);
+
+  &:hover {
+    color: var(--hover);
+    border-color: var(--hover);
+  }
+
+  &.Active {
+    background-color: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-foreground);
+  }
+}

@@ -2,7 +2,7 @@ import cn from "classnames";
 import type React from "react";
 import { Button, Form } from "react-bootstrap";
 import type { FormSelectProps } from ".";
-import styles from "./Form.module.css";
+import styles from "../../styles/Form.module.css";
 
 export const FormSelect: React.FC<FormSelectProps> = ({
   label,

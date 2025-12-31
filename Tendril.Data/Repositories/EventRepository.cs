@@ -17,6 +17,7 @@ public class EventRepository : IEventRepository
     {
         var query = _db.Events
             .Include(x => x.Venue)
+            .Where(x => !x.Disabled)
             .AsNoTracking();
 
         if (startDate.HasValue)
@@ -43,6 +44,7 @@ public class EventRepository : IEventRepository
     public async Task UpdateAsync(Event ev, CancellationToken cancellationToken = default)
     {
         _db.Events.Update(ev);
+
         await _db.SaveChangesAsync(cancellationToken);
     }
 
@@ -58,8 +60,9 @@ public class EventRepository : IEventRepository
             .AsNoTracking()
             .AnyAsync(x =>
                 x.ScraperDefinitionId == mappedEvent.ScraperDefinitionId &&
-                x.Title == mappedEvent.Title &&
-                x.StartUtc == mappedEvent.StartUtc);
+                //x.Title == mappedEvent.Title &&
+                x.StartUtc == mappedEvent.StartUtc &&
+                !x.Disabled);
     }
 
     public Task<Event?> Find(Event mappedEvent, CancellationToken cancellationToken = default)
@@ -67,7 +70,8 @@ public class EventRepository : IEventRepository
         return _db.Events
             .SingleOrDefaultAsync(x =>
                 x.ScraperDefinitionId == mappedEvent.ScraperDefinitionId &&
-                x.Title == mappedEvent.Title &&
-                x.StartUtc.Date == mappedEvent.StartUtc.Date);
+                //x.Title == mappedEvent.Title &&
+                x.StartUtc.Date == mappedEvent.StartUtc.Date &&
+                !x.Disabled);
     }
 }

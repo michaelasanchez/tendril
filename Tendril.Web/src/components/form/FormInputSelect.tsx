@@ -8,7 +8,7 @@ import {
   Form,
 } from "react-bootstrap";
 import type { FormSelectProps } from ".";
-import styles from "./Form.module.css";
+import styles from "../../styles/Form.module.css";
 
 export const FormInputSelect: React.FC<FormSelectProps> = ({
   label,

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Card, Form, Table } from "react-bootstrap";
 import { ScrapersApi } from "../api/scrapers";
 import { FormCheck, FormInput, FormSelect } from "../components/form";
-import formStyles from "../components/form/Form.module.css";
+import formStyles from "../styles/Form.module.css";
 import type { Guid, ScraperSelector, SelectorType } from "../types/api";
 
 interface Props {

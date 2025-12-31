@@ -18,7 +18,7 @@ const EventRow: React.FC<{
   <div className={styles.ModalRow}>
     <div>
       <div className={styles.IconBox}>
-        <Icon name={icon} size={18}/>
+        <Icon name={icon} size={18} />
       </div>
     </div>
     <div>
@@ -29,7 +29,6 @@ const EventRow: React.FC<{
 );
 
 export const EventModal: React.FC<Props> = ({ event, show, onHide }) => {
-  console.log(event?.startUtc);
   return (
     <Modal show={show} onHide={onHide}>
       <Modal.Header closeButton></Modal.Header>
@@ -42,15 +41,20 @@ export const EventModal: React.FC<Props> = ({ event, show, onHide }) => {
         </EventRow>
         <EventRow icon="location" label="Venue">
           {event?.location ?? event?.venueName}
-
         </EventRow>
         <EventRow icon="ticket" label="Tickets">
-          $? - $??
+          ${event?.minPrice}
+          {event?.maxPrice !== event?.minPrice ? ` - $${event?.maxPrice}` : ""}
         </EventRow>
       </Modal.Body>
       <Modal.Footer>
         {event?.ticketUrl && (
-          <a href={event.ticketUrl} target="_blank" rel="noreferrer" className="btn btn-outline-primary">
+          <a
+            href={event.ticketUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="btn btn-outline-primary"
+          >
             Get Tickets <Icon name="external" />
           </a>
         )}

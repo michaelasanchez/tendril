@@ -22,7 +22,7 @@ public class IngestionService(
         logger.LogInformation("Starting ingestion for {Scraper}", scraper.Name);
 
         var start = DateTimeOffset.UtcNow;
-        int created = 0, updated = 0, extracted = 0;
+        int created = 0, updated = 0, extracted = 0, errored = 0;
 
         // 1. Create Attempt Record IMMEDIATELY (Mark as Running)
         var attempt = new ScraperAttemptHistory
@@ -67,6 +67,8 @@ public class IngestionService(
                 }
                 catch (Exception ex)
                 {
+                    errored++;
+
                     logger.LogError(ex, "Error mapping event");
                     errors.Add(ex.Message);
                 }
@@ -96,6 +98,7 @@ public class IngestionService(
             attempt.Extracted = extracted;
             attempt.Created = created;
             attempt.Updated = updated;
+            attempt.Errored = errored;
 
             await scrapers.UpdateAsync(scraper, cancellationToken);
             await attemptHistories.UpdateAsync(attempt, cancellationToken);
@@ -118,20 +121,20 @@ public class IngestionService(
 
         if (existingEvent is not null)
         {
-            var dirty = false;
-            // (Your existing UpdateIfChanged logic here...)
-            UpdateEventFields(existingEvent, mappedEvent, ref dirty);
+            var updated = false;
 
-            if (dirty)
+            UpdateEventFields(existingEvent, mappedEvent, ref updated);
+
+            if (updated)
             {
                 existingEvent.UpdatedAtUtc = DateTimeOffset.UtcNow;
                 rawEntity.EventId = existingEvent.Id;
 
-                // Note: EF Core tracking usually handles the update automatically 
-                // when you call SaveChanges, or if your repo has an Update method:
                 await events.UpdateAsync(existingEvent);
+
                 return "updated";
             }
+
             return "skipped";
         }
         else
@@ -144,27 +147,29 @@ public class IngestionService(
         }
     }
 
-    // Helper to keep the main method clean
-    private void UpdateEventFields(Event current, Event incoming, ref bool isModified)
+    private static void UpdateEventFields(Event current, Event incoming, ref bool updated)
     {
-        current.Title = UpdateIfChanged(current.Title, incoming.Title, ref isModified);
-        //current.Location = UpdateIfChanged(current.Location, incoming.Location, ref isModified);
-        current.Description = UpdateIfChanged(current.Description, incoming.Description, ref isModified);
+        current.Title = UpdateIfChanged(current.Title, incoming.Title, ref updated);
+        current.Location = UpdateIfChanged(current.Location, incoming.Location, ref updated);
+        current.Description = UpdateIfChanged(current.Description, incoming.Description, ref updated);
 
-        current.StartUtc = UpdateIfChanged(current.StartUtc, incoming.StartUtc, ref isModified);
-        current.EndUtc = UpdateIfChanged(current.EndUtc, incoming.EndUtc, ref isModified);
+        current.StartUtc = UpdateIfChanged(current.StartUtc, incoming.StartUtc, ref updated);
+        current.EndUtc = UpdateIfChanged(current.EndUtc, incoming.EndUtc, ref updated);
 
-        current.ImageUrl = UpdateIfChanged(current.ImageUrl, incoming.ImageUrl, ref isModified);
-        //current.DetailsUrl = UpdateIfChanged(current.DetailsUrl, incoming.DetailsUrl, ref isModified);
-        current.TicketUrl = UpdateIfChanged(current.TicketUrl, incoming.TicketUrl, ref isModified);
+        current.MinPrice = UpdateIfChanged(current.MinPrice, incoming.MinPrice, ref updated);
+        current.MaxPrice = UpdateIfChanged(current.MaxPrice, incoming.MaxPrice, ref updated);
+
+        current.ImageUrl = UpdateIfChanged(current.ImageUrl, incoming.ImageUrl, ref updated);
+        current.DetailsUrl = UpdateIfChanged(current.DetailsUrl, incoming.DetailsUrl, ref updated);
+        current.TicketUrl = UpdateIfChanged(current.TicketUrl, incoming.TicketUrl, ref updated);
     }
 
-    private static T UpdateIfChanged<T>(T current, T incoming, ref bool isModified)
+    private static T UpdateIfChanged<T>(T current, T incoming, ref bool updated)
     {
         if (!EqualityComparer<T>.Default.Equals(current, incoming) &&
             !EqualityComparer<T>.Default.Equals(incoming, default))
         {
-            isModified = true;
+            updated = true;
 
             return incoming;
         }

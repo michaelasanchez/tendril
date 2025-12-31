@@ -1,8 +1,9 @@
-import { Calendar, ExternalLink, MapPin, Ticket } from "lucide-react";
+import { Calendar, ExternalLink, Funnel, MapPin, Ticket } from "lucide-react";
 
 const Icons = {
   calendar: Calendar,
   external: ExternalLink,
+  filter: Funnel,
   location: MapPin,
   ticket: Ticket,
 };
