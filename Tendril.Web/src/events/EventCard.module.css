@@ -1,0 +1,86 @@
+.EventCard {
+  --animation: cubic-bezier(0.4, 0, 0.2, 1);
+
+  cursor: pointer;
+
+  transition: border-color var(--animation) 0.3s, box-shadow var(--animation) 0.3s;
+
+  overflow: hidden;
+
+  .CardImage {
+    transition: scale var(--animation) 0.3s;
+  }
+
+  &:hover {
+    border-color: var(--hover);
+    box-shadow: rgba(38, 38, 38, 0.14) 0px 8px 16px 0px;
+
+    .CardImage {
+      --scale: 105%;
+      scale: var(--scale);
+      /* transform: scale(var(--scale)); */
+    }
+  }
+}
+
+.CardHeader {
+  position: relative;
+  overflow: hidden;
+
+  .Overlay {
+    --inset: 0.75em;
+
+    position: absolute;
+    inset: var(--inset) var(--inset) auto var(--inset);
+    /*pointer-events: none; /* lets clicks pass through unless overridden */
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .CategoryBadge {
+    background-color: var(--accent);
+    border-radius: var(--radius-full);
+    color: var(--accent-foreground);
+
+    padding: var(--spacing) calc(var(--spacing) * 2);
+  }
+}
+
+.CardContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+
+  .CardTitle {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+  }
+
+  .CardRow {
+    display: flex;
+    align-items: center;
+
+    color: var(--muted-foreground);
+
+    svg {
+      margin-right: 0.5em;
+    }
+  }
+}
+
+.NoImage {
+  --bg-opacity: 0.1;
+  --img-opacity: 0.25;
+
+  background-color: rgb(255, 255, 255, var(--bg-opacity));
+  border-top-left-radius: var(--bs-card-inner-border-radius);
+  border-top-right-radius: var(--bs-card-inner-border-radius);
+
+  img {
+    opacity: var(--img-opacity);
+  }
+}

@@ -1,53 +1,45 @@
 .EventList {
   .DayLabel {
-    padding: 0.5em 0;
+    padding: 1em 0 0.25em;
+    margin: 0;
     position: sticky;
     top: 0;
     z-index: 1;
-    background: var(--bs-body-bg);
-  }
-
-  .EventCard {
-    cursor: pointer;
-  }
-
-  .CardContent {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5em;
-
-    .CardRow {
-      display: flex;
-      align-items: center;
-
-      color: var(--muted-foreground);
-
-      svg {
-        margin-right: 0.5em;
-      }
-    }
-  }
-
-  .NoImage {
-    --bg-opacity: 0.1;
-    --img-opacity: 0.25;
-
-    /* padding: 3em; */
-
-    background-color: rgb(255, 255, 255, var(--bg-opacity));
-    border-top-left-radius: var(--bs-card-inner-border-radius);
-    border-top-right-radius: var(--bs-card-inner-border-radius);
-
-    img {
-      opacity: var(--img-opacity);
-    }
+    /* background: var(--background); */
   }
 
   .DayGroup {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    grid-auto-flow: row;
+    grid-template-columns: repeat(1, 1fr);
     gap: 1rem;
     place-items: stretch;
+  }
+}
+
+/* ≥ sm */
+@media (min-width: 576px) {
+  .EventList .DayGroup {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ≥ md */
+@media (min-width: 768px) {
+  .EventList .DayGroup {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ≥ lg */
+@media (min-width: 992px) {
+  .EventList .DayGroup {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ≥ xl */
+@media (min-width: 1200px) {
+  .EventList .DayGroup {
+    grid-template-columns: repeat(3, 1fr);
   }
 }

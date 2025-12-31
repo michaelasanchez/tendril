@@ -1,10 +1,10 @@
-import cn from "classnames";
-import { Card } from "react-bootstrap";
-import { FormInput } from "../components/form";
-import { Icon } from "../components/Icon";
-import buttonStyles from "../styles/Button.module.css";
-import cardStyles from "../styles/Card.module.css";
-import styles from "./FiltersCard.module.css";
+import cn from 'classnames';
+import { Card } from 'react-bootstrap';
+import { FormInput } from '../components/form';
+import { Icon } from '../components/Icon';
+import buttonStyles from '../styles/Button.module.css';
+import cardStyles from '../styles/Card.module.css';
+import styles from './FiltersCard.module.css';
 
 export interface EventFilter {
   title?: string;
@@ -23,13 +23,13 @@ interface Props {
 }
 
 const categories = [
-  "Concert",
-  "Comedy",
-  "Sports",
-  "Art",
-  "Theater",
-  "Food & Drink",
-  "Other",
+  'Concert',
+  'Comedy',
+  'Sports',
+  'Art',
+  'Theater',
+  'Food & Drink',
+  'Other',
 ];
 
 export const FiltersCard: React.FC<Props> = ({
@@ -39,7 +39,7 @@ export const FiltersCard: React.FC<Props> = ({
   onChange,
 }) => {
   return (
-    <Card className={cn(styles.FiltersCard, cardStyles.BgCard, className)}>
+    <Card className={cn(cardStyles.BgCard, styles.FiltersCard, className)}>
       <Card.Body className={cardStyles.CardBody}>
         <h4>
           <Icon name="filter" />
@@ -47,23 +47,22 @@ export const FiltersCard: React.FC<Props> = ({
         </h4>
         <FormInput
           label="SEARCH EVENTS"
-          value={filter.title ?? ""}
+          value={filter.title ?? ''}
           placeholder="Search by event name..."
           onChange={(title) => onChange({ title })}
         />
         <FormInput
           label="DATE RANGE"
-          value={filter.startDate ?? ""}
+          value={filter.startDate ?? ''}
           placeholder="yyyy-mm-dd"
           onChange={(startDate) => onChange({ startDate })}
         />
         <FormInput
           className={styles.NoLabel}
-          value={filter.endDate ?? ""}
+          value={filter.endDate ?? ''}
           placeholder="yyyy-mm-dd"
           onChange={(endDate) => onChange({ endDate })}
         />
-
 
         <label>CATEGORY</label>
         <div className={styles.ButtonGroup}>
@@ -90,7 +89,6 @@ export const FiltersCard: React.FC<Props> = ({
             </button>
           ))}
         </div>
-
 
         <label>LOCATION</label>
         <div className={styles.ButtonGroup}>

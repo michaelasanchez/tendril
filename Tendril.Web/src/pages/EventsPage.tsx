@@ -1,21 +1,21 @@
-import { format, parse } from "date-fns";
-import React, { useEffect, useMemo, useState } from "react";
-import { Col, Container, Row } from "react-bootstrap";
-import { EventsApi } from "../api/events";
-import { EventModal } from "../components/modal";
-import { EventList, FiltersCard, type EventFilter } from "../events";
-import type { Event } from "../types/api";
-import styles from "./EventsPage.module.css";
+import { format, parse } from 'date-fns';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Col, Container, Row } from 'react-bootstrap';
+import { EventsApi } from '../api/events';
+import { EventModal } from '../components/modal';
+import { EventList, FiltersCard, type EventFilter } from '../events';
+import type { Event } from '../types/api';
+import styles from './EventsPage.module.css';
 
-type View = "list" | "map" | "calendar";
+type View = 'list' | 'map' | 'calendar';
 
 export const EventsPage: React.FC = () => {
-  const [view, setView] = useState<View>("list");
+  const [view, setView] = useState<View>('list');
   const [events, setEvents] = useState<Event[]>([]);
   const [activeEvent, setActiveEvent] = useState<Event | null>(null);
 
   const [filter, setFilter] = useState<EventFilter>({
-    startDate: format(new Date(), "yyyy-MM-dd"),
+    startDate: format(new Date(), 'yyyy-MM-dd'),
   });
 
   const handleModalClose = () => setActiveEvent(null);
@@ -45,12 +45,12 @@ export const EventsPage: React.FC = () => {
     }
 
     if (startDate) {
-      const from = parse(startDate, "yyyy-MM-dd", new Date());
+      const from = parse(startDate, 'yyyy-MM-dd', new Date());
       filtered = filtered.filter((e) => from <= new Date(e.startUtc));
     }
 
     if (endDate) {
-      const to = parse(endDate, "yyyy-MM-dd", new Date());
+      const to = parse(endDate, 'yyyy-MM-dd', new Date());
       filtered = filtered.filter((e) => to >= new Date(e.startUtc));
     }
 
@@ -93,7 +93,7 @@ export const EventsPage: React.FC = () => {
           </p>
         </div>
 
-        {view === "list" && (
+        {view === 'list' && (
           <Row>
             <Col lg={4}>
               <FiltersCard
