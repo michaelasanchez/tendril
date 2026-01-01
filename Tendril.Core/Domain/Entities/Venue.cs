@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Tendril.Core.Domain.Entities;
+﻿namespace Tendril.Core.Domain.Entities;
 
 public class Venue
 {

@@ -12,8 +12,8 @@ using Tendril.Data;
 namespace Tendril.Data.Migrations
 {
     [DbContext(typeof(TendrilDbContext))]
-    [Migration("20251210022013_RemoveSelectorAttributeAndDelay")]
-    partial class RemoveSelectorAttributeAndDelay
+    [Migration("20260101202537_CreateDatabase")]
+    partial class CreateDatabase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -39,12 +39,30 @@ namespace Tendril.Data.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
+                    b.Property<string>("DetailsUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Disabled")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset?>("DisabledAtUtc")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<DateTimeOffset?>("EndUtc")
                         .HasColumnType("datetimeoffset");
 
                     b.Property<string>("ImageUrl")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Location")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("MaxPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("MinPrice")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTimeOffset>("ScrapedAtUtc")
                         .HasColumnType("datetimeoffset");
@@ -85,6 +103,9 @@ namespace Tendril.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("EventId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("RawDataJson")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -92,10 +113,17 @@ namespace Tendril.Data.Migrations
                     b.Property<DateTimeOffset>("ScrapedAtUtc")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid>("ScraperDefinitionId")
+                    b.Property<Guid?>("ScraperAttemptHistoryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ScraperDefinitionId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("EventId");
+
+                    b.HasIndex("ScraperAttemptHistoryId");
 
                     b.HasIndex("ScraperDefinitionId");
 
@@ -108,6 +136,9 @@ namespace Tendril.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int>("Created")
+                        .HasColumnType("int");
+
                     b.Property<DateTimeOffset>("EndTimeUtc")
                         .HasColumnType("datetimeoffset");
 
@@ -115,7 +146,13 @@ namespace Tendril.Data.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
-                    b.Property<int>("ExtractedCount")
+                    b.Property<int>("Errored")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Extracted")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Mapped")
                         .HasColumnType("int");
 
                     b.Property<Guid>("ScraperDefinitionId")
@@ -126,6 +163,9 @@ namespace Tendril.Data.Migrations
 
                     b.Property<bool>("Success")
                         .HasColumnType("bit");
+
+                    b.Property<int>("Updated")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -144,8 +184,13 @@ namespace Tendril.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("IsDynamic")
-                        .HasColumnType("bit");
+                    b.Property<string>("ExecutionMode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ExtractionStrategy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("LastErrorMessage")
                         .HasMaxLength(1000)
@@ -162,10 +207,9 @@ namespace Tendril.Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<string>("Schedule")
+                    b.Property<string>("PaginationType")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("State")
                         .IsRequired()
@@ -190,8 +234,17 @@ namespace Tendril.Data.Migrations
                     b.Property<string>("CombineWithField")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Format")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("Order")
                         .HasColumnType("int");
+
+                    b.Property<string>("RegexPattern")
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("RegexReplacement")
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<Guid>("ScraperDefinitionId")
                         .HasColumnType("uniqueidentifier");
@@ -201,13 +254,13 @@ namespace Tendril.Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<string>("SplitDelimiter")
+                        .HasColumnType("nvarchar(16)");
+
                     b.Property<string>("TargetField")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("TransformArgsJson")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("TransformType")
                         .IsRequired()
@@ -226,10 +279,25 @@ namespace Tendril.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("AttributeName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("ChildScraperDefinitionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("Delay")
+                        .HasColumnType("int");
+
                     b.Property<string>("FieldName")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("InteractionValue")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsPaginationTrigger")
+                        .HasColumnType("bit");
 
                     b.Property<int>("Order")
                         .HasColumnType("int");
@@ -298,11 +366,23 @@ namespace Tendril.Data.Migrations
 
             modelBuilder.Entity("Tendril.Core.Domain.Entities.ScrapedEventRaw", b =>
                 {
+                    b.HasOne("Tendril.Core.Domain.Entities.Event", "Event")
+                        .WithMany("ScrapedEventRaws")
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Tendril.Core.Domain.Entities.ScraperAttemptHistory", "ScraperAttemptHistory")
+                        .WithMany("ScrapedEventRaws")
+                        .HasForeignKey("ScraperAttemptHistoryId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Tendril.Core.Domain.Entities.ScraperDefinition", "ScraperDefinition")
                         .WithMany()
-                        .HasForeignKey("ScraperDefinitionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ScraperDefinitionId");
+
+                    b.Navigation("Event");
+
+                    b.Navigation("ScraperAttemptHistory");
 
                     b.Navigation("ScraperDefinition");
                 });
@@ -348,6 +428,16 @@ namespace Tendril.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("ScraperDefinition");
+                });
+
+            modelBuilder.Entity("Tendril.Core.Domain.Entities.Event", b =>
+                {
+                    b.Navigation("ScrapedEventRaws");
+                });
+
+            modelBuilder.Entity("Tendril.Core.Domain.Entities.ScraperAttemptHistory", b =>
+                {
+                    b.Navigation("ScrapedEventRaws");
                 });
 
             modelBuilder.Entity("Tendril.Core.Domain.Entities.ScraperDefinition", b =>
