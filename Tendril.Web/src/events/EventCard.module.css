@@ -37,6 +37,12 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+
+    .Favorite svg {
+      fill: var(--favorite);
+      fill-opacity: 1;
+      stroke: var(--favorite);
+    }
   }
 
   .CategoryBadge {

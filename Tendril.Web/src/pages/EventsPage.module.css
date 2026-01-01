@@ -1,10 +1,5 @@
-.pageHeader {
-  /* position: fixed; */
-  /* margin: 0.5em 0; */
-}
-
-.ListView {
-  display: flex;
+.EventList {
+  margin-bottom: 20rem;
 }
 
 .FiltersCard {

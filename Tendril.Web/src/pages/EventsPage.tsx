@@ -4,7 +4,7 @@ import { Col, Container, Row } from 'react-bootstrap';
 import { EventsApi } from '../api/events';
 import { EventModal } from '../components/modal';
 import { EventList, FiltersCard, type EventFilter } from '../events';
-import type { Event } from '../types/api';
+import type { Event, Guid } from '../types/api';
 import styles from './EventsPage.module.css';
 
 type View = 'list' | 'map' | 'calendar';
@@ -13,12 +13,26 @@ export const EventsPage: React.FC = () => {
   const [view, setView] = useState<View>('list');
   const [events, setEvents] = useState<Event[]>([]);
   const [activeEvent, setActiveEvent] = useState<Event | null>(null);
-
+  const [favorites, setFavorites] = useState<Set<Guid>>(new Set());
   const [filter, setFilter] = useState<EventFilter>({
     startDate: format(new Date(), 'yyyy-MM-dd'),
   });
 
   const handleModalClose = () => setActiveEvent(null);
+
+  const handleFavorite = (event: Event) => {
+    setFavorites((prev) => {
+      const updated = new Set(prev);
+
+      if (updated.has(event.id)) {
+        updated.delete(event.id);
+      } else {
+        updated.add(event.id);
+      }
+
+      return updated;
+    });
+  };
 
   const handleSetFilter = (update: Partial<EventFilter>) => {
     setFilter((prev) => ({ ...prev, ...update }));
@@ -37,6 +51,10 @@ export const EventsPage: React.FC = () => {
     const { title, startDate, endDate, location } = filter;
 
     let filtered = events;
+
+    if (filter.favoritesOnly) {
+      filtered = filtered.filter((e) => favorites.has(e.id));
+    }
 
     if (title) {
       filtered = filtered.filter((e) =>
@@ -61,7 +79,7 @@ export const EventsPage: React.FC = () => {
     }
 
     return filtered;
-  }, [filter]);
+  }, [events, favorites, filter]);
 
   // const calendarEvents = useMemo(
   //   () =>
@@ -105,8 +123,11 @@ export const EventsPage: React.FC = () => {
             </Col>
             <Col lg={8}>
               <EventList
+                className={styles.EventList}
                 events={filteredEvents}
+                favorites={favorites}
                 onEventClick={setActiveEvent}
+                onFavorite={handleFavorite}
               />
             </Col>
           </Row>

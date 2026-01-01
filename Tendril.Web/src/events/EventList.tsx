@@ -1,12 +1,16 @@
-import { format, parse } from "date-fns";
-import { useMemo } from "react";
-import { EventCard } from ".";
-import type { Event } from "../types/api";
-import styles from "./EventList.module.css";
+import cn from 'classnames';
+import { format, parse } from 'date-fns';
+import { useMemo } from 'react';
+import { EventCard } from '.';
+import type { Event, Guid } from '../types/api';
+import styles from './EventList.module.css';
 
 interface EventListProps {
+  className?: string;
   events: Event[];
+  favorites?: Set<Guid>;
   onEventClick?: (event: Event) => void;
+  onFavorite?: (event: Event) => void;
 }
 
 interface EventGroup {
@@ -15,13 +19,16 @@ interface EventGroup {
 }
 
 export const EventList: React.FC<EventListProps> = ({
+  className,
   events,
+  favorites,
   onEventClick,
+  onFavorite,
 }) => {
   const groups = useMemo(() => groupEventsByDay(events), [events]);
 
   return (
-    <div className={styles.EventList}>
+    <div className={cn(styles.EventList, className)}>
       {groups.map((g, i) => (
         <div key={i}>
           <h3 className={styles.DayLabel}>{g.label}</h3>
@@ -31,7 +38,9 @@ export const EventList: React.FC<EventListProps> = ({
                 key={e.id}
                 className={styles.EventCard}
                 event={e}
+                favorite={favorites?.has(e.id)}
                 onClick={() => onEventClick?.(e)}
+                onFavorite={() => onFavorite?.(e)}
               />
             ))}
           </div>
@@ -42,7 +51,7 @@ export const EventList: React.FC<EventListProps> = ({
 
   function groupEventsByDay(events: Event[]): EventGroup[] {
     const grouped = events.reduce((groups, event) => {
-      const dateKey = event.startUtc.split("T")[0];
+      const dateKey = event.startUtc.split('T')[0];
       if (!groups[dateKey]) {
         groups[dateKey] = [];
       }
@@ -55,10 +64,10 @@ export const EventList: React.FC<EventListProps> = ({
     return Object.keys(grouped)
       .sort()
       .map((g) => {
-        const dateObj = parse(g, "yyyy-MM-dd", new Date());
+        const dateObj = parse(g, 'yyyy-MM-dd', new Date());
 
         return {
-          label: format(dateObj, "MMM dd"),
+          label: format(dateObj, 'MMM dd'),
           events: grouped[g],
         };
       });

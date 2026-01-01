@@ -11,6 +11,36 @@
     margin: 2em 0 0;
   }
 
+  .Checkbox {
+    display: flex;
+    align-items: center;
+    gap: 1em;
+
+    cursor: pointer;
+
+    padding: 0;
+    margin: 2em 0 0;
+
+    input,
+    label {
+      margin: 0;
+      cursor: pointer;
+    }
+
+    input {
+      --size: 1.2em;
+
+      height: var(--size);
+      width: var(--size);
+
+      float: none;
+    }
+
+    label {
+      margin-top: 1px;
+    }
+  }
+
   .NoLabel {
     margin-top: 0.5em;
   }
@@ -18,7 +48,12 @@
   input:focus {
     box-shadow: 0 0 0 2px rgb(119, 112, 245);
 
-    transition: box-shadow cubic-bezier(.4, 0, .2, 1) .15s;
+    transition: box-shadow cubic-bezier(0.4, 0, 0.2, 1) 0.15s;
+  }
+
+  input:checked {
+    background-color: var(--accent);
+    border-color: var(--accent);
   }
 
   .ButtonGroup {

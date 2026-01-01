@@ -43,3 +43,10 @@
     grid-template-columns: repeat(3, 1fr);
   }
 }
+
+/* ≥ xxl */
+@media (min-width: 1400px) {
+  .EventList .DayGroup {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}

@@ -53,16 +53,34 @@ export const FiltersCard: React.FC<Props> = ({
         />
         <FormInput
           label="DATE RANGE"
+          type="date"
           value={filter.startDate ?? ''}
-          placeholder="yyyy-mm-dd"
+          placeholder="mm/dd/yyyy"
           onChange={(startDate) => onChange({ startDate })}
         />
         <FormInput
           className={styles.NoLabel}
+          type="date"
           value={filter.endDate ?? ''}
-          placeholder="yyyy-mm-dd"
+          placeholder="mm/dd/yyyy"
           onChange={(endDate) => onChange({ endDate })}
         />
+
+        <div
+          className={styles.Checkbox}
+          onClick={() => onChange({ favoritesOnly: !filter.favoritesOnly })}
+        >
+          <input
+            className="form-check-input"
+            type="checkbox"
+            checked={filter.favoritesOnly ?? false}
+            onChange={(e) => {
+              e.stopPropagation();
+              onChange({ favoritesOnly: !filter.favoritesOnly });
+            }}
+          />
+          <label>SHOW FAVORITES ONLY</label>
+        </div>
 
         <label>CATEGORY</label>
         <div className={styles.ButtonGroup}>

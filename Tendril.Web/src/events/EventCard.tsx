@@ -10,7 +10,9 @@ import NoImage from './no-image.svg';
 interface Props {
   event: Event;
   className?: string | CSSModuleClasses;
+  favorite?: boolean;
   onClick?: () => void;
+  onFavorite?: () => void;
 }
 
 const fakeCategories = [
@@ -35,9 +37,36 @@ const fakeCategories = [
   'EXHILARATING',
   'THRILLING',
   'RIVETING',
+  'CAPTIVATING',
+  'ENTHRALLING',
+  'GRIPPING',
+  'ENGAGING',
+  'FASCINATING',
+  'CHARMING',
+  'DELIGHTFUL',
+  'ENCHANTING',
+  'GLORIOUS',
+  'RADIANT',
+  'DAZZLING',
+  'BRILLIANT',
+  'LUMINOUS',
+  'VIBRANT',
+  'ELECTRIFYING',
+  'DYNAMIC',
+  'ENERGETIC',
+  'VIVACIOUS',
+  'SPIRITED',
+  'ZESTY',
+  'EXUBERANT',
 ];
 
-export const EventCard: React.FC<Props> = ({ event, className, onClick }) => {
+export const EventCard: React.FC<Props> = ({
+  className,
+  event,
+  favorite,
+  onClick,
+  onFavorite,
+}) => {
   return (
     <Card
       key={event.id}
@@ -55,7 +84,16 @@ export const EventCard: React.FC<Props> = ({ event, className, onClick }) => {
         <div className={styles.Overlay}>
           <div className={styles.TopLeft}>
             <button
-              className={cn(buttonStyles.Button, buttonStyles.IconButton)}
+              className={cn(
+                buttonStyles.IconButton,
+                favorite && styles.Favorite
+              )}
+              onClick={(e) => {
+                if (!!onFavorite) {
+                  e.stopPropagation();
+                  onFavorite();
+                }
+              }}
             >
               <Icon name="favorite" />
             </button>
@@ -63,7 +101,10 @@ export const EventCard: React.FC<Props> = ({ event, className, onClick }) => {
           <div className={styles.TopRight}>
             <div className={styles.CategoryBadge}>
               {event.category ??
-                fakeCategories[event.title.length % fakeCategories.length]}
+                fakeCategories[
+                  (event.title.length + new Date(event.startUtc).getDate()) %
+                    fakeCategories.length
+                ]}
             </div>
           </div>
         </div>

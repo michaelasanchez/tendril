@@ -5,13 +5,14 @@ export interface FormInputProps {
   label?: string;
   value: string;
   onChange: (value: string) => void;
-  type?: "text" | "number" | "password" | "email";
+  type?: "text" | "number" | "password" | "email" | "date";
   placeholder?: string;
   disabled?: boolean;
   autoFocus?: boolean;
 }
 
 export interface FormCheckProps {
+  className?: string;
   label: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
