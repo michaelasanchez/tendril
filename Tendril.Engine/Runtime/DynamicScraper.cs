@@ -78,7 +78,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
 
         foreach (var action in preActions)
         {
-            await PerformActionAsync(page, null, action);
+            await PerformPreActionAsync(page, null, action);
         }
 
         // 2. WAIT FOR CONTENT
@@ -133,7 +133,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
                     else
                     {
                         // Standard data extraction
-                        await ExtractFieldAsync(page, item, step, result.Data);
+                        await ProcessStepAsync(page, item, step, result.Data);
                     }
                 }
 
@@ -152,7 +152,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
         } while (hasMore);
     }
 
-    private async Task PerformActionAsync(IPage page, IElementHandle? scope, ScraperSelector action)
+    private static async Task PerformPreActionAsync(IPage page, IElementHandle? scope, ScraperSelector action)
     {
         // Determine the element to act upon
         // If 'scope' is provided, look inside it. Otherwise, look at the full page.
@@ -178,7 +178,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
                 await page.WaitForTimeoutAsync(action.Delay ?? DefaultWait);
                 break;
 
-            case SelectorType.Input: // [ENTITY REQ] New InteractionType
+            case SelectorType.Input:
                 if (!string.IsNullOrEmpty(action.InteractionValue))
                 {
                     await target.FillAsync(action.InteractionValue);
@@ -193,46 +193,64 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
         }
     }
 
-    private static async Task ExtractFieldAsync(
+    private static async Task ProcessStepAsync(
         IPage page,
         IElementHandle item,
         ScraperSelector step,
         RawScrapedEvent rawEvent)
     {
+        // 1. Exclusions: These types should be handled by the main loop, not here.
+        if (step.Type is SelectorType.Container or SelectorType.FollowLink) return;
+
         try
         {
-            // Handle "Root" selectors (e.g., a modal that exists outside the <li>)
-            // If step.Root is true, we ignore 'item' scope and query the Page directly.
-            // (Note: You might need to pass IPage into this method if you support Root selectors deeply)
+            // 2. Determine Target (Root vs Scoped)
             IElementHandle? targetElement;
 
-            if (step.Root) // [ENTITY REQ] Add IsRoot to Selector
+            if (step.Root)
             {
-                // Look at the whole page, not just the list item
                 targetElement = string.IsNullOrWhiteSpace(step.Selector)
-                    ? null // Root requires a selector
+                    ? null
                     : await page.QuerySelectorAsync(step.Selector);
             }
             else
             {
-                // Look inside the list item
                 targetElement = string.IsNullOrWhiteSpace(step.Selector)
                     ? item
                     : await item.QuerySelectorAsync(step.Selector);
             }
 
-            // For simplicity in this snippet, assuming standard scoped selection:
-            if (string.IsNullOrWhiteSpace(step.Selector))
-            {
-                targetElement = item;
-            }
-            else
-            {
-                targetElement = await item.QuerySelectorAsync(step.Selector);
-            }
-
             if (targetElement == null) return;
 
+            // 3. Handle Interactions (Void actions)
+            switch (step.Type)
+            {
+                case SelectorType.Click:
+                    await targetElement.ClickAsync();
+                    await Wait(page, step.Delay);
+                    return;
+
+                case SelectorType.Hover:
+                    await targetElement.HoverAsync();
+                    await Wait(page, step.Delay);
+                    return;
+
+                case SelectorType.Input:
+                    if (!string.IsNullOrEmpty(step.InteractionValue))
+                    {
+                        await targetElement.FillAsync(step.InteractionValue);
+                        await Wait(page, step.Delay);
+                    }
+                    return;
+
+                case SelectorType.Scroll:
+                    // Reusing your ScrollAsync helper logic here
+                    // Note: You might need to make ScrollAsync static or move it to a helper class
+                    await ScrollAsync(page, targetElement, step.Delay);
+                    return;
+            }
+
+            // 4. Handle Data Extraction (Returns a value)
             string? value = null;
 
             if (step.Type == SelectorType.CaptureLink)
@@ -263,34 +281,38 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
                     Console.WriteLine($"Failed to capture popup URL: {ex.Message}");
                 }
             }
-            else
+            else if (step.Type == SelectorType.Text)
             {
-                value = step.Type switch
-                {
-                    SelectorType.Text => await targetElement.InnerTextAsync(),
-                    SelectorType.Attribute => await targetElement.GetAttributeAsync(step.AttributeName ?? ""),
-                    _ => null
-                };
+                value = await targetElement.InnerTextAsync();
+            }
+            else if (step.Type == SelectorType.Attribute)
+            {
+                value = await targetElement.GetAttributeAsync(step.AttributeName ?? "");
             }
 
+            // 5. Assign to Event
             if (!string.IsNullOrWhiteSpace(value) && !string.IsNullOrWhiteSpace(step.FieldName))
             {
-                // Simple assignment. 
-                // The EventMapper later handles type conversion (int, date, etc.)
                 rawEvent.Fields[step.FieldName] = value.Trim();
             }
         }
         catch (Exception ex)
         {
-            // Log locally or just continue. 
-            // We don't want one missing field to crash the whole item.
-            Console.WriteLine($"Error extracting field {step.FieldName}: {ex.Message}");
+            Console.WriteLine($"Error processing step {step.Selector}: {ex.Message}");
         }
     }
 
-    private async Task<bool> PerformPaginationAsync(IPage page, ScraperDefinition def)
+    // Small helper to keep the switch clean
+    private static async Task Wait(IPage page, int? delay)
     {
-        // [ENTITY REQ] PaginationType enum on Definition
+        if (delay.HasValue && delay.Value > 0)
+        {
+            await page.WaitForTimeoutAsync(delay.Value);
+        }
+    }
+
+    private static async Task<bool> PerformPaginationAsync(IPage page, ScraperDefinition def)
+    {
         if (def.PaginationType == PaginationType.None) return false;
 
         if (def.PaginationType == PaginationType.InfiniteScroll)
@@ -317,7 +339,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
 
         return false;
     }
-    private async Task<bool> ScrollAsync(IPage page, IElementHandle? element = null, int? delay = null)
+    private static async Task<bool> ScrollAsync(IPage page, IElementHandle? element = null, int? delay = null)
     {
         long previousHeight = 0;
         long currentHeight = 0;
