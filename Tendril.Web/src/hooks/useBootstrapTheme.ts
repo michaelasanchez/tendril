@@ -1,47 +1,37 @@
-import React, { useState, useLayoutEffect } from 'react';
+import { useState, useLayoutEffect } from 'react';
 
-/**
- * useBootstrapTheme Hook (Anti-Flicker Version)
- * * * Logic:
- * 1. Checks LocalStorage.
- * 2. Checks System Preference.
- * 3. Sets the attribute SYNCHRONOUSLY inside the state initializer to prevent 
- * the "white flash" before the first paint.
- */
-export const useBootstrapTheme = () => {
-  const [theme, setTheme] = useState(() => {
-    // 1. Resolve the initial theme
-    // We check localStorage first
-    let initialTheme = localStorage.getItem('theme');
-    
-    // If nothing in storage, check system preference
-    if (!initialTheme) {
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        initialTheme = 'dark';
-      } else {
-        initialTheme = 'light';
-      }
+type Theme = 'light' | 'dark';
+
+export const useBootstrapTheme = (initialOverride?: Theme) => {
+  const [theme, setTheme] = useState<Theme>(() => {
+    // 1. Priority: Debugging Override
+    // If you passed 'dark' or 'light', we force it immediately.
+    if (initialOverride) return initialOverride;
+
+    // 2. Priority: Local Storage
+    const stored = localStorage.getItem('theme') as Theme | null;
+    if (stored) return stored;
+
+    // 3. Priority: System Preference
+    if (
+      window.matchMedia &&
+      window.matchMedia('(prefers-color-scheme: dark)').matches
+    ) {
+      return 'dark';
     }
 
-    // 2. CRITICAL: Set the attribute immediately. 
-    // Doing this here (during the render phase of the first mount) ensures 
-    // the DOM has the correct attribute before the browser paints the screen.
-    // This solves the "White Flash" issue.
-    document.documentElement.setAttribute('data-bs-theme', initialTheme);
-
-    return initialTheme;
+    return 'light';
   });
 
-  // 3. Handle subsequent updates
-  // useLayoutEffect fires synchronously after all DOM mutations.
-  // We use this to catch updates when the user clicks the toggle button.
   useLayoutEffect(() => {
+    // This runs synchronously before the browser paints.
+    // It handles the initial load AND all subsequent updates.
     document.documentElement.setAttribute('data-bs-theme', theme);
     localStorage.setItem('theme', theme);
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'));
+    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
   };
 
   return { theme, toggleTheme };

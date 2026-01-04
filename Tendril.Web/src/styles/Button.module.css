@@ -5,6 +5,8 @@
   --button-delay: calc(var(--delay) * 2);
 
   --button-hover-color: var(--hover);
+  --button-hover-background: var(--background);
+  --button-hover-border: var(--hover);
 
   background-color: var(--button-background);
   border: 1px solid var(--button-border);
@@ -17,8 +19,9 @@
     border-color var(--button-delay);
 
   &:hover {
+    background-color: var(--button-hover-background);
+    border-color: var(--button-hover-border);
     color: var(--button-hover-color);
-    border-color: var(--hover);
   }
 
   &.Active {
@@ -33,6 +36,20 @@
     --button-border: var(--accent);
     --button-color: var(--accent-foreground);
     --button-hover-color: var(--accent-foreground);
+
+    &:hover {
+      --button-hover-background: var(--accent);
+    }
+  }
+
+  &.OutlinePrimary {
+    --button-color: var(--accent);
+
+    &:hover {
+      --button-hover-background: var(--accent);
+      --button-hover-border: var(--accent);
+      --button-hover-color: var(--accent-foreground);
+    }
   }
 
   &.Danger {
@@ -45,8 +62,9 @@
     --button-color: var(--destructive);
 
     &:hover {
-      background-color: var(--destructive);
-      color: var(--accent-foreground);
+      --button-hover-background: var(--destructive);
+      --button-hover-border: var(--destructive);
+      --button-hover-color: var(--accent-foreground);
     }
   }
 }

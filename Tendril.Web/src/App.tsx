@@ -1,18 +1,13 @@
-import { useEffect } from "react";
-import { Container } from "react-bootstrap";
-import { Navigate, Route, Routes } from "react-router-dom";
-import { useBootstrapTheme } from "./hooks/useBootstrapTheme";
-import { EventsPage } from "./pages/EventsPage";
-import { ScraperEditorPage } from "./pages/ScraperEditorPage";
-import { ScrapersPage } from "./pages/ScrapersPage";
-import { VenuesPage } from "./pages/VenuesPage";
+import { Container } from 'react-bootstrap';
+import { Navigate, Route, Routes } from 'react-router-dom';
+import { EventsPage } from './pages/EventsPage';
+import { ScraperEditorPage } from './pages/ScraperEditorPage';
+import { ScrapersPage } from './pages/ScrapersPage';
+import { VenuesPage } from './pages/VenuesPage';
+import { useBootstrapTheme } from './hooks';
 
 export default function App() {
-  const { theme, toggleTheme } = useBootstrapTheme();
-
-  useEffect(() => {
-    if (theme === "dark") toggleTheme();
-  }, []);
+  useBootstrapTheme('dark');
 
   return (
     <Container>
