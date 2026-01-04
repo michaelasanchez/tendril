@@ -1,10 +1,16 @@
-// src/scrapers/ScraperSelectorsTab.tsx
-import React, { useEffect, useState } from "react";
-import { Card, Form, Table } from "react-bootstrap";
-import { ScrapersApi } from "../api/scrapers";
-import { FormCheck, FormInput, FormSelect } from "../components/form";
-import formStyles from "../styles/Form.module.css";
-import type { Guid, ScraperSelector, SelectorType } from "../types/api";
+import React, { useEffect, useState } from 'react';
+import { Card, Form, Table } from 'react-bootstrap';
+import { ScrapersApi } from '../api/scrapers';
+import { AdminButton as Button } from '../components/button';
+import { FormCheck, FormInput, FormSelect } from '../components/form';
+import {
+  buttonStyles,
+  cardStyles,
+  formStyles,
+  pageStyles,
+  tableStyles,
+} from '../styles';
+import type { Guid, ScraperSelector, SelectorType } from '../types/api';
 
 interface Props {
   scraperId: Guid;
@@ -16,15 +22,15 @@ const toOptions = (arr: string[]) =>
   arr.map((item) => ({ value: item, label: item }));
 
 const selectorTypeOptions = toOptions([
-  "Container",
-  "Text",
-  "Attribute",
-  "Click",
-  "Hover",
-  "Scroll",
-  "Input",
-  "CaptureLink",
-  "FollowLink",
+  'Container',
+  'Text',
+  'Attribute',
+  'Click',
+  'Hover',
+  'Scroll',
+  'Input',
+  'CaptureLink',
+  'FollowLink',
 ]);
 
 interface Option {
@@ -44,8 +50,8 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
 
   useEffect(() => {
     if (
-      selectors.some((s) => s.type === "FollowLink") ||
-      editing.type === "FollowLink"
+      selectors.some((s) => s.type === 'FollowLink') ||
+      editing.type === 'FollowLink'
     ) {
       const loadScrapers = async () => {
         const data = await ScrapersApi.getAll();
@@ -60,11 +66,11 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
   const startNew = () => {
     setIsNew(true);
     setEditing({
-      fieldName: "",
-      selector: "",
+      fieldName: '',
+      selector: '',
       order: selectors.length,
       root: false,
-      type: "Text",
+      type: 'Text',
       attribute: null,
       delay: null,
     } as Partial<ScraperSelector>);
@@ -86,12 +92,12 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
     if (isNew) {
       await ScrapersApi.createSelector(scraperId, {
         fieldName: editing.fieldName,
-        selector: editing.selector ?? "",
+        selector: editing.selector ?? '',
         order: editing.order ?? selectors.length,
         root: editing.root ?? false,
         type: editing.type,
         attribute:
-          editing.type == "Attribute" && !!editing.attribute
+          editing.type == 'Attribute' && !!editing.attribute
             ? editing.attribute
             : null,
         delay: editing.delay ?? null,
@@ -107,7 +113,7 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
         root: editing.root,
         type: editing.type,
         attribute:
-          editing.type == "Attribute" && !!editing.attribute
+          editing.type == 'Attribute' && !!editing.attribute
             ? editing.attribute
             : null,
         delay: editing.delay ?? null,
@@ -127,160 +133,171 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
   };
 
   return (
-    <Card>
-      <Card.Body>
-        <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <h3>Selectors</h3>
-          <button onClick={startNew}>Add Selector</button>
-        </div>
-      </Card.Body>
-      <Card.Body>
-        <Table className="data-table" hover>
-          <thead>
-            <tr>
-              <th>Field</th>
-              <th>Selector</th>
-              <th>Order</th>
-              <th>Root</th>
-              <th>Type</th>
-              <th>Attribute</th>
-              <th>Delay</th>
-              <th>Interaction</th>
-              <th>Child Scraper</th>
-              <th>Pagination Trigger</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {selectors
-              .sort((a, b) => a.order - b.order)
-              .map((s) => (
-                <tr key={s.id}>
-                  <td>{s.fieldName}</td>
-                  <td>
-                    <code>{s.selector}</code>
-                  </td>
-                  <td>{s.order}</td>
-                  <td>{s.root ? "Yes" : ""}</td>
-                  <td>{s.type}</td>
-                  <td>{s.attribute}</td>
-                  <td>{s.delay}</td>
-                  <td>{s.interactionValue}</td>
-                  <td>
-                    {s.childScraperId &&
-                      scraperOptions.find((o) => o.value === s.childScraperId)
-                        ?.label}
-                  </td>
-                  <td>{s.isPaginationTrigger ? "Yes" : ""}</td>
-                  <td>
-                    <button onClick={() => startEdit(s)}>Edit</button>
-                    <button onClick={() => remove(s)}>Delete</button>
-                  </td>
-                </tr>
-              ))}
-            {selectors.length === 0 && (
+    <>
+      <div className={pageStyles.pageHeader}>
+        <h3>Selectors</h3>
+        <Button className={buttonStyles.Primary} onClick={startNew}>
+          Add Selector
+        </Button>
+      </div>
+      <Card className={cardStyles.BgCard}>
+        <Card.Body>
+          <Table className={tableStyles.Table} hover responsive>
+            <thead>
               <tr>
-                <td colSpan={5}>No selectors defined.</td>
+                <th>Field</th>
+                <th>Selector</th>
+                <th>Order</th>
+                <th>Root</th>
+                <th>Type</th>
+                <th>Attribute</th>
+                <th>Delay</th>
+                <th>Interaction</th>
+                <th>Child Scraper</th>
+                <th>Pagination Trigger</th>
+                <th />
               </tr>
-            )}
-          </tbody>
-        </Table>
+            </thead>
+            <tbody>
+              {selectors
+                .sort((a, b) => a.order - b.order)
+                .map((s) => (
+                  <tr key={s.id}>
+                    <td>{s.fieldName}</td>
+                    <td>
+                      <code>{s.selector}</code>
+                    </td>
+                    <td>{s.order}</td>
+                    <td>{s.root ? 'Yes' : ''}</td>
+                    <td>{s.type}</td>
+                    <td>{s.attribute}</td>
+                    <td>{s.delay}</td>
+                    <td>{s.interactionValue}</td>
+                    <td>
+                      {s.childScraperId &&
+                        scraperOptions.find((o) => o.value === s.childScraperId)
+                          ?.label}
+                    </td>
+                    <td>{s.isPaginationTrigger ? 'Yes' : ''}</td>
+                    <td className={tableStyles.TableActions}>
+                      <div>
+                        <Button onClick={() => startEdit(s)}>Edit</Button>
+                        <Button
+                          className={buttonStyles.OutlineDanger}
+                          onClick={() => remove(s)}
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              {selectors.length === 0 && (
+                <tr>
+                  <td colSpan={5}>No selectors defined.</td>
+                </tr>
+              )}
+            </tbody>
+          </Table>
+        </Card.Body>
+      </Card>
 
-        {editing.fieldName !== undefined && (
-          <div className="edit-panel">
-            <h4>{isNew ? "New Selector" : "Edit Selector"}</h4>
-            <Form className={formStyles.form}>
-              <FormInput
-                label="Field Name"
-                value={editing.fieldName ?? ""}
-                autoFocus={true}
-                onChange={(fieldName) => setEditing({ ...editing, fieldName })}
-              />
-              <FormInput
-                label="Selector"
-                value={editing.selector ?? ""}
-                onChange={(selector) => setEditing({ ...editing, selector })}
-              />
-              <FormInput
-                type="number"
-                label="Order"
-                value={editing.order?.toString() ?? "0"}
-                onChange={(order) =>
-                  setEditing({ ...editing, order: parseInt(order) })
-                }
-              />
-              <div className={formStyles.formGroup}>
-                <FormCheck
-                  label="Root"
-                  checked={editing.root ?? false}
-                  onChange={(checked) =>
-                    setEditing({ ...editing, root: checked })
-                  }
-                />
-                <FormCheck
-                  label="Pagination Trigger"
-                  checked={editing.isPaginationTrigger ?? false}
-                  onChange={(isPaginationTrigger) =>
-                    setEditing({ ...editing, isPaginationTrigger })
-                  }
-                />
-              </div>
-              <FormSelect
-                label="Type"
-                value={editing.type ?? "Text"}
-                onChange={(value) =>
-                  setEditing({ ...editing, type: value as SelectorType })
-                }
-                options={selectorTypeOptions}
-              />
-              {editing.type === "Attribute" && (
+      {editing.fieldName !== undefined && (
+        <>
+          <h4>{isNew ? 'New Selector' : 'Edit Selector'}</h4>
+          <Card className={cardStyles.BgCard}>
+            <Card.Body>
+              <Form className={formStyles.form}>
                 <FormInput
-                  label="Attribute"
-                  value={editing.attribute ?? ""}
-                  onChange={(attribute) =>
-                    setEditing({ ...editing, attribute })
+                  label="Field Name"
+                  value={editing.fieldName ?? ''}
+                  autoFocus={true}
+                  onChange={(fieldName) =>
+                    setEditing({ ...editing, fieldName })
                   }
                 />
-              )}
-              <FormInput
-                type="number"
-                label="Delay"
-                value={editing.delay?.toString() ?? ""}
-                onChange={(delay) =>
-                  setEditing({ ...editing, delay: parseInt(delay) })
-                }
-              />
-              {editing.type === "Input" && (
                 <FormInput
-                  label="Interaction Value"
-                  value={editing.interactionValue ?? ""}
-                  onChange={(interactionValue) =>
-                    setEditing({ ...editing, interactionValue })
+                  label="Selector"
+                  value={editing.selector ?? ''}
+                  onChange={(selector) => setEditing({ ...editing, selector })}
+                />
+                <FormInput
+                  type="number"
+                  label="Order"
+                  value={editing.order?.toString() ?? '0'}
+                  onChange={(order) =>
+                    setEditing({ ...editing, order: parseInt(order) })
                   }
                 />
-              )}
-              {editing.type == "FollowLink" && (
+                <div className={formStyles.formGroup}>
+                  <FormCheck
+                    label="Root"
+                    checked={editing.root ?? false}
+                    onChange={(checked) =>
+                      setEditing({ ...editing, root: checked })
+                    }
+                  />
+                  <FormCheck
+                    label="Pagination Trigger"
+                    checked={editing.isPaginationTrigger ?? false}
+                    onChange={(isPaginationTrigger) =>
+                      setEditing({ ...editing, isPaginationTrigger })
+                    }
+                  />
+                </div>
                 <FormSelect
-                  label="Child Scraper"
-                  value={editing.childScraperId ?? ""}
-                  options={scraperOptions}
-                  onChange={(childScraperId) =>
-                    setEditing({ ...editing, childScraperId })
+                  label="Type"
+                  value={editing.type ?? 'Text'}
+                  onChange={(value) =>
+                    setEditing({ ...editing, type: value as SelectorType })
+                  }
+                  options={selectorTypeOptions}
+                />
+                {editing.type === 'Attribute' && (
+                  <FormInput
+                    label="Attribute"
+                    value={editing.attribute ?? ''}
+                    onChange={(attribute) =>
+                      setEditing({ ...editing, attribute })
+                    }
+                  />
+                )}
+                <FormInput
+                  type="number"
+                  label="Delay"
+                  value={editing.delay?.toString() ?? ''}
+                  onChange={(delay) =>
+                    setEditing({ ...editing, delay: parseInt(delay) })
                   }
                 />
-              )}
-              <div className={formStyles.buttonRow}>
-                <button type="button" onClick={save}>
-                  Save
-                </button>
-                <button type="button" onClick={cancelEdit}>
-                  Cancel
-                </button>
-              </div>
-            </Form>
-          </div>
-        )}
-      </Card.Body>
-    </Card>
+                {editing.type === 'Input' && (
+                  <FormInput
+                    label="Interaction Value"
+                    value={editing.interactionValue ?? ''}
+                    onChange={(interactionValue) =>
+                      setEditing({ ...editing, interactionValue })
+                    }
+                  />
+                )}
+                {editing.type == 'FollowLink' && (
+                  <FormSelect
+                    label="Child Scraper"
+                    value={editing.childScraperId ?? ''}
+                    options={scraperOptions}
+                    onChange={(childScraperId) =>
+                      setEditing({ ...editing, childScraperId })
+                    }
+                  />
+                )}
+                <div className={formStyles.buttonRow}>
+                  <Button variant="primary" onClick={save}>Save</Button>
+                  <Button onClick={cancelEdit}>Cancel</Button>
+                </div>
+              </Form>
+            </Card.Body>
+          </Card>
+        </>
+      )}
+    </>
   );
 };

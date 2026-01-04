@@ -1,0 +1,22 @@
+.Table {
+  th, td {
+    background-color: transparent;
+  }
+}
+
+.TableActions {
+  /* vertical-align: middle; */
+
+  & > div {
+    display: flex;
+    align-items: center;
+    gap: 1em;
+  }
+}
+
+.GroupHeader td {
+  background: #fafafa;
+  font-weight: 600;
+  text-transform: uppercase;
+  border-top: 2px solid #ddd;
+}

@@ -22,7 +22,7 @@ public class IngestionService(
         logger.LogInformation("Starting ingestion for {Scraper}", scraper.Name);
 
         var start = DateTimeOffset.UtcNow;
-        int created = 0, updated = 0, extracted = 0, errored = 0;
+        int created = 0, updated = 0, extracted = 0, errored = 0, skipped = 0;
 
         // 1. Create Attempt Record IMMEDIATELY (Mark as Running)
         var attempt = new ScraperAttemptHistory
@@ -37,6 +37,10 @@ public class IngestionService(
         await attemptHistories.Add(attempt, cancellationToken);
 
         var errors = new List<string>();
+
+        var rawEntities = new List<ScrapedEventRaw>();
+        var mappedEntities = new List<Event>();
+        var summaries = new List<string>();
 
         try
         {
@@ -57,20 +61,31 @@ public class IngestionService(
 
                 await rawEvents.AddAsync(rawEntity, cancellationToken);
 
+                rawEntities.Add(rawEntity);
+
                 // B. Map & Upsert Event
                 try
                 {
-                    var result = await ProcessSingleEventAsync(scraper, rawEntity);
+                    var (mappedEvent, status, summary) = await ProcessSingleEventAsync(scraper, rawEntity);
 
-                    if (result == "created") created++;
-                    if (result == "updated") updated++;
+                    if (mappedEvent is not null)
+                    {
+                        mappedEntities.Add(mappedEvent);
+                    }
+
+                    summaries.Add(summary);
+
+                    if (status == "created") created++;
+                    if (status == "updated") updated++;
+                    if (status == "skipped") skipped++;
                 }
                 catch (Exception ex)
                 {
+                    errors.Add(ex.Message);
+
                     errored++;
 
                     logger.LogError(ex, "Error mapping event");
-                    errors.Add(ex.Message);
                 }
             }
 
@@ -98,6 +113,7 @@ public class IngestionService(
             attempt.Extracted = extracted;
             attempt.Created = created;
             attempt.Updated = updated;
+            attempt.Skipped = skipped;
             attempt.Errored = errored;
 
             await scrapers.UpdateAsync(scraper, cancellationToken);
@@ -106,16 +122,23 @@ public class IngestionService(
 
         return new IngestResult
         {
+            Attempt = attempt,
             Success = attempt.Success,
-            Attempt = attempt
+            Errors = errors,
+
+            // TODO: these need to be DTOs...
+            //Raw = rawEntities,
+            //Mapped = mappedEntities,
+
+            MappingSummary = summaries
         };
     }
 
-    private async Task<string> ProcessSingleEventAsync(ScraperDefinition scraper, ScrapedEventRaw rawEntity)
+    private async Task<(Event? mappedEvent, string result, string message)> ProcessSingleEventAsync(ScraperDefinition scraper, ScrapedEventRaw rawEntity)
     {
         var mappedEvent = mapper.Map(scraper, rawEntity);
 
-        if (mappedEvent.StartUtc == default) return "skipped";
+        if (mappedEvent.StartUtc == default) return (mappedEvent, "skipped", "Skipped - Missing start date");
 
         var existingEvent = await events.Find(mappedEvent);
 
@@ -132,10 +155,10 @@ public class IngestionService(
 
                 await events.UpdateAsync(existingEvent);
 
-                return "updated";
+                return (mappedEvent, "updated", $"Updated - [{existingEvent.Title}]({existingEvent.Id})");
             }
 
-            return "skipped";
+            return (mappedEvent, "skipped", $"Skipped - No changes - [{existingEvent.Title}]({existingEvent.Id})");
         }
         else
         {
@@ -143,7 +166,7 @@ public class IngestionService(
 
             rawEntity.EventId = mappedEvent.Id;
 
-            return "created";
+            return (mappedEvent, "created", $"Created - [{mappedEvent.Title}]({mappedEvent.Id})");
         }
     }
 
@@ -176,4 +199,6 @@ public class IngestionService(
 
         return current;
     }
+
+    record UpdateResult(bool Updated, string Field, string? OldValue, string? NewValue);
 }

@@ -1,19 +1,19 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Table } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
-import { ScrapersApi } from "../api/scrapers";
-import type { ScraperDefinition } from "../types/api";
-import pageStyles from "./Page.module.css";
-import styles from "./ScrapersPage.module.css";
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Table } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
+import { ScrapersApi } from '../api/scrapers';
+import { AdminButton as Button } from '../components/button';
+import { buttonStyles, pageStyles, tableStyles } from '../styles';
+import type { ScraperDefinition } from '../types/api';
 
 type SortKey =
-  | "name"
-  | "baseUrl"
-  | "state"
-  | "lastSuccessUtc"
-  | "lastFailureUtc";
+  | 'name'
+  | 'baseUrl'
+  | 'state'
+  | 'lastSuccessUtc'
+  | 'lastFailureUtc';
 
-type SortDirection = "asc" | "desc";
+type SortDirection = 'asc' | 'desc';
 
 export const ScrapersPage: React.FC = () => {
   const [scrapers, setScrapers] = useState<ScraperDefinition[]>([]);
@@ -28,18 +28,18 @@ export const ScrapersPage: React.FC = () => {
   const onSort = (key: SortKey) => {
     setSort((prev) => {
       if (!prev || prev.key !== key) {
-        return { key, direction: "asc" };
+        return { key, direction: 'asc' };
       }
 
       return {
         key,
-        direction: prev.direction === "asc" ? "desc" : "asc",
+        direction: prev.direction === 'asc' ? 'desc' : 'asc',
       };
     });
   };
 
   const sortIndicator = (key: SortKey) =>
-    sort?.key === key ? <>&nbsp;{sort.direction === "asc" ? "▲" : "▼"}</> : "";
+    sort?.key === key ? <>&nbsp;{sort.direction === 'asc' ? '▲' : '▼'}</> : '';
 
   const navigate = useNavigate();
 
@@ -50,7 +50,7 @@ export const ScrapersPage: React.FC = () => {
       const data = await ScrapersApi.getAll();
       setScrapers(data);
     } catch (e: any) {
-      setError(e.message ?? "Error loading scrapers.");
+      setError(e.message ?? 'Error loading scrapers.');
     } finally {
       setLoading(false);
     }
@@ -75,8 +75,8 @@ export const ScrapersPage: React.FC = () => {
         if (aValue === null || aValue === undefined) return 1;
         if (bValue === null || bValue === undefined) return -1;
 
-        if (aValue < bValue) return sort.direction === "asc" ? -1 : 1;
-        if (aValue > bValue) return sort.direction === "asc" ? 1 : -1;
+        if (aValue < bValue) return sort.direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sort.direction === 'asc' ? 1 : -1;
 
         return 0;
       });
@@ -86,73 +86,109 @@ export const ScrapersPage: React.FC = () => {
   }, [sort]);
 
   const handleRunNow = async (id: string) => {
-    if (!window.confirm("Run this scraper now?")) return;
+    if (!window.confirm('Run this scraper now?')) return;
     try {
       await ScrapersApi.runNow(id);
       await load();
     } catch (e: any) {
-      alert(e.message ?? "Run failed.");
+      alert(e.message ?? 'Run failed.');
     }
   };
+
+  const scraperGroups = useMemo(() => {
+    return scrapers.reduce<Record<string, ScraperDefinition[]>>(
+      (groups, scraper) => {
+        const extractionStrategy = scraper.extractionStrategy ?? 'Unknown';
+        if (!groups[extractionStrategy]) {
+          groups[extractionStrategy] = [];
+        }
+        groups[extractionStrategy].push(scraper);
+        return groups;
+      },
+      {}
+    );
+  }, [scrapers]);
 
   return (
     <section>
       <div className={pageStyles.pageHeader}>
         <h2>Scrapers</h2>
-        <button onClick={() => navigate("/scrapers/new")}>New Scraper</button>
+        <button
+          className={buttonStyles.AdminButton}
+          onClick={() => navigate('/scrapers/new')}
+        >
+          New Scraper
+        </button>
       </div>
 
       {loading && <p>Loading…</p>}
       {error && <p className="error">{error}</p>}
 
-      <Table className="data-table" hover>
+      <Table className="data-table" hover responsive>
         <thead>
           <tr>
-            <th onClick={() => onSort("name")}>Name{sortIndicator("name")}</th>
-            <th onClick={() => onSort("baseUrl")}>
-              Base URL{sortIndicator("baseUrl")}
+            <th onClick={() => onSort('name')}>Name{sortIndicator('name')}</th>
+            <th onClick={() => onSort('baseUrl')}>
+              Base URL{sortIndicator('baseUrl')}
             </th>
-            <th onClick={() => onSort("state")}>
-              State{sortIndicator("state")}
+            <th onClick={() => onSort('state')}>
+              State{sortIndicator('state')}
             </th>
-            <th onClick={() => onSort("lastSuccessUtc")}>
-              Last Success{sortIndicator("lastSuccessUtc")}
+            <th onClick={() => onSort('lastSuccessUtc')}>
+              Last Success{sortIndicator('lastSuccessUtc')}
             </th>
-            <th onClick={() => onSort("lastFailureUtc")}>
-              Last Failure{sortIndicator("lastFailureUtc")}
+            <th onClick={() => onSort('lastFailureUtc')}>
+              Last Failure{sortIndicator('lastFailureUtc')}
             </th>
             <th />
           </tr>
         </thead>
-        <tbody>
-          {scrapers.map((s) => (
-            <tr key={s.id}>
-              <td className={styles.center}>
-                <button
-                  className="link"
-                  onClick={() => navigate(`/scrapers/${s.id}`)}
-                >
-                  {s.name}
-                </button>
-              </td>
-              <td>
-                <a href={s.baseUrl} target="_blank">{s.baseUrl}</a>
-              </td>
-              <td>{s.state}</td>
-              <td>{s.lastSuccessUtc ?? "-"}</td>
-              <td>{s.lastFailureUtc ?? "-"}</td>
-              <td>
-                <button onClick={() => handleRunNow(s.id)}>Run Now</button>
-              </td>
+
+        {Object.entries(scraperGroups).map(([strategy, group]) => (
+          <tbody key={strategy}>
+            <tr className={tableStyles.GroupHeader}>
+              <td colSpan={6}>{strategy}</td>
             </tr>
-          ))}
-          {scrapers.length === 0 && !loading && (
-            <tr>
-              <td colSpan={6}>No scrapers defined yet.</td>
-            </tr>
-          )}
-        </tbody>
+
+            {group.map((s) => (
+              <tr key={s.id}>
+                <td>{s.name}</td>
+                <td>
+                  <a href={s.baseUrl} target="_blank">
+                    {s.baseUrl}
+                  </a>
+                </td>
+                <td>{s.state}</td>
+                <td>{s.lastSuccessUtc ? formatDate(s.lastSuccessUtc) : '-'}</td>
+                <td>{s.lastFailureUtc ? formatDate(s.lastFailureUtc) : '-'}</td>
+                <td className={tableStyles.TableActions}>
+                  <div>
+                    <Button onClick={() => navigate(`/scrapers/${s.id}`)}>
+                      Edit
+                    </Button>
+                    <Button
+                      className={buttonStyles.Primary}
+                      onClick={() => handleRunNow(s.id)}
+                    >
+                      Run&nbsp;Now
+                    </Button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+            {scrapers.length === 0 && !loading && (
+              <tr>
+                <td colSpan={6}>No scrapers defined yet.</td>
+              </tr>
+            )}
+          </tbody>
+        ))}
       </Table>
     </section>
   );
+
+  function formatDate(dateString: string) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+  }
 };

@@ -1,24 +1,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Hepta+Slab:wght@400;500&family=Gentium+Plus&family=Inter&family=Azeret+Mono&display=swap');
 
 :root {
-
-
-
-
-
   /* Base font size */
   --font-size: 14px;
-  
+
   /* Font families */
   --font-slab: 'Hepta Slab', serif;
   --font-serif: 'Gentium Plus', serif;
   --font-sans: 'Inter', sans-serif;
   --font-mono: 'Azeret Mono', monospace;
-  
+
   /* Font weights */
   --font-weight-regular: 400;
   --font-weight-medium: 500;
-  
+
   /* Typography scale */
   --text-xs: 10px;
   --text-sm: 12px;
@@ -28,142 +23,86 @@
   --text-2xl: 40px;
 
   --spacing: 0.25rem;
-  
+
   /* The default background color for the application. */
-  --background: rgba(255, 255, 255, 1.00);
+  --background: rgba(255, 255, 255, 1);
   /* The default color for elements or text that appears on top of the background. */
-  --foreground: rgba(38, 38, 38, 1.00);
+  --foreground: rgba(38, 38, 38, 1);
   /* The background color for cards, modals, and other containers. */
-  --card: rgba(247, 247, 247, 1.00); 
+  --card: rgba(247, 247, 247, 1);
   /* The default color for text or elements that appear on top of cards, modals and other background containers. */
-  --card-foreground: rgba(38, 38, 38, 1.00);
+  --card-foreground: rgba(38, 38, 38, 1);
   /* The background color for dropdowns and tooltips. */
-  --popover: rgba(255, 255, 255, 1.00);
+  --popover: rgba(255, 255, 255, 1);
   /* The default color for text or elements that appear on top of dropdowns and tooltips. */
-  --popover-foreground: rgba(38, 38, 38, 1.00);
+  --popover-foreground: rgba(38, 38, 38, 1);
   /* The primary color used for buttons, links, and other interactive elements. */
-  --primary: rgba(38, 38, 38, 1.00);
+  --primary: rgba(38, 38, 38, 1);
   /* The default color for text or elements that appear on top of primary colored elements. */
-  --primary-foreground: rgba(255, 255, 255, 1.00);
+  --primary-foreground: rgba(255, 255, 255, 1);
   /* The secondary color used for secondary(but NOT-DESTRUCTIVE) buttons and interactive elements. */
   --secondary: rgba(0, 0, 0, 0);
   /* The default color for text or elements that appear on top of secondary colored elements. */
-  --secondary-foreground: rgba(38, 38, 38, 1.00);
+  --secondary-foreground: rgba(38, 38, 38, 1);
   /* The muted color used for less prominent elements, such as disabled buttons or disabled text. */
   --muted: rgba(0, 0, 0, 0);
   /* The default color for text or elements that appear on top of muted colored elements. */
-  --muted-foreground: rgba(103, 103, 103, 1.00);
+  --muted-foreground: rgba(103, 103, 103, 1);
   /* The accent color used for highlights, links, and other interactive elements. */
-  --accent: rgba(119, 112, 245, 1.00);
+  --accent: rgba(119, 112, 245, 1);
   /* The default color for text or elements that appear on top of accent colored elements. */
-  --accent-foreground: rgba(255, 255, 255, 1.00);
+  --accent-foreground: rgba(255, 255, 255, 1);
   /* The color used for background in destructive actions, such as delete buttons or error messages. */
-  --destructive: rgba(252, 157, 54, 1.00);
+  --destructive: rgba(252, 157, 54, 1);
   /* The default color for text or elements that appear on top of destructive colored elements. */
-  --destructive-foreground: rgba(255, 255, 255, 1.00);
+  --destructive-foreground: rgba(255, 255, 255, 1);
   /* The default border color for elements such as inputs, buttons, and other containers. */
-  --border: rgba(208, 208, 208, 1.00);
+  --border: rgba(208, 208, 208, 1);
   /* The default background color for input fields once the text has been filled. Should be either transparent or match the input-background. */
-  --input: rgba(255, 255, 255, 1.00);
+  --input: rgba(255, 255, 255, 1);
   /* The default background color for input fields, text areas, and other input elements. */
-  --input-background: rgba(255, 255, 255, 1.00);
+  --input-background: rgba(255, 255, 255, 1);
   /* The default color for focus rinds, outlines, and other focus indicators. */
-  --ring: rgba(119, 112, 245, 1.00);
+  --ring: rgba(119, 112, 245, 1);
   /* Shadow for small elevations, such as cards or modals. */
-  --elevation-sm: 0px 2px 4px rgba(38, 38, 38, 0.10);
+  --elevation-sm: 0px 2px 4px rgba(38, 38, 38, 0.1);
   /* The color for chart elements, such as a bar or line in a chart. */
-  --chart-1: rgba(51, 149, 255, 1.00);
+  --chart-1: rgba(51, 149, 255, 1);
   /* The color for another chart element, such as a bar or line in a chart. */
-  --chart-2: rgba(119, 112, 245, 1.00);
+  --chart-2: rgba(119, 112, 245, 1);
   /* The color for another chart element, such as a bar or line in a chart. */
-  --chart-3: rgba(120, 184, 20, 1.00);
+  --chart-3: rgba(120, 184, 20, 1);
   /* The color for another chart element, such as a bar or line in a chart. */
-  --chart-4: rgba(243, 202, 2, 1.00);
+  --chart-4: rgba(243, 202, 2, 1);
   /* The color for another chart element, such as a bar or line in a chart. */
-  --chart-5: rgba(252, 157, 54, 1.00);
+  --chart-5: rgba(252, 157, 54, 1);
   /* The default border radius for elements such as buttons, cards, and other containers. */
   --radius: 4px;
   /* Border radius for fully rounded elements like pill buttons */
   --radius-full: 9999px;
   /* The background color for sidebars, navigation menus, and other persistent elements. */
-  --sidebar: rgba(250, 246, 242, 1.00);
+  --sidebar: rgba(250, 246, 242, 1);
   /* The default color for text or elements that appear on top of sidebars, navigation menus, and other persistent elements. */
-  --sidebar-foreground: rgba(38, 38, 38, 1.00);
+  --sidebar-foreground: rgba(38, 38, 38, 1);
   /* The primary color used for buttons, links, and other interactive elements in sidebars and navigation menus. */
-  --sidebar-primary: rgba(38, 38, 38, 1.00);
+  --sidebar-primary: rgba(38, 38, 38, 1);
   /* The default color for text or elements that appear on top of primary colored elements in sidebars and navigation menus. */
-  --sidebar-primary-foreground: rgba(255, 255, 255, 1.00);
+  --sidebar-primary-foreground: rgba(255, 255, 255, 1);
   /* The accent color used for highlights, links, and other interactive elements in sidebars and navigation menus. */
-  --sidebar-accent: rgba(119, 112, 245, 1.00);
+  --sidebar-accent: rgba(119, 112, 245, 1);
   /* The default color for text or elements that appear on top of accent colored elements in sidebars and navigation menus. */
-  --sidebar-accent-foreground: rgba(255, 255, 255, 1.00);
+  --sidebar-accent-foreground: rgba(255, 255, 255, 1);
   /* The default border color for elements in sidebars and navigation menus. */
-  --sidebar-border: rgba(208, 208, 208, 1.00);
+  --sidebar-border: rgba(208, 208, 208, 1);
   /* The default color for focus rings, outlines, and other focus indicators in sidebars and navigation menus. */
-  --sidebar-ring: rgba(119, 112, 245, 1.00);
-
-  
+  --sidebar-ring: rgba(119, 112, 245, 1);
 
   --delay: 100ms;
 
   --favorite: rgb(251, 44, 54);
   --hover: rgb(91, 78, 150);
 
-  --placeholder: rgba(38, 38, 38, 0.40);
-}
-
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-input-background: var(--input-background);
-  --color-ring: var(--ring);
-  --radius-sm: calc(var(--radius) / 2);
-  --radius-md: var(--radius);
-  --radius-lg: calc(var(--radius) * 2);
-  --radius-xl: var(--radius-full);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --shadow-sm: var(--elevation-sm);
-  --shadow-md: 0px 4px 8px rgba(38, 38, 38, 0.12);
-  --shadow-lg: 0px 8px 16px rgba(38, 38, 38, 0.14);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-}
-
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-
-  body {
-    @apply bg-background text-foreground;
-  }
+  --placeholder: rgba(38, 38, 38, 0.4);
 }
 
 /* Typography Styles */
@@ -226,6 +165,17 @@ caption {
   line-height: 1.5;
 }
 
+th {
+  font-family: var(--font-slab);
+  font-size: var(--text-sm);
+}
+
+a {
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
 button {
   font-family: var(--font-sans);
   font-size: var(--text-base);
@@ -249,116 +199,3 @@ body {
   font-size: var(--font-size);
   font-family: var(--font-sans);
 }
-
-
-
-
-
-.text-muted {
-  color: var(--muted-foreground) !important;
-}
-
-
-
-
-
-
-
-
-
-
-/* 
-
-
-:root {
-
-  --primary: var(--accent);
-}
-
-a {
-  font-weight: 500;
-  color: var(--primary);
-  text-decoration: inherit;
-}
-
-a:hover {
-  color: var(--primary);
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  /* background-color: #1a1a1a; * /
-  cursor: pointer;
-  transition: border-color 0.25s;
-
-  &:disabled {
-    opacity: 0.5;
-  }
-
-  &:has(a) {
-    padding: 0;
-  }
-}
-
-.btn-outline-info {
-    --bs-btn-color: var(--primary);
-    --bs-btn-border-color: var(--primary);
-    --bs-btn-hover-bg: var(--primary);
-    --bs-btn-hover-border-color: var(--primary);
-    --bs-btn-active-bg: var(--primary);
-    --bs-btn-active-border-color: var(--primary);
-    --bs-btn-disabled-color: var(--primary);
-    --bs-btn-disabled-border-color: var(--primary);
-}
-
-.nav {
-  --bs-nav-link-color: var(--primary);
-}
-
-.nav-pills a.nav-link.active {
-  background-color: var(--primary);
-}
-
-.nav-link {
-  color: white;
-}
-
-.nav-link:hover {
-  color: var(--primary);
-}
-
-button:hover:not(:disabled) {
-  border-color: var(--primary);
-}
-
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-html[data-bs-theme="dark"] {
-  .rbc-toolbar button:not(.rbc-active) {
-    color: var(--bs-btn-color);
-  }
-  .rbc-today {
-    background: rgba(255, 255, 255, 0.25);
-  }
-
-  .rbc-event {
-    /* background-color: rgba(0, 0, 0, 0.95); * /
-  }
-
-  .rbc-off-range-bg {
-    background: rgba(0, 0, 0, 0.25);
-  }
-} */

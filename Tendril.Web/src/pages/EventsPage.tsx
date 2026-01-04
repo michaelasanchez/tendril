@@ -4,6 +4,7 @@ import { Col, Container, Row } from 'react-bootstrap';
 import { EventsApi } from '../api/events';
 import { EventModal } from '../components/modal';
 import { EventList, FiltersCard, type EventFilter } from '../events';
+import { pageStyles } from '../styles';
 import type { Event, Guid } from '../types/api';
 import styles from './EventsPage.module.css';
 
@@ -104,11 +105,13 @@ export const EventsPage: React.FC = () => {
   return (
     <Container>
       <section>
-        <div className={styles.pageHeader}>
-          <h1>Upcoming Events</h1>
-          <p className="text-muted">
-            {filteredEvents?.length ?? 0} events found
-          </p>
+        <div className={pageStyles.pageHeader}>
+          <div>
+            <h1>Upcoming Events</h1>
+            <p className={pageStyles.SubHeader}>
+              {filteredEvents?.length ?? 0} events found
+            </p>
+          </div>
         </div>
 
         {view === 'list' && (

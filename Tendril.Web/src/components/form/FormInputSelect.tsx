@@ -1,14 +1,8 @@
-import cn from "classnames";
-import type React from "react";
-import {
-  Button,
-  ButtonGroup,
-  Dropdown,
-  DropdownButton,
-  Form,
-} from "react-bootstrap";
-import type { FormSelectProps } from ".";
-import styles from "../../styles/Form.module.css";
+import cn from 'classnames';
+import type React from 'react';
+import { Button, ButtonGroup, Dropdown, Form } from 'react-bootstrap';
+import type { FormSelectProps } from '.';
+import styles from '../../styles/Form.module.css';
 
 export const FormInputSelect: React.FC<FormSelectProps> = ({
   label,
@@ -23,7 +17,7 @@ export const FormInputSelect: React.FC<FormSelectProps> = ({
   <Form.Group className={styles.FormInputSelect}>
     <Form.Label>{label}</Form.Label>
     <div>
-      <ButtonGroup>
+      <Dropdown as={ButtonGroup} className="w-100">
         <Form.Control
           value={value}
           onChange={(e) => onChange(e.target.value)}
@@ -32,7 +26,12 @@ export const FormInputSelect: React.FC<FormSelectProps> = ({
           autoFocus={autoFocus}
         />
 
-        <DropdownButton as={ButtonGroup} title="" variant="outline-secondary" dir="start">
+        <Dropdown.Toggle
+          variant="outline-secondary"
+          className="flex-shrink-0"
+        />
+
+        <Dropdown.Menu className="w-100" align="end">
           {options.map((option) => (
             <Dropdown.Item
               eventKey={option.value}
@@ -41,28 +40,17 @@ export const FormInputSelect: React.FC<FormSelectProps> = ({
               {option.label}
             </Dropdown.Item>
           ))}
-        </DropdownButton>
-      </ButtonGroup>
+        </Dropdown.Menu>
+      </Dropdown>
       {clearable && (
         <Button
           className={cn(styles.ClearButton, !!value && styles.Show)}
           variant="outline-secondary"
-          onClick={() => onChange("")}
+          onClick={() => onChange('')}
         >
           x
         </Button>
       )}
     </div>
-    {/* <Form.Select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      disabled={disabled}
-    >
-      {options.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </Form.Select> */}
   </Form.Group>
 );

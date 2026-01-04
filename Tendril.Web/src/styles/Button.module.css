@@ -1,23 +1,60 @@
 .Button {
-  background-color: var(--background);
-  border: 1px solid var(--border);
+  --button-background: var(--background);
+  --button-border: var(--border);
+  --button-color: var(--foreground);
+  --button-delay: calc(var(--delay) * 2);
+
+  --button-hover-color: var(--hover);
+
+  background-color: var(--button-background);
+  border: 1px solid var(--button-border);
   border-radius: var(--radius-full);
+  color: var(--button-color);
 
   padding: calc(var(--spacing) * 2) calc(var(--spacing) * 4);
 
-  transition: color calc(var(--animation) * 4),
-    background-color var(--animation), border-color calc(var(--animation) * 4);
+  transition: color var(--button-delay), background-color var(--button-delay),
+    border-color var(--button-delay);
 
   &:hover {
-    color: var(--hover);
+    color: var(--button-hover-color);
     border-color: var(--hover);
   }
 
   &.Active {
-    background-color: var(--accent);
-    border-color: var(--accent);
-    color: var(--accent-foreground);
+    --button-background: var(--accent);
+    --button-border: var(--accent);
+    --button-color: var(--accent-foreground);
+    --button-hover-color: var(--accent-foreground);
   }
+
+  &.Primary {
+    --button-background: var(--accent);
+    --button-border: var(--accent);
+    --button-color: var(--accent-foreground);
+    --button-hover-color: var(--accent-foreground);
+  }
+
+  &.Danger {
+    --button-background: var(--destructive);
+    --button-border: var(--destructive);
+    --button-color: var(--accent-foreground);
+  }
+
+  &.OutlineDanger {
+    --button-color: var(--destructive);
+
+    &:hover {
+      background-color: var(--destructive);
+      color: var(--accent-foreground);
+    }
+  }
+}
+
+.AdminButton {
+  composes: Button;
+
+  border-radius: calc(var(--radius) * 2);
 }
 
 .IconButton {
@@ -27,6 +64,7 @@
 
   padding: calc(var(--spacing) * 1.5) calc(var(--spacing) * 2);
 
+  /* TODO: this animation prop probably doesn't belong here */
   transform: scale(1);
 
   transition: transform calc(var(--delay) * 2);

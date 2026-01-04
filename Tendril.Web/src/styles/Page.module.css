@@ -1,0 +1,18 @@
+.pageHeader {
+  display: flex;
+  align-items: flex-start;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 1rem 0;
+
+  /* TOOD: what is this for again?
+    it was throwing off h3 only page headers */
+  /* &:has(> :only-child) {
+    justify-content: flex-end;
+  } */
+}
+
+.SubHeader {
+  color: var(--muted-foreground);
+}

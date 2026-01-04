@@ -1,11 +1,11 @@
 // src/pages/VenuesPage.tsx
-import React, { useEffect, useState } from "react";
-import { Form, Table } from "react-bootstrap";
-import { VenuesApi } from "../api/venues";
-import { FormInput } from "../components/form";
-import formStyles from "../styles/Form.module.css";
-import type { Venue } from "../types/api";
-import pageStyles from "./Page.module.css";
+import React, { useEffect, useState } from 'react';
+import { Form, Table } from 'react-bootstrap';
+import { VenuesApi } from '../api/venues';
+import { AdminButton as Button } from '../components/button';
+import { FormInput } from '../components/form';
+import { formStyles, pageStyles } from '../styles';
+import type { Venue } from '../types/api';
 
 export const VenuesPage: React.FC = () => {
   const [venues, setVenues] = useState<Venue[]>([]);
@@ -16,7 +16,7 @@ export const VenuesPage: React.FC = () => {
     const data = await VenuesApi.getAll();
     setVenues(
       data.sort((a, b) =>
-        a.name.replace("The ", "").localeCompare(b.name.replace("The ", ""))
+        a.name.replace('The ', '').localeCompare(b.name.replace('The ', ''))
       )
     );
   };
@@ -27,7 +27,7 @@ export const VenuesPage: React.FC = () => {
 
   const startNew = () => {
     setIsNew(true);
-    setEditing({ name: "", address: "", website: "" });
+    setEditing({ name: '', address: '', website: '' });
   };
 
   const startEdit = (v: Venue) => {
@@ -92,7 +92,7 @@ export const VenuesPage: React.FC = () => {
                     {v.website}
                   </a>
                 ) : (
-                  "-"
+                  '-'
                 )}
               </td>
               <td>
@@ -111,26 +111,28 @@ export const VenuesPage: React.FC = () => {
 
       {editing.name !== undefined && (
         <div className="card edit-panel">
-          <h3>{isNew ? "New Venue" : "Edit Venue"}</h3>
+          <h3>{isNew ? 'New Venue' : 'Edit Venue'}</h3>
           <Form className={formStyles.form}>
             <FormInput
               label="Name"
-              value={editing.name ?? ""}
+              value={editing.name ?? ''}
               onChange={(name) => setEditing({ ...editing, name })}
             />
             <FormInput
               label="Address"
-              value={editing.address ?? ""}
+              value={editing.address ?? ''}
               onChange={(address) => setEditing({ ...editing, address })}
             />
             <FormInput
               label="Website"
-              value={editing.website ?? ""}
+              value={editing.website ?? ''}
               onChange={(website) => setEditing({ ...editing, website })}
             />
             <div className={formStyles.buttonRow}>
-              <button type="button" onClick={save}>Save</button>
-              <button type="button" onClick={cancel}>Cancel</button>
+              <Button variant="primary" onClick={save}>
+                Save
+              </Button>
+              <Button onClick={cancel}>Cancel</Button>
             </div>
           </Form>
         </div>

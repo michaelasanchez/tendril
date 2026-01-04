@@ -41,12 +41,6 @@ public class ScrapeExecutor(
         // Use Typed Client if you set it up, otherwise use Factory
         var client = httpClientFactory.CreateClient("ScraperClient");
 
-        //client.DefaultRequestHeaders.UserAgent.ParseAdd(
-        //    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
-        //    "AppleWebKit/537.36 (KHTML, like Gecko) " +
-        //    "Chrome/122.0.0.0 Safari/537.36"
-        //);
-
         var html = await client.GetStringAsync(def.BaseUrl, ct);
 
         await foreach (var item in staticLogic.ExecuteAsync(html, def, ct))
@@ -72,11 +66,27 @@ public class ScrapeExecutor(
     {
         // Reuse context if passed (from a Dynamic Parent), otherwise create new
         var context = existingContext ?? await PlaywrightContextFactory.CreateContextAsync();
+
         // If we created it, we own it and must dispose it. 
         // If it was passed in, the parent owns it.
         bool isContextOwner = existingContext == null;
 
         var page = await context.NewPageAsync();
+
+        // TOOD: this should be set up as configuration
+        //  ScraperDefinition.BlockedMediaTypes or something like that
+        //await page.RouteAsync("**/*", async route =>
+        //{
+        //    var type = route.Request.ResourceType;
+        //    if (type == "image" || type == "stylesheet" || type == "font" || type == "media")
+        //    {
+        //        await route.AbortAsync();
+        //    }
+        //    else
+        //    {
+        //        await route.ContinueAsync();
+        //    }
+        //});
 
         try
         {
@@ -89,6 +99,7 @@ public class ScrapeExecutor(
                     // RECURSION: Dynamic Parent found a child
                     // We pass 'context' down so dynamic children can share the session
                     var childEvent = await RunChildDispatchAsync(item, context, ct);
+
                     if (childEvent != null) yield return MergeEvents(item.Data, childEvent);
                 }
                 else
@@ -100,6 +111,7 @@ public class ScrapeExecutor(
         finally
         {
             await page.CloseAsync(); // Close the tab
+
             if (isContextOwner) await context.DisposeAsync(); // Close the browser if we opened it
         }
     }
@@ -111,6 +123,7 @@ public class ScrapeExecutor(
         CancellationToken ct)
     {
         var childDef = await repo.GetByIdAsync(parentItem.ChildScraperId!.Value, ct);
+
         if (childDef == null) return null;
 
         childDef.BaseUrl = parentItem.ChildUrl!;
@@ -118,25 +131,13 @@ public class ScrapeExecutor(
         // DECISION POINT: Switch based on the CHILD'S mode
         if (childDef.ExecutionMode == ExecutionMode.Static)
         {
-            try
+            await foreach (var res in RunStaticPipelineAsync(childDef, context, ct))
             {
-                // Dynamic/Static Parent -> Static Child
-                // We iterate manually to get the first item
-                await foreach (var res in RunStaticPipelineAsync(childDef, context, ct))
-                {
-                    return res; // Return first result
-                }
-            }
-            catch (Exception ex)
-            {
-                throw ex;
+                return res; // Return first result
             }
         }
         else
         {
-            // Dynamic/Static Parent -> Dynamic Child
-            // Note: If Parent was Static (context is null), RunDynamicPipeline will spin up a NEW browser.
-            // If Parent was Dynamic, we reuse the existing context (keeping cookies!).
             await foreach (var res in RunDynamicPipelineAsync(childDef, context, ct))
             {
                 return res; // Return first result

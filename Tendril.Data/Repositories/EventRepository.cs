@@ -54,24 +54,24 @@ public class EventRepository : IEventRepository
         await _db.SaveChangesAsync(cancellationToken);
     }
 
-    public Task<bool> Exists(Event mappedEvent, CancellationToken cancellationToken = default)
+    public Task<bool> Exists(Event mappedEvent, CancellationToken ct = default)
     {
         return _db.Events
             .AsNoTracking()
             .AnyAsync(x =>
                 x.ScraperDefinitionId == mappedEvent.ScraperDefinitionId &&
-                //x.Title == mappedEvent.Title &&
+                x.Title == mappedEvent.Title &&
                 x.StartUtc == mappedEvent.StartUtc &&
-                !x.Disabled);
+                !x.Disabled, ct);
     }
 
-    public Task<Event?> Find(Event mappedEvent, CancellationToken cancellationToken = default)
+    public Task<Event?> Find(Event mappedEvent, CancellationToken ct = default)
     {
         return _db.Events
             .SingleOrDefaultAsync(x =>
                 x.ScraperDefinitionId == mappedEvent.ScraperDefinitionId &&
-                //x.Title == mappedEvent.Title &&
-                x.StartUtc.Date == mappedEvent.StartUtc.Date &&
-                !x.Disabled);
+                !x.Disabled &&
+                x.Title == mappedEvent.Title &&
+                x.StartUtc == mappedEvent.StartUtc, ct);
     }
 }

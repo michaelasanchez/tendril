@@ -18,6 +18,9 @@
 .buttonRow {
   display: flex;
   gap: 0.5em;
+  justify-content: flex-end;
+
+  margin-top: 1em;
 }
 
 .FormSelect,
@@ -31,6 +34,10 @@
   input {
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
+  }
+
+  > div {
+    display: flex;
   }
 }
 

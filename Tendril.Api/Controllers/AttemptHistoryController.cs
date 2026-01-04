@@ -33,6 +33,8 @@ public sealed class AttemptHistoryController : ControllerBase
             Mapped = a.Mapped,
             Created = a.Created,
             Updated = a.Updated,
+            Skipped = a.Skipped,
+            Errored = a.Errored,
             ErrorMessage = a.ErrorMessage
         });
 

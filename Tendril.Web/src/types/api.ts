@@ -96,6 +96,8 @@ export interface ScraperAttemptHistory {
   mapped: number;
   created: number;
   updated: number;
+  skipped: number;
+  errored: number;
   errorMessage: string;
 }
 

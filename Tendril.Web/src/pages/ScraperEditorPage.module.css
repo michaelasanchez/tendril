@@ -1,4 +1,14 @@
 .tabs {
+  display: flex;
   gap: 1em;
   margin-bottom: 1em;
+}
+
+.InputGrow {
+  flex-grow: 1;
+}
+
+.ButtonContainer {
+  display: flex;
+  gap: 1em;
 }

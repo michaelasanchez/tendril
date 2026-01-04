@@ -23,6 +23,51 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
         IPage page,
         ScraperDefinition def)
     {
+        // CHECK STRATEGY
+        if (def.ExtractionStrategy is ExtractionStrategy.JsonLd)
+        {
+            var maxRetries = 3;
+            var retry = 0;
+
+            while (retry < maxRetries)
+            {
+
+                // If we are here, we paid the "Playwright Tax" to render the page.
+                // Now just grab the full HTML string and use the shared parser.
+                var content = await page.ContentAsync();
+
+                try
+                {
+                    // We wait up to 5 seconds for the script tag to appear in the DOM
+                    await page.WaitForSelectorAsync("script[type='application/ld+json']", new PageWaitForSelectorOptions
+                    {
+                        State = WaitForSelectorState.Attached,
+                        Timeout = 5000
+                    });
+                }
+                catch (TimeoutException)
+                {
+                    // If it doesn't show up in 5s, we proceed. 
+                    // It might just not be there, or the page is slow.
+                    // The processor will return null gracefully below.
+                }
+
+                // Use the same helper used in StaticScraper (you'd inject this)
+                var result = jsonLd.Extract(content, def.Selectors.FirstOrDefault()?.Selector ?? "ComedyEvent");
+
+                if (result != null)
+                {
+                    yield return new ScrapeYieldItem { Data = result };
+                }
+
+                retry++;
+            }
+
+            // TODO: here we should log that we waited/retried three times and got nothing,
+            //  probably even log the content
+            yield break; // Done.
+        }
+
         // 1. PRE-SCRAPE PHASE
         // Run any interactions (like typing zip code) required BEFORE the list appears.
         var container = def.Selectors.Single(x => x.Type == SelectorType.Container);
@@ -47,23 +92,6 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
             yield break;
         }
 
-        // CHECK STRATEGY
-        if (def.ExtractionStrategy is ExtractionStrategy.JsonLd)
-        {
-            // If we are here, we paid the "Playwright Tax" to render the page.
-            // Now just grab the full HTML string and use the shared parser.
-            var content = await page.ContentAsync();
-
-            // Use the same helper used in StaticScraper (you'd inject this)
-            var result = jsonLd.Extract(content, def.Selectors.FirstOrDefault()?.Selector ?? "Event");
-
-            if (result != null)
-            {
-                yield return new ScrapeYieldItem { Data = result };
-            }
-            yield break; // Done.
-        }
-
         // 3. PAGINATION LOOP
         bool hasMore = true;
         var processedSignatures = new HashSet<string>();
@@ -79,13 +107,13 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
 
                 // Run extraction selectors
                 var itemSelectors = def.Selectors
-                    .Where(x => x.Type != SelectorType.Container && !x.IsPaginationTrigger) // [ENTITY REQ] IsPaginationTrigger
+                    .Where(x => x.Type != SelectorType.Container && !x.IsPaginationTrigger)
                     .OrderBy(x => x.Order);
 
                 foreach (var step in itemSelectors)
                 {
                     // Check if this step triggers a child scraper (Deep Dive)
-                    if (step.ChildScraperDefinitionId.HasValue) // [ENTITY REQ] ChildScraperDefinitionId
+                    if (step.ChildScraperDefinitionId.HasValue)
                     {
                         var linkEl = string.IsNullOrEmpty(step.Selector)
                             ? item
@@ -111,6 +139,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
 
                 // Dedup check (simple hash of fields)
                 var signature = result.Data.GetSignature();
+
                 if (processedSignatures.Add(signature))
                 {
                     yield return result;

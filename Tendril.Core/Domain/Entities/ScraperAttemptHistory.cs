@@ -17,6 +17,7 @@ public class ScraperAttemptHistory
     public int Mapped { get; set; }
     public int Created { get; set; }
     public int Updated { get; set; }
+    public int Skipped { get; set; }
     public int Errored { get; set; }
 
     public string? ErrorMessage { get; set; }
