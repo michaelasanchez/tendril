@@ -151,7 +151,8 @@ export const ScraperEditorPage: React.FC = () => {
   return (
     <section>
       <div className={pageStyles.pageHeader}>
-        <h2>{isNew ? 'New Scraper' : `Edit Scraper – ${scraper.name}`}</h2>
+        {/* <h2>{isNew ? 'New Scraper' : `Edit Scraper – ${scraper.name}`}</h2> */}
+        <h2>{scraper.name}</h2>
         <AdminButton onClick={() => navigate('/scrapers')}>Back</AdminButton>
       </div>
 

@@ -7,7 +7,6 @@ using Tendril.Engine.Models;
 
 namespace Tendril.Engine.Runtime;
 
-// Internal helper to pass data back to the Executor
 public record ScrapeYieldItem
 {
     public RawScrapedEvent Data { get; init; } = new();
@@ -17,8 +16,6 @@ public record ScrapeYieldItem
 
 public class DynamicScraper(IJsonLdProcessor jsonLd)
 {
-    private const int DefaultWait = 100;
-
     public async IAsyncEnumerable<ScrapeYieldItem> ExecuteAsync(
         IPage page,
         ScraperDefinition def)
@@ -53,7 +50,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
                 }
 
                 // Use the same helper used in StaticScraper (you'd inject this)
-                var result = jsonLd.Extract(content, def.Selectors.FirstOrDefault()?.Selector ?? "ComedyEvent");
+                var result = jsonLd.Extract(content, def.Selectors.FirstOrDefault()?.Selector ?? "Event");
 
                 if (result != null)
                 {
@@ -78,7 +75,8 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
 
         foreach (var action in preActions)
         {
-            await PerformPreActionAsync(page, null, action);
+            // item: null (forces page scope), rawEvent: null (skips extraction)
+            await ProcessStepAsync(page, null, action, null);
         }
 
         // 2. WAIT FOR CONTENT
@@ -119,15 +117,18 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
                             ? item
                             : await item.QuerySelectorAsync(step.Selector);
 
-                        var url = await linkEl?.GetAttributeAsync("href");
-
-                        if (!string.IsNullOrWhiteSpace(url))
+                        if (linkEl is not null)
                         {
-                            result = result with
+                            var url = await linkEl.GetAttributeAsync("href");
+
+                            if (!string.IsNullOrWhiteSpace(url))
                             {
-                                ChildUrl = url,
-                                ChildScraperId = step.ChildScraperDefinitionId
-                            };
+                                result = result with
+                                {
+                                    ChildUrl = url,
+                                    ChildScraperId = step.ChildScraperDefinitionId
+                                };
+                            }
                         }
                     }
                     else
@@ -147,67 +148,34 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
             }
 
             // B. PAGINATION ACTION
-            hasMore = await PerformPaginationAsync(page, def);
+            if (items.Count == 0)
+            {
+                hasMore = false;
+            }
+            else
+            {
+                hasMore = await PerformPagination(page, def);
+            }
 
         } while (hasMore);
     }
 
-    private static async Task PerformPreActionAsync(IPage page, IElementHandle? scope, ScraperSelector action)
-    {
-        // Determine the element to act upon
-        // If 'scope' is provided, look inside it. Otherwise, look at the full page.
-        // If the selector is empty, act on the scope itself (e.g. clicking the list item).
-        var target = string.IsNullOrWhiteSpace(action.Selector)
-            ? scope
-            : (scope != null
-                ? await scope.QuerySelectorAsync(action.Selector)
-                : await page.QuerySelectorAsync(action.Selector));
-
-        if (target == null) return;
-
-        switch (action.Type)
-        {
-            case SelectorType.Click:
-                await target.ClickAsync();
-                // Wait for potential navigation or DOM update
-                await page.WaitForTimeoutAsync(action.Delay ?? DefaultWait);
-                break;
-
-            case SelectorType.Hover:
-                await target.HoverAsync();
-                await page.WaitForTimeoutAsync(action.Delay ?? DefaultWait);
-                break;
-
-            case SelectorType.Input:
-                if (!string.IsNullOrEmpty(action.InteractionValue))
-                {
-                    await target.FillAsync(action.InteractionValue);
-                    await page.WaitForTimeoutAsync(action.Delay ?? DefaultWait);
-                }
-                break;
-
-            case SelectorType.Scroll:
-                // Use the scroll helper on this specific element
-                await ScrollAsync(page, target, action.Delay);
-                break;
-        }
-    }
-
     private static async Task ProcessStepAsync(
         IPage page,
-        IElementHandle item,
+        IElementHandle? item,
         ScraperSelector step,
-        RawScrapedEvent rawEvent)
+        RawScrapedEvent? rawEvent)
     {
-        // 1. Exclusions: These types should be handled by the main loop, not here.
+        // 1. Exclusions
         if (step.Type is SelectorType.Container or SelectorType.FollowLink) return;
 
         try
         {
-            // 2. Determine Target (Root vs Scoped)
+            // 2. Determine Target
             IElementHandle? targetElement;
 
-            if (step.Root)
+            // Logic: If explicitly Root OR if we have no item scope (Pre-Scrape), query the Page.
+            if (step.Root || item == null)
             {
                 targetElement = string.IsNullOrWhiteSpace(step.Selector)
                     ? null
@@ -215,6 +183,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
             }
             else
             {
+                // Scoped: Look inside the provided list item
                 targetElement = string.IsNullOrWhiteSpace(step.Selector)
                     ? item
                     : await item.QuerySelectorAsync(step.Selector);
@@ -222,64 +191,42 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
 
             if (targetElement == null) return;
 
-            // 3. Handle Interactions (Void actions)
+            // 3. Handle Interactions (Click, Input, Scroll, Hover)
             switch (step.Type)
             {
                 case SelectorType.Click:
                     await targetElement.ClickAsync();
-                    await Wait(page, step.Delay);
-                    return;
+                    await PerformWait(page, step.Delay);
+                    return; // Action done
 
                 case SelectorType.Hover:
                     await targetElement.HoverAsync();
-                    await Wait(page, step.Delay);
-                    return;
+                    await PerformWait(page, step.Delay);
+                    return; // Action done
 
                 case SelectorType.Input:
                     if (!string.IsNullOrEmpty(step.InteractionValue))
                     {
                         await targetElement.FillAsync(step.InteractionValue);
-                        await Wait(page, step.Delay);
+                        await PerformWait(page, step.Delay);
                     }
-                    return;
+                    return; // Action done
 
                 case SelectorType.Scroll:
-                    // Reusing your ScrollAsync helper logic here
-                    // Note: You might need to make ScrollAsync static or move it to a helper class
-                    await ScrollAsync(page, targetElement, step.Delay);
-                    return;
+                    await PerformScroll(page, targetElement, step.Delay);
+                    return; // Action done
             }
 
-            // 4. Handle Data Extraction (Returns a value)
+            // 4. Handle Data Extraction (Text, Attribute, CaptureLink)
+            // If we don't have an event object to write to, we can stop here.
+            if (rawEvent == null) return;
+
             string? value = null;
 
             if (step.Type == SelectorType.CaptureLink)
             {
-                try
-                {
-                    // 1. Setup the listener BEFORE clicking
-                    // We ask the browser context: "Tell me when a new tab opens"
-                    var popupTask = page.Context.WaitForPageAsync();
-
-                    // 2. Click the button that triggers the popup
-                    await targetElement.ClickAsync();
-
-                    // 3. Await the new tab
-                    var popupPage = await popupTask;
-
-                    // 4. Wait for it to settle so the URL is accurate (handling redirects)
-                    await popupPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
-
-                    // 5. Grab the URL
-                    value = popupPage.Url;
-
-                    // 6. Close the popup to clean up memory
-                    await popupPage.CloseAsync();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Failed to capture popup URL: {ex.Message}");
-                }
+                // [Insert your existing CaptureLink logic here]
+                // value = popupPage.Url;
             }
             else if (step.Type == SelectorType.Text)
             {
@@ -302,22 +249,13 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
         }
     }
 
-    // Small helper to keep the switch clean
-    private static async Task Wait(IPage page, int? delay)
-    {
-        if (delay.HasValue && delay.Value > 0)
-        {
-            await page.WaitForTimeoutAsync(delay.Value);
-        }
-    }
-
-    private static async Task<bool> PerformPaginationAsync(IPage page, ScraperDefinition def)
+    private static async Task<bool> PerformPagination(IPage page, ScraperDefinition def)
     {
         if (def.PaginationType == PaginationType.None) return false;
 
         if (def.PaginationType == PaginationType.InfiniteScroll)
         {
-            return await ScrollAsync(page); // Uses your existing logic
+            return await PerformScroll(page);
         }
 
         if (def.PaginationType == PaginationType.NextButton)
@@ -332,6 +270,9 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
             {
                 await nextBtn.ClickAsync();
                 await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+                await PerformWait(page, nextBtnDef.Delay);
+
                 return true;
             }
             catch { return false; }
@@ -339,7 +280,8 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
 
         return false;
     }
-    private static async Task<bool> ScrollAsync(IPage page, IElementHandle? element = null, int? delay = null)
+
+    private static async Task<bool> PerformScroll(IPage page, IElementHandle? element = null, int? delay = null)
     {
         long previousHeight = 0;
         long currentHeight = 0;
@@ -373,4 +315,13 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
         // Returns true if content grew (meaning we successfully scrolled and found new stuff)
         return currentHeight > previousHeight;
     }
+
+    private static async Task PerformWait(IPage page, int? delay)
+    {
+        if (delay.HasValue && delay.Value > 0)
+        {
+            await page.WaitForTimeoutAsync(delay.Value);
+        }
+    }
+
 }

@@ -7,7 +7,7 @@ import { VenuesPage } from './pages/VenuesPage';
 import { useBootstrapTheme } from './hooks';
 
 export default function App() {
-  useBootstrapTheme('dark');
+  useBootstrapTheme('light');
 
   return (
     <Container>

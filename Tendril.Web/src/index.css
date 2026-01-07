@@ -105,6 +105,13 @@
   --placeholder: rgba(38, 38, 38, 0.4);
 }
 
+[data-bs-theme='dark'] {
+  --background: rgba(33, 37, 41, 1);
+  --foreground: rgba(222, 226, 230, 1);
+  --border: rgba(255, 255, 255, 0.2);
+  --card: rgba(255, 255, 255, 0.05);
+}
+
 /* Typography Styles */
 
 h1 {
@@ -116,7 +123,8 @@ h1 {
 }
 
 h2 {
-  font-family: var(--font-serif);
+  /* font-family: var(--font-serif); */
+  font-family: var(--font-slab);
   font-size: var(--text-xl);
   font-weight: var(--font-weight-regular);
   line-height: 1.3;
