@@ -1,13 +1,68 @@
-.ModalRow {
-  display: flex;
-  gap: 1em;
+.Modal {
+  --inset: calc(var(--spacing) * 6);
 
-  margin-bottom: 1em;
+  .Header {
+    padding: 0;
 
-  .IconBox {
-    padding: 1em 1.25em;
+    position: relative;
+    overflow: hidden;
 
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
+    img {
+      /* aspect-ratio: 16 / 12; */
+      object-fit: cover;
+      width: 100%;
+    }
+
+    .TopRight {
+      position: absolute;
+      top: var(--inset);
+      right: var(--inset);
+    }
+
+    .BottomLeft {
+      position: absolute;
+      bottom: var(--inset);
+      left: var(--inset);
+    }
+  }
+
+  .Body {
+    padding: var(--inset);
+
+    h2 {
+      margin-bottom: calc(var(--spacing) * 2);
+    }
+
+    h4 {
+      margin-bottom: var(--spacing);
+    }
+
+    p {
+      color: var(--muted-foreground);
+      margin: 0;
+    }
+
+    .Content {
+      margin-bottom: var(--inset);
+    }
+
+    .ModalRow {
+      display: flex;
+      gap: 1em;
+
+      margin-bottom: 1em;
+
+      .IconBox {
+        padding: calc(var(--spacing) * 3);
+
+        background-color: var(--card);
+        border-radius: calc(var(--radius) * 2);
+        color: var(--accent);
+      }
+    }
+  }
+
+  .Footer {
+    justify-content: flex-start;
   }
 }

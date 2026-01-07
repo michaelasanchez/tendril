@@ -1,6 +1,7 @@
 import cn from 'classnames';
 import { format } from 'date-fns';
 import { Card } from 'react-bootstrap';
+import { Badge } from '../components/badge';
 import { Icon } from '../components/Icon';
 import { buttonStyles, cardStyles } from '../styles';
 import type { Event } from '../types/api';
@@ -15,7 +16,7 @@ interface Props {
   onFavorite?: () => void;
 }
 
-const fakeCategories = [
+export const fakeCategories = [
   'EXCITING',
   'AMAZING',
   'AWESOME',
@@ -99,13 +100,13 @@ export const EventCard: React.FC<Props> = ({
             </button>
           </div>
           <div className={styles.TopRight}>
-            <div className={styles.CategoryBadge}>
+            <Badge>
               {event.category ??
                 fakeCategories[
                   (event.title.length + new Date(event.startUtc).getDate()) %
                     fakeCategories.length
                 ]}
-            </div>
+            </Badge>
           </div>
         </div>
       </div>
@@ -131,7 +132,9 @@ export const EventCard: React.FC<Props> = ({
           {!!event.minPrice && (
             <div className={styles.CardRow}>
               <Icon name="ticket" /> ${event.minPrice}
-              {event.maxPrice !== event.minPrice ? ` - $${event.maxPrice}` : ''}
+              {!!event?.maxPrice && event.maxPrice !== event.minPrice
+                ? ` - $${event.maxPrice}`
+                : ''}
             </div>
           )}
         </div>

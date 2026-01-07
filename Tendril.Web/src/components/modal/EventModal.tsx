@@ -1,8 +1,13 @@
-import { format } from "date-fns";
-import { Modal } from "react-bootstrap";
-import type { Event } from "../../types/api";
-import { Icon, type IconName } from "../Icon";
-import styles from "./Modal.module.css";
+import cn from 'classnames';
+import { format } from 'date-fns';
+import { Modal } from 'react-bootstrap';
+import { fakeCategories } from '../../events';
+import { buttonStyles } from '../../styles';
+import type { Event } from '../../types/api';
+import { Badge } from '../badge';
+import { AdminButton, Button } from '../button';
+import { Icon, type IconName } from '../Icon';
+import styles from './Modal.module.css';
 
 interface Props {
   event: Event | null;
@@ -22,7 +27,7 @@ const EventRow: React.FC<{
       </div>
     </div>
     <div>
-      <h6>{label}</h6>
+      <h4>{label}</h4>
       {children}
     </div>
   </div>
@@ -30,40 +35,60 @@ const EventRow: React.FC<{
 
 export const EventModal: React.FC<Props> = ({ event, show, onHide }) => {
   return (
-    <Modal show={show} onHide={onHide}>
-      <Modal.Header closeButton></Modal.Header>
-      <Modal.Body>
-        <h4>{event?.title}</h4>
-        <p>{event?.description}</p>
+    <Modal className={styles.Modal} show={show} onHide={onHide}>
+      {!!event?.imageUrl && (
+        <Modal.Header className={styles.Header}>
+          <img src={event.imageUrl} />
+          <div className={styles.TopRight}>
+            <Button className={cn(buttonStyles.IconButton)} onClick={onHide}>
+              <Icon name="close" />
+            </Button>
+          </div>
+          <div className={styles.BottomLeft}>
+            <Badge>
+              {event.category ??
+                fakeCategories[
+                  (event.title.length + new Date(event.startUtc).getDate()) %
+                    fakeCategories.length
+                ]}
+            </Badge>
+          </div>
+        </Modal.Header>
+      )}
+      <Modal.Body className={styles.Body}>
+        <div className={styles.Content}>
+          <h2>{event?.title}</h2>
+          <p>{event?.description}</p>
+        </div>
         <EventRow icon="calendar" label="Date & Time">
-          <div>{event && format(event?.startUtc ?? "", "MMM d, yyyy")}</div>
-          <div>{event && format(event?.startUtc ?? "", "h:mm a")}</div>
+          <p>{event && format(event.startUtc ?? '', 'iiii, MMMM d, yyyy')}</p>
+          <p>{event && format(event.startUtc ?? '', 'h:mm a')}</p>
         </EventRow>
         <EventRow icon="location" label="Venue">
-          {event?.location ?? event?.venueName}
+          <p>{event?.location ?? event?.venueName}</p>
         </EventRow>
-        <EventRow icon="ticket" label="Tickets">
-          ${event?.minPrice}
-          {event?.maxPrice !== event?.minPrice ? ` - $${event?.maxPrice}` : ""}
-        </EventRow>
+        {!!event?.minPrice && (
+          <EventRow icon="ticket" label="Tickets">
+            <p>
+              ${event?.minPrice}
+              {!!event?.maxPrice && event?.maxPrice !== event?.minPrice
+                ? ` - $${event?.maxPrice}`
+                : ''}
+            </p>
+          </EventRow>
+        )}
       </Modal.Body>
-      <Modal.Footer>
+      <Modal.Footer className={styles.Footer}>
         {event?.ticketUrl && (
-          <a
+          <AdminButton
+            variant="primary"
             href={event.ticketUrl}
             target="_blank"
             rel="noreferrer"
-            className="btn btn-outline-primary"
           >
             Get Tickets <Icon name="external" />
-          </a>
+          </AdminButton>
         )}
-        {/* <Button variant="secondary" onClick={onHide}>
-          Close
-        </Button>
-        <Button variant="primary" onClick={onHide}>
-          Save Changes
-        </Button> */}
       </Modal.Footer>
     </Modal>
   );

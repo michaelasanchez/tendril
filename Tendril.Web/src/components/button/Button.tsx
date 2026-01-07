@@ -5,10 +5,11 @@ import { buttonStyles } from '../../styles';
 export type Variant = 'primary' | 'danger' | 'outline-danger';
 
 export interface ButtonProps {
-  children: ReactNode;
+  children?: ReactNode;
   className?: string;
   disabled?: boolean;
   href?: string;
+  rel?: string;
   target?: string;
   type?: 'button' | 'submit' | 'reset';
   variant?: Variant;
@@ -47,6 +48,7 @@ export const Button: React.FC<ButtonProps> = ({
   className,
   disabled,
   href,
+  rel,
   target,
   type = 'button',
   variant,
@@ -56,6 +58,7 @@ export const Button: React.FC<ButtonProps> = ({
     <a
       className={cn(buttonStyles.Button, getVariantClass(variant), className)}
       href={href}
+      rel={rel}
       target={target}
       type={type}
     >

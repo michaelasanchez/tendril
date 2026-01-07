@@ -1,7 +1,8 @@
-import { Calendar, ExternalLink, Funnel, Heart, MapPin, Ticket } from "lucide-react";
+import { Calendar, ExternalLink, Funnel, Heart, MapPin, Ticket, X } from "lucide-react";
 
 const Icons = {
   calendar: Calendar,
+  close: X,
   external: ExternalLink,
   favorite: Heart,
   filter: Funnel,

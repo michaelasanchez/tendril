@@ -123,8 +123,7 @@ h1 {
 }
 
 h2 {
-  /* font-family: var(--font-serif); */
-  font-family: var(--font-slab);
+  font-family: var(--font-serif);
   font-size: var(--text-xl);
   font-weight: var(--font-weight-regular);
   line-height: 1.3;
@@ -178,7 +177,7 @@ th {
   font-size: var(--text-sm);
 }
 
-a {
+a:not(class*='button') {
   color: var(--accent);
   font-family: var(--font-mono);
   font-size: var(--text-xs);

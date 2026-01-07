@@ -44,14 +44,6 @@
       stroke: var(--favorite);
     }
   }
-
-  .CategoryBadge {
-    background-color: var(--accent);
-    border-radius: var(--radius-full);
-    color: var(--accent-foreground);
-
-    padding: var(--spacing) calc(var(--spacing) * 2);
-  }
 }
 
 .CardContent {
