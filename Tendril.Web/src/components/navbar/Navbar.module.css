@@ -1,0 +1,41 @@
+.Navbar {
+  border-bottom: 1px solid var(--border);
+
+  & > div {
+    gap: calc(var(--spacing) * 6);
+  }
+
+  .Group {
+    display: flex;
+    align-items: center;
+    gap: 1em;
+  }
+
+  .Logo {
+    background-color: var(--accent);
+    border-radius: calc(var(--spacing) * 2);
+    color: var(--accent-foreground);
+
+    padding: calc(var(--spacing) * 2);
+  }
+
+  .Brand {
+    h3 {
+      margin-bottom: 0;
+    }
+
+    caption {
+      display: inline;
+      padding: 0;
+      width: max-content;
+      white-space: wrap;
+    }
+  }
+
+  .Location {
+    border: 1px solid var(--border);
+    padding: calc(var(--spacing) * 2) calc(var(--spacing) * 4);
+
+    white-space: nowrap;
+  }
+}

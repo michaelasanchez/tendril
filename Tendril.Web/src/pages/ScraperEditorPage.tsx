@@ -4,7 +4,7 @@ import { Card, Form, Tab } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ScrapersApi } from '../api/scrapers';
 import { VenuesApi } from '../api/venues';
-import { AdminButton, AdminButton as Button } from '../components/button';
+import { SquareButton, SquareButton as Button } from '../components/button';
 import { FormInput, FormSelect } from '../components/form';
 import { Icon } from '../components/Icon';
 import {
@@ -153,7 +153,7 @@ export const ScraperEditorPage: React.FC = () => {
       <div className={pageStyles.pageHeader}>
         {/* <h2>{isNew ? 'New Scraper' : `Edit Scraper – ${scraper.name}`}</h2> */}
         <h2>{scraper.name}</h2>
-        <AdminButton onClick={() => navigate('/scrapers')}>Back</AdminButton>
+        <SquareButton onClick={() => navigate('/scrapers')}>Back</SquareButton>
       </div>
 
       <Tab.Container activeKey={eventKey}>
@@ -263,7 +263,7 @@ export const ScraperEditorPage: React.FC = () => {
                     options={paginationTypeOptions}
                   />
                   <div className={formStyles.buttonRow}>
-                    <AdminButton onClick={handleSaveGeneral}>Save</AdminButton>
+                    <SquareButton onClick={handleSaveGeneral}>Save</SquareButton>
                   </div>
                 </Form>
               </Card.Body>

@@ -5,7 +5,7 @@ import { fakeCategories } from '../../events';
 import { buttonStyles } from '../../styles';
 import type { Event } from '../../types/api';
 import { Badge } from '../badge';
-import { AdminButton, Button } from '../button';
+import { SquareButton, Button } from '../button';
 import { Icon, type IconName } from '../Icon';
 import styles from './Modal.module.css';
 
@@ -80,14 +80,14 @@ export const EventModal: React.FC<Props> = ({ event, show, onHide }) => {
       </Modal.Body>
       <Modal.Footer className={styles.Footer}>
         {event?.ticketUrl && (
-          <AdminButton
+          <SquareButton
             variant="primary"
             href={event.ticketUrl}
             target="_blank"
             rel="noreferrer"
           >
             Get Tickets <Icon name="external" />
-          </AdminButton>
+          </SquareButton>
         )}
       </Modal.Footer>
     </Modal>

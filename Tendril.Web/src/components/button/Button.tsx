@@ -2,13 +2,19 @@ import cn from 'classnames';
 import React, { type ReactNode } from 'react';
 import { buttonStyles } from '../../styles';
 
-export type Variant = 'primary' | 'danger' | 'outline-danger';
+export type Variant =
+  | 'default'
+  | 'primary'
+  | 'outline-primary'
+  | 'danger'
+  | 'outline-danger';
 
 export interface ButtonProps {
   children?: ReactNode;
   className?: string;
   disabled?: boolean;
   href?: string;
+  readonly?: boolean;
   rel?: string;
   target?: string;
   type?: 'button' | 'submit' | 'reset';
@@ -48,10 +54,11 @@ export const Button: React.FC<ButtonProps> = ({
   className,
   disabled,
   href,
+  readonly,
   rel,
   target,
   type = 'button',
-  variant,
+  variant = 'default',
   onClick,
 }) => {
   return !!href ? (
@@ -80,6 +87,8 @@ function getVariantClass(varint: Variant | undefined) {
   switch (varint) {
     case 'primary':
       return buttonStyles.Primary;
+    case 'outline-primary':
+      return buttonStyles.OutlinePrimary;
     case 'danger':
       return buttonStyles.Danger;
     case 'outline-danger':

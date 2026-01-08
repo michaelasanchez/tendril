@@ -1,7 +1,10 @@
+import cn from 'classnames';
 import { format, parse } from 'date-fns';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Col, Container, Row } from 'react-bootstrap';
 import { EventsApi } from '../api/events';
+import { SquareButton } from '../components/button';
+import { Icon } from '../components/Icon';
 import { EventModal } from '../components/modal';
 import { EventList, FiltersCard, type EventFilter } from '../events';
 import { pageStyles } from '../styles';
@@ -12,6 +15,7 @@ type View = 'list' | 'map' | 'calendar';
 
 export const EventsPage: React.FC = () => {
   const [view, setView] = useState<View>('list');
+  const [showFilters, setShowFilters] = useState<boolean>();
   const [events, setEvents] = useState<Event[]>([]);
   const [activeEvent, setActiveEvent] = useState<Event | null>(null);
   const [favorites, setFavorites] = useState<Set<Guid>>(new Set());
@@ -105,7 +109,7 @@ export const EventsPage: React.FC = () => {
   return (
     <Container>
       <section>
-        <div className={pageStyles.pageHeader}>
+        <div className={styles.PageHeader}>
           <div>
             <h1>Upcoming Events</h1>
             <p className={pageStyles.SubHeader}>
@@ -113,16 +117,28 @@ export const EventsPage: React.FC = () => {
             </p>
           </div>
         </div>
+        <div className={cn('d-lg-none', styles.PageControls)}>
+          <SquareButton
+            variant={showFilters ? 'primary' : undefined}
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Icon name="sliders" /> Filters
+          </SquareButton>
+        </div>
 
         {view === 'list' && (
           <Row>
             <Col lg={4}>
-              <FiltersCard
-                className={styles.FiltersCard}
-                filter={filter}
-                locations={locations}
-                onChange={handleSetFilter}
-              />
+              <div
+                className={cn('d-lg-block', showFilters ? 'd-block' : 'd-none')}
+              >
+                <FiltersCard
+                  className={styles.FiltersCard}
+                  filter={filter}
+                  locations={locations}
+                  onChange={handleSetFilter}
+                />
+              </div>
             </Col>
             <Col lg={8}>
               <EventList

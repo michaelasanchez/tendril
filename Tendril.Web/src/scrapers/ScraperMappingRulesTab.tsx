@@ -1,7 +1,7 @@
 import React, { useEffect, useState, type JSX } from 'react';
 import { Card, Form, Table } from 'react-bootstrap';
 import { ScrapersApi } from '../api/scrapers';
-import { AdminButton as Button } from '../components/button';
+import { SquareButton as Button } from '../components/button';
 import {
   FormInput,
   FormInputSelect,

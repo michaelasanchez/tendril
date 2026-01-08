@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Card, Table } from 'react-bootstrap';
 import { ScrapersApi } from '../api/scrapers';
-import { AdminButton as Button } from '../components/button';
+import { SquareButton as Button } from '../components/button';
 import styles from '../pages/ScraperEditorPage.module.css';
 import { cardStyles, pageStyles, tableStyles } from '../styles';
 import type {

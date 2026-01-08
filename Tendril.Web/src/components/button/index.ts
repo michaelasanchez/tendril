@@ -1,2 +1,2 @@
-export * from './AdminButton';
+export * from './SquareButton';
 export * from './Button';

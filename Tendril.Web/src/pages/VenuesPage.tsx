@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Form, Table } from 'react-bootstrap';
 import { VenuesApi } from '../api/venues';
-import { AdminButton as Button } from '../components/button';
+import { SquareButton as Button } from '../components/button';
 import { FormInput } from '../components/form';
 import { formStyles, pageStyles } from '../styles';
 import type { Venue } from '../types/api';

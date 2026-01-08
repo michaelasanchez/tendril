@@ -1,5 +1,22 @@
 .EventList {
-  margin-bottom: 20rem;
+  margin-bottom: calc(var(--spacing) * 20);
+}
+
+.PageHeader {
+  
+  display: flex;
+  align-items: flex-start;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-top: calc(var(--spacing) * 6);
+}
+
+.PageControls {
+  display: flex;
+  justify-content: space-between;
+
+  margin-bottom: calc(var(--spacing) * 6);
 }
 
 .FiltersCard {

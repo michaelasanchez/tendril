@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Table } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { ScrapersApi } from '../api/scrapers';
-import { AdminButton as Button } from '../components/button';
+import { SquareButton as Button } from '../components/button';
 import { buttonStyles, pageStyles, tableStyles } from '../styles';
 import type { ScraperDefinition } from '../types/api';
 
@@ -114,7 +114,7 @@ export const ScrapersPage: React.FC = () => {
       <div className={pageStyles.pageHeader}>
         <h2>Scrapers</h2>
         <button
-          className={buttonStyles.AdminButton}
+          className={buttonStyles.SquareButton}
           onClick={() => navigate('/scrapers/new')}
         >
           New Scraper

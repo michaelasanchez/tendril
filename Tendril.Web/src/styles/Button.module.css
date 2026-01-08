@@ -71,7 +71,7 @@
   }
 }
 
-.AdminButton {
+.SquareButton {
   composes: Button;
 
   border-radius: calc(var(--radius) * 2);
