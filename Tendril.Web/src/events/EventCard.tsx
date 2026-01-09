@@ -2,8 +2,9 @@ import cn from 'classnames';
 import { format } from 'date-fns';
 import { Card } from 'react-bootstrap';
 import { Badge } from '../components/badge';
+import { IconButton } from '../components/button';
 import { Icon } from '../components/Icon';
-import { buttonStyles, cardStyles } from '../styles';
+import { cardStyles } from '../styles';
 import type { Event } from '../types/api';
 import styles from './EventCard.module.css';
 import NoImage from './no-image.svg';
@@ -84,20 +85,16 @@ export const EventCard: React.FC<Props> = ({
 
         <div className={styles.Overlay}>
           <div className={styles.TopLeft}>
-            <button
-              className={cn(
-                buttonStyles.IconButton,
-                favorite && styles.Favorite
-              )}
+            <IconButton
+              className={cn(favorite && styles.Favorite)}
+              name="favorite"
               onClick={(e) => {
                 if (!!onFavorite) {
                   e.stopPropagation();
                   onFavorite();
                 }
               }}
-            >
-              <Icon name="favorite" />
-            </button>
+            />
           </div>
           <div className={styles.TopRight}>
             <Badge>

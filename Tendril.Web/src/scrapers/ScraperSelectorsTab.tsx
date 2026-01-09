@@ -3,13 +3,7 @@ import { Card, Form, Table } from 'react-bootstrap';
 import { ScrapersApi } from '../api/scrapers';
 import { SquareButton as Button } from '../components/button';
 import { FormCheck, FormInput, FormSelect } from '../components/form';
-import {
-  buttonStyles,
-  cardStyles,
-  formStyles,
-  pageStyles,
-  tableStyles,
-} from '../styles';
+import { cardStyles, formStyles, pageStyles, tableStyles } from '../styles';
 import type { Guid, ScraperSelector, SelectorType } from '../types/api';
 
 interface Props {
@@ -136,7 +130,7 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
     <>
       <div className={pageStyles.pageHeader}>
         <h3>Selectors</h3>
-        <Button className={buttonStyles.Primary} onClick={startNew}>
+        <Button variant="primary" onClick={startNew}>
           Add Selector
         </Button>
       </div>
@@ -183,7 +177,7 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
                       <div>
                         <Button onClick={() => startEdit(s)}>Edit</Button>
                         <Button
-                          className={buttonStyles.OutlineDanger}
+                          variant="outline-danger"
                           onClick={() => remove(s)}
                         >
                           Delete
@@ -290,7 +284,9 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
                   />
                 )}
                 <div className={formStyles.buttonRow}>
-                  <Button variant="primary" onClick={save}>Save</Button>
+                  <Button variant="primary" onClick={save}>
+                    Save
+                  </Button>
                   <Button onClick={cancelEdit}>Cancel</Button>
                 </div>
               </Form>

@@ -1,8 +1,8 @@
 import cn from 'classnames';
 import { Card } from 'react-bootstrap';
+import { Button } from '../components/button';
 import { FormInput } from '../components/form';
 import { Icon } from '../components/Icon';
-import buttonStyles from '../styles/Button.module.css';
 import cardStyles from '../styles/Card.module.css';
 import styles from './FiltersCard.module.css';
 
@@ -84,53 +84,41 @@ export const FiltersCard: React.FC<Props> = ({
 
         <label>CATEGORY</label>
         <div className={styles.ButtonGroup}>
-          <button
-            className={cn(
-              buttonStyles.Button,
-              !filter.category && buttonStyles.Active
-            )}
+          <Button
+            variant={!filter.category ? 'active' : 'default'}
             onClick={() => onChange({ category: null })}
           >
             All
-          </button>
+          </Button>
 
           {categories.map((c, i) => (
-            <button
+            <Button
               key={i}
-              className={cn(
-                buttonStyles.Button,
-                filter.category === c && buttonStyles.Active
-              )}
+              variant={filter.category === c ? 'active' : 'default'}
               onClick={() => onChange({ category: c })}
             >
               {c}
-            </button>
+            </Button>
           ))}
         </div>
 
         <label>LOCATION</label>
         <div className={styles.ButtonGroup}>
-          <button
-            className={cn(
-              buttonStyles.Button,
-              !filter.location && buttonStyles.Active
-            )}
+          <Button
+            variant={!filter.location ? 'active' : 'default'}
             onClick={() => onChange({ location: null })}
           >
             All Locations
-          </button>
+          </Button>
 
           {locations.map((l, i) => (
-            <button
+            <Button
               key={i}
-              className={cn(
-                buttonStyles.Button,
-                filter.location === l && buttonStyles.Active
-              )}
+              variant={filter.location === l ? 'active' : 'default'}
               onClick={() => onChange({ location: l })}
             >
               {l}
-            </button>
+            </Button>
           ))}
         </div>
       </Card.Body>

@@ -2,8 +2,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Table } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { ScrapersApi } from '../api/scrapers';
-import { SquareButton as Button } from '../components/button';
-import { buttonStyles, pageStyles, tableStyles } from '../styles';
+import { SquareButton as Button, SquareButton } from '../components/button';
+import { pageStyles, tableStyles } from '../styles';
 import type { ScraperDefinition } from '../types/api';
 
 type SortKey =
@@ -113,12 +113,9 @@ export const ScrapersPage: React.FC = () => {
     <section>
       <div className={pageStyles.pageHeader}>
         <h2>Scrapers</h2>
-        <button
-          className={buttonStyles.SquareButton}
-          onClick={() => navigate('/scrapers/new')}
-        >
+        <SquareButton onClick={() => navigate('/scrapers/new')}>
           New Scraper
-        </button>
+        </SquareButton>
       </div>
 
       {loading && <p>Loading…</p>}
@@ -167,7 +164,7 @@ export const ScrapersPage: React.FC = () => {
                       Edit
                     </Button>
                     <Button
-                      className={buttonStyles.Primary}
+                      variant="primary"
                       onClick={() => handleRunNow(s.id)}
                     >
                       Run&nbsp;Now

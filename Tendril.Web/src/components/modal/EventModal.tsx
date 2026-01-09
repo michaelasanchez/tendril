@@ -1,11 +1,9 @@
-import cn from 'classnames';
 import { format } from 'date-fns';
 import { Modal } from 'react-bootstrap';
 import { fakeCategories } from '../../events';
-import { buttonStyles } from '../../styles';
 import type { Event } from '../../types/api';
 import { Badge } from '../badge';
-import { SquareButton, Button } from '../button';
+import { IconButton, SquareButton } from '../button';
 import { Icon, type IconName } from '../Icon';
 import styles from './Modal.module.css';
 
@@ -40,9 +38,7 @@ export const EventModal: React.FC<Props> = ({ event, show, onHide }) => {
         <Modal.Header className={styles.Header}>
           <img src={event.imageUrl} />
           <div className={styles.TopRight}>
-            <Button className={cn(buttonStyles.IconButton)} onClick={onHide}>
-              <Icon name="close" />
-            </Button>
+            <IconButton name="close" onClick={onHide} />
           </div>
           <div className={styles.BottomLeft}>
             <Badge>

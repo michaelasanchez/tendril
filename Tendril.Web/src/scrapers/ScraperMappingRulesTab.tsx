@@ -8,7 +8,7 @@ import {
   FormSelect,
   type SelectOption,
 } from '../components/form';
-import { buttonStyles, cardStyles, pageStyles, tableStyles } from '../styles';
+import { cardStyles, pageStyles, tableStyles } from '../styles';
 import formStyles from '../styles/Form.module.css';
 import type {
   Guid,
@@ -189,7 +189,7 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
               )}
           </div>
         </div>
-        <Button className={buttonStyles.Primary} onClick={startNew}>
+        <Button variant="primary" onClick={startNew}>
           Add&nbsp;Rule
         </Button>
       </div>
@@ -228,7 +228,7 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
                       <div>
                         <Button onClick={() => startEdit(r)}>Edit</Button>
                         <Button
-                          className={buttonStyles.OutlineDanger}
+                          variant="outline-danger"
                           onClick={() => remove(r)}
                         >
                           Delete

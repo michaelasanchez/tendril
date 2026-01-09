@@ -1,10 +1,9 @@
-import cn from 'classnames';
 import React, { useEffect, useState } from 'react';
 import { Card, Form, Tab } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ScrapersApi } from '../api/scrapers';
 import { VenuesApi } from '../api/venues';
-import { SquareButton, SquareButton as Button } from '../components/button';
+import { SquareButton as Button, SquareButton } from '../components/button';
 import { FormInput, FormSelect } from '../components/form';
 import { Icon } from '../components/Icon';
 import {
@@ -12,7 +11,7 @@ import {
   ScraperRunsTab,
   ScraperSelectorsTab,
 } from '../scrapers';
-import { buttonStyles, cardStyles, formStyles, pageStyles } from '../styles';
+import { cardStyles, formStyles, pageStyles } from '../styles';
 import type {
   ExecutionMode,
   ExtractionStrategy,
@@ -159,27 +158,27 @@ export const ScraperEditorPage: React.FC = () => {
       <Tab.Container activeKey={eventKey}>
         <div className={styles.tabs}>
           <Button
-            className={cn(eventKey == 'general' && buttonStyles.Active)}
+            variant={eventKey == 'general' ? 'active' : 'default'}
             onClick={() => setEventKey('general')}
           >
             General
           </Button>
           <Button
-            className={cn(eventKey == 'selectors' && buttonStyles.Active)}
+            variant={eventKey == 'selectors' ? 'active' : 'default'}
             disabled={isNew}
             onClick={() => setEventKey('selectors')}
           >
             Selectors
           </Button>
           <Button
-            className={cn(eventKey == 'mapping' && buttonStyles.Active)}
+            variant={eventKey == 'mapping' ? 'active' : 'default'}
             disabled={isNew}
             onClick={() => setEventKey('mapping')}
           >
             Mapping Rules
           </Button>
           <Button
-            className={cn(eventKey == 'runs' && buttonStyles.Active)}
+            variant={eventKey == 'runs' ? 'active' : 'default'}
             disabled={isNew}
             onClick={() => setEventKey('runs')}
           >
@@ -263,7 +262,9 @@ export const ScraperEditorPage: React.FC = () => {
                     options={paginationTypeOptions}
                   />
                   <div className={formStyles.buttonRow}>
-                    <SquareButton onClick={handleSaveGeneral}>Save</SquareButton>
+                    <SquareButton onClick={handleSaveGeneral}>
+                      Save
+                    </SquareButton>
                   </div>
                 </Form>
               </Card.Body>

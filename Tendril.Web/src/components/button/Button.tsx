@@ -1,9 +1,10 @@
 import cn from 'classnames';
 import React, { type ReactNode } from 'react';
-import { buttonStyles } from '../../styles';
+import styles from './Button.module.css';
 
 export type Variant =
   | 'default'
+  | 'active' // TODO: should we get rid of this?
   | 'primary'
   | 'outline-primary'
   | 'danger'
@@ -14,12 +15,11 @@ export interface ButtonProps {
   className?: string;
   disabled?: boolean;
   href?: string;
-  readonly?: boolean;
   rel?: string;
   target?: string;
   type?: 'button' | 'submit' | 'reset';
   variant?: Variant;
-  onClick?: () => void;
+  onClick?: React.MouseEventHandler<HTMLButtonElement>;
 }
 
 // type BaseProps = {
@@ -54,7 +54,6 @@ export const Button: React.FC<ButtonProps> = ({
   className,
   disabled,
   href,
-  readonly,
   rel,
   target,
   type = 'button',
@@ -63,7 +62,7 @@ export const Button: React.FC<ButtonProps> = ({
 }) => {
   return !!href ? (
     <a
-      className={cn(buttonStyles.Button, getVariantClass(variant), className)}
+      className={cn(styles.Button, getVariantClass(variant), className)}
       href={href}
       rel={rel}
       target={target}
@@ -73,7 +72,7 @@ export const Button: React.FC<ButtonProps> = ({
     </a>
   ) : (
     <button
-      className={cn(buttonStyles.Button, getVariantClass(variant), className)}
+      className={cn(styles.Button, getVariantClass(variant), className)}
       disabled={disabled}
       type={type}
       onClick={onClick}
@@ -86,13 +85,13 @@ export const Button: React.FC<ButtonProps> = ({
 function getVariantClass(varint: Variant | undefined) {
   switch (varint) {
     case 'primary':
-      return buttonStyles.Primary;
+      return styles.Primary;
     case 'outline-primary':
-      return buttonStyles.OutlinePrimary;
+      return styles.OutlinePrimary;
     case 'danger':
-      return buttonStyles.Danger;
+      return styles.Danger;
     case 'outline-danger':
-      return buttonStyles.OutlineDanger;
+      return styles.OutlineDanger;
     default:
       return '';
   }
