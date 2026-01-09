@@ -4,5 +4,5 @@ public class ScrapeResult
 {
     public bool Success { get; set; }
     public string? ErrorMessage { get; set; }
-    public List<RawScrapedEvent> RawEvents { get; set; } = new();
+    public List<RawScrapedData> RawEvents { get; set; } = new();
 }

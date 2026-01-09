@@ -24,7 +24,7 @@ public class ScraperRunsController(
         if (scraper == null)
             return NotFound();
 
-        var events = new List<RawScrapedEvent>();
+        var events = new List<RawScrapedData>();
 
         try
         {

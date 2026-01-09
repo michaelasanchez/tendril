@@ -6,7 +6,7 @@ namespace Tendril.Engine.Abstractions;
 
 public interface IScrapeExecutor
 {
-    IAsyncEnumerable<RawScrapedEvent> RunScraperAsync(
+    IAsyncEnumerable<RawScrapedData> RunScraperAsync(
         ScraperDefinition def,
         [EnumeratorCancellation] CancellationToken ct);
 }

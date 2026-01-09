@@ -3,16 +3,10 @@ using Microsoft.Playwright;
 using Tendril.Core.Domain.Entities;
 using Tendril.Core.Domain.Enums;
 using Tendril.Engine.Abstractions;
+using Tendril.Engine.Extensions;
 using Tendril.Engine.Models;
 
 namespace Tendril.Engine.Runtime;
-
-public record ScrapeYieldItem
-{
-    public RawScrapedEvent Data { get; init; } = new();
-    public string? ChildUrl { get; init; }
-    public Guid? ChildScraperId { get; init; }
-}
 
 public class DynamicScraper(IJsonLdProcessor jsonLd)
 {
@@ -69,14 +63,15 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
         // Run any interactions (like typing zip code) required BEFORE the list appears.
         var container = def.Selectors.Single(x => x.Type == SelectorType.Container);
 
-        var preActions = def.Selectors
+        var preSelectors = def.Selectors
             .Where(x => x.Order < container.Order && x.Type != SelectorType.Container)
             .OrderBy(x => x.Order);
 
-        foreach (var action in preActions)
+        var preResult = new ScrapeYieldItem();
+
+        foreach (var step in preSelectors)
         {
-            // item: null (forces page scope), rawEvent: null (skips extraction)
-            await ProcessStepAsync(page, null, action, null);
+            await ProcessSelector(page, null, step, preResult.Data);
         }
 
         // 2. WAIT FOR CONTENT
@@ -103,12 +98,11 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
             {
                 var result = new ScrapeYieldItem();
 
-                // Run extraction selectors
-                var itemSelectors = def.Selectors
+                var fieldSelectors = def.Selectors
                     .Where(x => x.Type != SelectorType.Container && !x.IsPaginationTrigger)
                     .OrderBy(x => x.Order);
 
-                foreach (var step in itemSelectors)
+                foreach (var step in fieldSelectors)
                 {
                     // Check if this step triggers a child scraper (Deep Dive)
                     if (step.ChildScraperDefinitionId.HasValue)
@@ -134,7 +128,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
                     else
                     {
                         // Standard data extraction
-                        await ProcessStepAsync(page, item, step, result.Data);
+                        await ProcessSelector(page, item, step, result.Data);
                     }
                 }
 
@@ -143,7 +137,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
 
                 if (processedSignatures.Add(signature))
                 {
-                    yield return result;
+                    yield return preResult.Merge(result);
                 }
             }
 
@@ -160,11 +154,11 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
         } while (hasMore);
     }
 
-    private static async Task ProcessStepAsync(
+    private static async Task ProcessSelector(
         IPage page,
         IElementHandle? item,
         ScraperSelector step,
-        RawScrapedEvent? rawEvent)
+        RawScrapedData? rawEvent)
     {
         // 1. Exclusions
         if (step.Type is SelectorType.Container or SelectorType.FollowLink) return;

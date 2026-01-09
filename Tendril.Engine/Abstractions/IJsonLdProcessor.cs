@@ -4,5 +4,5 @@ namespace Tendril.Engine.Abstractions;
 
 public interface IJsonLdProcessor
 {
-    RawScrapedEvent? Extract(string htmlContent, string targetType);
+    RawScrapedData? Extract(string htmlContent, string targetType);
 }

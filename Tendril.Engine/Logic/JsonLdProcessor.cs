@@ -7,7 +7,7 @@ namespace Tendril.Engine.Logic;
 
 public class JsonLdProcessor : IJsonLdProcessor
 {
-    public RawScrapedEvent? Extract(string htmlContent, string targetType)
+    public RawScrapedData? Extract(string htmlContent, string targetType)
     {
         var matches = Regex.Matches(
             htmlContent,
@@ -52,9 +52,9 @@ public class JsonLdProcessor : IJsonLdProcessor
         return false;
     }
 
-    private RawScrapedEvent MapJson(JsonElement element)
+    private RawScrapedData MapJson(JsonElement element)
     {
-        var evt = new RawScrapedEvent();
+        var evt = new RawScrapedData();
         // Start the recursive flattening
         Flatten(element, string.Empty, evt.Fields);
         return evt;

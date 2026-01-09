@@ -2,9 +2,9 @@
 
 namespace Tendril.Engine.Models;
 
-public class RawScrapedEvent
+public class RawScrapedData
 {
-    public Dictionary<string, string?> Fields { get; set; } = new();
+    public Dictionary<string, string?> Fields { get; set; } = [];
 
     public string GetSignature()
     {
@@ -18,6 +18,7 @@ public class RawScrapedEvent
         foreach (var key in sortedKeys)
         {
             var value = Fields[key] ?? "null";
+
             // Create a format like: [Title:MyEvent][Date:2024-01-01]
             sb.Append($"[{key}:{value}]");
         }

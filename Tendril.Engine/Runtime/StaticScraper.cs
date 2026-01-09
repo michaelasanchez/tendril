@@ -1,15 +1,16 @@
 ﻿using HtmlAgilityPack;
-using HtmlAgilityPack.CssSelectors.NetCore; // Still needed for CSS
+using HtmlAgilityPack.CssSelectors.NetCore;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using Tendril.Core.Domain.Entities;
 using Tendril.Core.Domain.Enums;
 using Tendril.Engine.Abstractions;
+using Tendril.Engine.Extensions;
 using Tendril.Engine.Models;
 
 namespace Tendril.Engine.Runtime;
 
-public class StaticScraper(IJsonLdProcessor jsonLd) // Removed Factory injection for clarity, assume string passed in
+public class StaticScraper(IJsonLdProcessor jsonLd)
 {
     public async IAsyncEnumerable<ScrapeYieldItem> ExecuteAsync(
         string html,
@@ -20,7 +21,12 @@ public class StaticScraper(IJsonLdProcessor jsonLd) // Removed Factory injection
         if (def.ExtractionStrategy == ExtractionStrategy.JsonLd)
         {
             var data = jsonLd.Extract(html, def.Selectors.FirstOrDefault()?.Selector ?? "Event");
-            if (data != null) yield return new ScrapeYieldItem { Data = data };
+
+            if (data != null)
+            {
+                yield return new ScrapeYieldItem { Data = data };
+            }
+
             yield break;
         }
 
@@ -33,34 +39,46 @@ public class StaticScraper(IJsonLdProcessor jsonLd) // Removed Factory injection
             {
                 yield return item;
             }
+
             yield break;
         }
 
         // 3. DOM STRATEGIES (CSS or XPath)
         // Both require parsing the HTML first
-        var doc = new HtmlDocument();
-        doc.LoadHtml(html);
+        var page = new HtmlDocument();
+        page.LoadHtml(html);
+
+
 
         // A. Find Containers
-        var containerDef = def.Selectors.SingleOrDefault(x => x.Type == SelectorType.Container);
-        if (containerDef == null) yield break;
+        var container = def.Selectors.SingleOrDefault(x => x.Type == SelectorType.Container);
+        if (container == null) yield break;
 
-        IEnumerable<HtmlNode>? nodes = null;
+        var preSelectors = def.Selectors
+            .Where(x => x.Order < container.Order && x.Type != SelectorType.Container)
+            .OrderBy(x => x.Order);
+
+        var preResult = new ScrapeYieldItem();
+
+        foreach (var step in preSelectors)
+        {
+            ExtractField(page, null, step, preResult.Data, def.ExtractionStrategy);
+        }
+
+        IEnumerable<HtmlNode>? items = null;
 
         if (def.ExtractionStrategy == ExtractionStrategy.XPath)
         {
-            // Native HAP method
-            nodes = doc.DocumentNode.SelectNodes(containerDef.Selector);
+            items = page.DocumentNode.SelectNodes(container.Selector);
         }
-        else // Strategy == Css
+        else // CSS
         {
-            // Extension method
-            nodes = doc.DocumentNode.QuerySelectorAll(containerDef.Selector);
+            items = page.DocumentNode.QuerySelectorAll(container.Selector);
         }
 
-        if (nodes == null) yield break;
+        if (items == null) yield break;
 
-        foreach (var node in nodes)
+        foreach (var item in items)
         {
             var result = new ScrapeYieldItem();
 
@@ -74,7 +92,8 @@ public class StaticScraper(IJsonLdProcessor jsonLd) // Removed Factory injection
                 if (step.ChildScraperDefinitionId.HasValue)
                 {
                     // Helper determines how to find the node based on Strategy
-                    var targetNode = FindNode(node, step, def.ExtractionStrategy);
+                    var targetNode = FindNode(item, step, def.ExtractionStrategy);
+
                     var url = targetNode?.GetAttributeValue("href", "");
 
                     if (!string.IsNullOrWhiteSpace(url))
@@ -85,11 +104,11 @@ public class StaticScraper(IJsonLdProcessor jsonLd) // Removed Factory injection
                 // FIELD LOGIC
                 else
                 {
-                    ExtractField(node, step, result.Data, doc, def.ExtractionStrategy);
+                    ExtractField(page, item, step, result.Data, def.ExtractionStrategy);
                 }
             }
 
-            yield return result;
+            yield return preResult.Merge(result);
         }
     }
 
@@ -109,17 +128,17 @@ public class StaticScraper(IJsonLdProcessor jsonLd) // Removed Factory injection
         }
     }
 
-    private void ExtractField(HtmlNode parentNode, ScraperSelector step, RawScrapedEvent rawEvent, HtmlDocument doc, ExtractionStrategy strategy)
+    private static void ExtractField(HtmlDocument page, HtmlNode? parentNode, ScraperSelector step, RawScrapedData rawEvent, ExtractionStrategy strategy)
     {
         try
         {
             HtmlNode? targetNode = null;
 
-            if (step.Root)
+            if (step.Root || parentNode is null)
             {
                 targetNode = strategy == ExtractionStrategy.XPath
-                    ? doc.DocumentNode.SelectSingleNode(step.Selector)
-                    : doc.DocumentNode.QuerySelector(step.Selector);
+                    ? page.DocumentNode.SelectSingleNode(step.Selector)
+                    : page.DocumentNode.QuerySelector(step.Selector);
             }
             else
             {
@@ -140,7 +159,10 @@ public class StaticScraper(IJsonLdProcessor jsonLd) // Removed Factory injection
                 rawEvent.Fields[step.FieldName] = value;
             }
         }
-        catch { /* Ignore */ }
+        catch
+        {
+            // TODO: we'll figure this out one day
+        }
     }
 
     // REGEX IMPLEMENTATION
@@ -186,6 +208,7 @@ public class StaticScraper(IJsonLdProcessor jsonLd) // Removed Factory injection
                     }
                 }
             }
+
             yield return result;
         }
     }

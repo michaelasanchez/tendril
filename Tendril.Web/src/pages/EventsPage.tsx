@@ -116,6 +116,9 @@ export const EventsPage: React.FC = () => {
               {filteredEvents?.length ?? 0} events found
             </p>
           </div>
+          <div>
+            
+          </div>
         </div>
         <div className={cn('d-lg-none', styles.PageControls)}>
           <SquareButton

@@ -4,6 +4,7 @@ using Tendril.Core.Domain.Entities;
 using Tendril.Core.Domain.Enums;
 using Tendril.Core.Interfaces.Repositories;
 using Tendril.Engine.Abstractions;
+using Tendril.Engine.Extensions;
 using Tendril.Engine.Models;
 using Tendril.Engine.Playwright;
 
@@ -15,7 +16,7 @@ public class ScrapeExecutor(
     IHttpClientFactory httpClientFactory,
     IScraperRepository repo) : IScrapeExecutor
 {
-    public async IAsyncEnumerable<RawScrapedEvent> RunScraperAsync(
+    public async IAsyncEnumerable<RawScrapedData> RunScraperAsync(
         ScraperDefinition def,
         [EnumeratorCancellation] CancellationToken ct)
     {
@@ -33,7 +34,7 @@ public class ScrapeExecutor(
     }
 
     // --- PIPELINE 1: STATIC ---
-    private async IAsyncEnumerable<RawScrapedEvent> RunStaticPipelineAsync(
+    private async IAsyncEnumerable<RawScrapedData> RunStaticPipelineAsync(
         ScraperDefinition def,
         IBrowserContext? parentContext, // Passed down just in case a child needs it
         [EnumeratorCancellation] CancellationToken ct)
@@ -45,11 +46,26 @@ public class ScrapeExecutor(
 
         await foreach (var item in staticLogic.ExecuteAsync(html, def, ct))
         {
-            if (item.ChildUrl != null)
+            if (item.ChildUrl is not null)
             {
-                // RECURSION: Static Parent found a child
-                var childEvent = await RunChildDispatchAsync(item, parentContext, ct);
-                if (childEvent != null) yield return MergeEvents(item.Data, childEvent);
+                var childResults = new List<RawScrapedData>();
+
+                try
+                {
+                    await foreach (var childEvent in RunChildDispatchAsync(item, parentContext, ct))
+                    {
+                        childResults.Add(childEvent);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // TODO: we'll figure this out one day
+                }
+
+                foreach (var res in childResults)
+                {
+                    yield return res;
+                }
             }
             else
             {
@@ -59,7 +75,7 @@ public class ScrapeExecutor(
     }
 
     // --- PIPELINE 2: DYNAMIC ---
-    private async IAsyncEnumerable<RawScrapedEvent> RunDynamicPipelineAsync(
+    private async IAsyncEnumerable<RawScrapedData> RunDynamicPipelineAsync(
         ScraperDefinition def,
         IBrowserContext? existingContext, // Reuse if available
         [EnumeratorCancellation] CancellationToken ct)
@@ -73,21 +89,6 @@ public class ScrapeExecutor(
 
         var page = await context.NewPageAsync();
 
-        // TOOD: this should be set up as configuration
-        //  ScraperDefinition.BlockedMediaTypes or something like that
-        //await page.RouteAsync("**/*", async route =>
-        //{
-        //    var type = route.Request.ResourceType;
-        //    if (type == "image" || type == "stylesheet" || type == "font" || type == "media")
-        //    {
-        //        await route.AbortAsync();
-        //    }
-        //    else
-        //    {
-        //        await route.ContinueAsync();
-        //    }
-        //});
-
         try
         {
             await page.GotoAsync(def.BaseUrl);
@@ -96,11 +97,24 @@ public class ScrapeExecutor(
             {
                 if (item.ChildUrl != null)
                 {
-                    // RECURSION: Dynamic Parent found a child
-                    // We pass 'context' down so dynamic children can share the session
-                    var childEvent = await RunChildDispatchAsync(item, context, ct);
+                    var childResults = new List<RawScrapedData>();
 
-                    if (childEvent != null) yield return MergeEvents(item.Data, childEvent);
+                    try
+                    {
+                        await foreach (var childEvent in RunChildDispatchAsync(item, context, ct))
+                        {
+                            childResults.Add(childEvent);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // TODO: we'll figure this out one day
+                    }
+
+                    foreach (var res in childResults)
+                    {
+                        yield return item.Data.MergeData(res);
+                    }
                 }
                 else
                 {
@@ -117,44 +131,31 @@ public class ScrapeExecutor(
     }
 
     // --- THE UNIFIED DISPATCHER ---
-    private async Task<RawScrapedEvent?> RunChildDispatchAsync(
+    private async IAsyncEnumerable<RawScrapedData> RunChildDispatchAsync(
         ScrapeYieldItem parentItem,
         IBrowserContext? context,
-        CancellationToken ct)
+        [EnumeratorCancellation] CancellationToken ct)
     {
-        var childDef = await repo.GetByIdAsync(parentItem.ChildScraperId!.Value, ct);
+        var childDef = await repo.GetByIdWithDetailsAsync(parentItem.ChildScraperId!.Value, ct);
 
-        if (childDef == null) return null;
+        if (childDef == null) yield break;
 
         childDef.BaseUrl = parentItem.ChildUrl!;
 
-        // DECISION POINT: Switch based on the CHILD'S mode
+        IAsyncEnumerable<RawScrapedData> pipeline;
+
         if (childDef.ExecutionMode == ExecutionMode.Static)
         {
-            await foreach (var res in RunStaticPipelineAsync(childDef, context, ct))
-            {
-                return res; // Return first result
-            }
+            pipeline = RunStaticPipelineAsync(childDef, context, ct);
         }
         else
         {
-            await foreach (var res in RunDynamicPipelineAsync(childDef, context, ct))
-            {
-                return res; // Return first result
-            }
+            pipeline = RunDynamicPipelineAsync(childDef, context, ct);
         }
 
-        return null;
-    }
-
-    private RawScrapedEvent MergeEvents(RawScrapedEvent parent, RawScrapedEvent child)
-    {
-        // Simple dictionary merge
-        var merged = new RawScrapedEvent();
-
-        foreach (var kvp in parent.Fields) merged.Fields[kvp.Key] = kvp.Value;
-        foreach (var kvp in child.Fields) merged.Fields[kvp.Key] = kvp.Value; // Child wins collision
-
-        return merged;
+        await foreach (var res in pipeline)
+        {
+            yield return res;
+        }
     }
 }
