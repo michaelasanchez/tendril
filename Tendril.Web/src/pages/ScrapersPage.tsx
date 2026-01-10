@@ -3,6 +3,7 @@ import { Table } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { ScrapersApi } from '../api/scrapers';
 import { SquareButton as Button, SquareButton } from '../components/button';
+import { Icon } from '../components/Icon';
 import { pageStyles, tableStyles } from '../styles';
 import type { ScraperDefinition } from '../types/api';
 
@@ -14,6 +15,12 @@ type SortKey =
   | 'lastFailureUtc';
 
 type SortDirection = 'asc' | 'desc';
+
+interface ScraperGroup {
+  key: string;
+  order: number;
+  scrapers: ScraperDefinition[];
+}
 
 export const ScrapersPage: React.FC = () => {
   const [scrapers, setScrapers] = useState<ScraperDefinition[]>([]);
@@ -96,17 +103,45 @@ export const ScrapersPage: React.FC = () => {
   };
 
   const scraperGroups = useMemo(() => {
-    return scrapers.reduce<Record<string, ScraperDefinition[]>>(
-      (groups, scraper) => {
-        const extractionStrategy = scraper.extractionStrategy ?? 'Unknown';
-        if (!groups[extractionStrategy]) {
-          groups[extractionStrategy] = [];
+    // 1. Create temporary buckets
+    const strategyMap = new Map<string, ScraperDefinition[]>();
+    const unknownList: ScraperDefinition[] = [];
+    const disabledList: ScraperDefinition[] = [];
+
+    // 2. Sort items into buckets (Single pass)
+    scrapers.forEach((scraper) => {
+      if (scraper.disabled) {
+        disabledList.push(scraper);
+        return;
+      }
+
+      if (scraper.extractionStrategy) {
+        if (!strategyMap.has(scraper.extractionStrategy)) {
+          strategyMap.set(scraper.extractionStrategy, []);
         }
-        groups[extractionStrategy].push(scraper);
-        return groups;
-      },
-      {}
-    );
+        strategyMap.get(scraper.extractionStrategy)!.push(scraper);
+      } else {
+        unknownList.push(scraper);
+      }
+    });
+
+    // 3. Transform Strategy Map to Array and Sort Alphabetically
+    const sortedStrategies = Array.from(strategyMap.entries())
+      .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
+      .map(([key, list]) => ({ key, scrapers: list }));
+
+    // 4. Construct Final List (Strategies -> Unknown -> Disabled)
+    const result = [...sortedStrategies];
+
+    if (unknownList.length > 0) {
+      result.push({ key: 'Unknown', scrapers: unknownList });
+    }
+
+    if (disabledList.length > 0) {
+      result.push({ key: 'Disabled', scrapers: disabledList });
+    }
+
+    return result;
   }, [scrapers]);
 
   return (
@@ -141,13 +176,13 @@ export const ScrapersPage: React.FC = () => {
           </tr>
         </thead>
 
-        {Object.entries(scraperGroups).map(([strategy, group]) => (
-          <tbody key={strategy}>
+        {scraperGroups.map(({ key, scrapers }) => (
+          <tbody key={key}>
             <tr className={tableStyles.GroupHeader}>
-              <td colSpan={6}>{strategy}</td>
+              <td colSpan={6}>{key}</td>
             </tr>
 
-            {group.map((s) => (
+            {scrapers.map((s) => (
               <tr key={s.id}>
                 <td>{s.name}</td>
                 <td>
@@ -161,13 +196,13 @@ export const ScrapersPage: React.FC = () => {
                 <td className={tableStyles.TableActions}>
                   <div>
                     <Button onClick={() => navigate(`/scrapers/${s.id}`)}>
-                      Edit
+                      <Icon name="edit" />
                     </Button>
                     <Button
-                      variant="primary"
+                      variant="outline-primary"
                       onClick={() => handleRunNow(s.id)}
                     >
-                      Run&nbsp;Now
+                      <Icon name="run" />
                     </Button>
                   </div>
                 </td>

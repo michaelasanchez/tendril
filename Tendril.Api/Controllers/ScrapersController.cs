@@ -38,6 +38,8 @@ public class ScrapersController(
             Id = Guid.NewGuid(),
             Name = request.Name,
             BaseUrl = request.BaseUrl,
+            Disabled = request.Disabled,
+            Notes = request.Notes ?? string.Empty,
             ExecutionMode = request.ExecutionMode ?? Core.Domain.Enums.ExecutionMode.Dynamic,
             ExtractionStrategy = request.ExtractionStrategy ?? Core.Domain.Enums.ExtractionStrategy.Css,
             PaginationType = request.PaginationType ?? Core.Domain.Enums.PaginationType.None,
@@ -58,6 +60,8 @@ public class ScrapersController(
 
         if (request.Name is not null) scraper.Name = request.Name;
         if (request.BaseUrl is not null) scraper.BaseUrl = request.BaseUrl;
+        if (request.Disabled is not null) scraper.Disabled = request.Disabled.Value;
+        if (request.Notes is not null) scraper.Notes = request.Notes;
         if (request.ExecutionMode is not null) scraper.ExecutionMode = request.ExecutionMode.Value;
         if (request.ExtractionStrategy is not null) scraper.ExtractionStrategy = request.ExtractionStrategy.Value;
         if (request.PaginationType is not null) scraper.PaginationType = request.PaginationType.Value;

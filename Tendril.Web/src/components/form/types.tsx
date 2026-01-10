@@ -11,6 +11,17 @@ export interface FormInputProps {
   autoFocus?: boolean;
 }
 
+export interface FormTextProps {
+  value: string;
+  onChange: (value: string) => void;
+  autoFocus?: boolean;
+  className?: string;
+  disabled?: boolean;
+  placeholder?: string;
+  label?: string;
+  rows?: number;
+}
+
 export interface FormCheckProps {
   className?: string;
   label: string;

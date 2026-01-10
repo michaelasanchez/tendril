@@ -79,10 +79,10 @@ export const FiltersCard: React.FC<Props> = ({
               onChange({ favoritesOnly: !filter.favoritesOnly });
             }}
           />
-          <label>SHOW FAVORITES ONLY</label>
+          <label>Show Favorites Only</label>
         </div>
 
-        <label>CATEGORY</label>
+        <label>Category</label>
         <div className={styles.ButtonGroup}>
           <Button
             variant={!filter.category ? 'active' : 'default'}
@@ -102,7 +102,7 @@ export const FiltersCard: React.FC<Props> = ({
           ))}
         </div>
 
-        <label>LOCATION</label>
+        <label>Location</label>
         <div className={styles.ButtonGroup}>
           <Button
             variant={!filter.location ? 'active' : 'default'}

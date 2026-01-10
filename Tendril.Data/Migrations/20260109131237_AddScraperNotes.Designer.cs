@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tendril.Data;
 
@@ -11,9 +12,11 @@ using Tendril.Data;
 namespace Tendril.Data.Migrations
 {
     [DbContext(typeof(TendrilDbContext))]
-    partial class TendrilDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260109131237_AddScraperNotes")]
+    partial class AddScraperNotes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -184,9 +187,6 @@ namespace Tendril.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("Disabled")
-                        .HasColumnType("bit");
-
                     b.Property<string>("ExecutionMode")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -211,7 +211,6 @@ namespace Tendril.Data.Migrations
                         .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("Notes")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PaginationType")

@@ -1,14 +1,16 @@
-import { Calendar, ExternalLink, Funnel, Heart, MapPin, Moon, SlidersHorizontal, Sun, Ticket, X } from "lucide-react";
+import { Calendar, Edit, ExternalLink, Funnel, Heart, MapPin, Moon, Play, SlidersHorizontal, Sun, Ticket, X } from "lucide-react";
 
 const Icons = {
   calendar: Calendar,
   close: X,
   dark: Moon,
+  edit: Edit,
   external: ExternalLink,
   favorite: Heart,
   filter: Funnel,
   light: Sun,
   location: MapPin,
+  run: Play,
   sliders: SlidersHorizontal,
   ticket: Ticket,
 };

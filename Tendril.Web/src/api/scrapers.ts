@@ -15,6 +15,8 @@ import { apiDelete, apiGet, apiPost, apiPut } from "./client";
 export interface CreateScraperRequest {
   name: string;
   baseUrl: string;
+  disabled: boolean;
+  notes: string;
   executionMode: ExecutionMode;
   extractionStrategy: ExtractionStrategy;
   paginationType: PaginationType;

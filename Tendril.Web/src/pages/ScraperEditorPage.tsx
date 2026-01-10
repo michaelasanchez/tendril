@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ScrapersApi } from '../api/scrapers';
 import { VenuesApi } from '../api/venues';
 import { SquareButton as Button, SquareButton } from '../components/button';
-import { FormInput, FormSelect } from '../components/form';
+import { FormCheck, FormInput, FormSelect, FormText } from '../components/form';
 import { Icon } from '../components/Icon';
 import {
   ScraperMappingRulesTab,
@@ -96,6 +96,8 @@ export const ScraperEditorPage: React.FC = () => {
             id: '' as Guid,
             name: '',
             baseUrl: '',
+            disabled: false,
+            notes: '',
             executionMode: 'Static',
             extractionStrategy: 'Css',
             paginationType: 'None',
@@ -120,6 +122,8 @@ export const ScraperEditorPage: React.FC = () => {
         const created = await ScrapersApi.create({
           name: scraper.name,
           baseUrl: scraper.baseUrl,
+          disabled: scraper.disabled,
+          notes: scraper.notes,
           executionMode: scraper.executionMode,
           extractionStrategy: scraper.extractionStrategy,
           paginationType: scraper.paginationType,
@@ -130,6 +134,8 @@ export const ScraperEditorPage: React.FC = () => {
         await ScrapersApi.update(scraperId as Guid, {
           name: scraper.name,
           baseUrl: scraper.baseUrl,
+          disabled: scraper.disabled,
+          notes: scraper.notes,
           executionMode: scraper.executionMode,
           extractionStrategy: scraper.extractionStrategy,
           paginationType: scraper.paginationType,
@@ -191,13 +197,23 @@ export const ScraperEditorPage: React.FC = () => {
             <Card className={cardStyles.BgCard}>
               <Card.Body>
                 <Form className={formStyles.form}>
-                  <FormInput
-                    label="Name"
-                    value={scraper.name}
-                    onChange={(value) =>
-                      setScraper({ ...scraper, name: value })
-                    }
-                  />
+                  <div className={formStyles.formGroup}>
+                    <FormInput
+                      className={styles.InputGrow}
+                      label="Name"
+                      value={scraper.name}
+                      onChange={(name) => setScraper({ ...scraper, name })}
+                    />
+
+                    <FormCheck
+                      label="Disabled"
+                      checked={scraper.disabled}
+                      onChange={(disabled) =>
+                        setScraper({ ...scraper, disabled })
+                      }
+                    />
+                  </div>
+
                   <FormSelect
                     label="Venue"
                     value={scraper.venueId ?? ''}
@@ -211,19 +227,26 @@ export const ScraperEditorPage: React.FC = () => {
                       venues.map((v) => ({ value: v.id, label: v.name }))
                     )}
                   />
+
                   <div className={formStyles.formGroup}>
                     <FormInput
                       className={styles.InputGrow}
                       label="Base URL"
                       value={scraper.baseUrl}
-                      onChange={(value) =>
-                        setScraper({ ...scraper, baseUrl: value })
+                      onChange={(baseUrl) =>
+                        setScraper({ ...scraper, baseUrl })
                       }
                     />
                     <Button href={scraper.baseUrl} target="_blank">
                       <Icon name="external" />
                     </Button>
                   </div>
+
+                  <FormText
+                    label="Notes"
+                    value={scraper.notes}
+                    onChange={(notes) => setScraper({ ...scraper, notes })}
+                  />
 
                   <hr />
 

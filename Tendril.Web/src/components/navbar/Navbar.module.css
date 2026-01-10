@@ -24,7 +24,10 @@
       margin-bottom: 0;
     }
 
-    caption {
+    .Caption {
+      font-family: var(--font-mono);
+      font-size: var(--text-sm);
+
       display: inline;
       padding: 0;
       width: max-content;

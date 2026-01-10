@@ -20,6 +20,8 @@ export interface ScraperDefinition {
   id: Guid;
   name: string;
   baseUrl: string;
+  disabled: boolean;
+  notes: string;
   executionMode: ExecutionMode;
   extractionStrategy: ExtractionStrategy;
   paginationType: PaginationType;

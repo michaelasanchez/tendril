@@ -20,7 +20,9 @@ export const Navbar: React.FC<Props> = ({ theme, onThemeToggle }) => {
           </div>
           <div className={styles.Brand}>
             <h3>Local Events</h3>
-            <caption>Discover what's happening in your city</caption>
+            <div className={styles.Caption}>
+              Discover what's happening in your city
+            </div>
           </div>
         </div>
         <div className={styles.Group}>
