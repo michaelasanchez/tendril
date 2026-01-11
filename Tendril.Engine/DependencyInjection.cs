@@ -9,6 +9,8 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddEngineServices(this IServiceCollection services)
     {
+        services.AddTransient<ScrapeResourceManager>();
+
         services.AddScoped<IEventMapper, EventMapper>();
         services.AddScoped<IJsonLdProcessor, JsonLdProcessor>();
 

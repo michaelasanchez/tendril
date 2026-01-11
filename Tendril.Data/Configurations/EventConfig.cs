@@ -17,7 +17,7 @@ public class EventConfig : IEntityTypeConfiguration<Event>
             .HasMaxLength(300);
 
         builder.Property(x => x.Description)
-            .HasMaxLength(2000);
+            .HasColumnType("nvarchar(max)");
 
         builder.Property(x => x.Category)
             .HasMaxLength(200);

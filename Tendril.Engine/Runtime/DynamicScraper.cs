@@ -14,7 +14,17 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
         IPage page,
         ScraperDefinition def)
     {
-        // CHECK STRATEGY
+        // 1. NAVIGATION
+        try
+        {
+            await page.GotoAsync(def.BaseUrl, new PageGotoOptions { Timeout = 30000 });
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to navigate to {def.BaseUrl}: {ex.Message}", ex);
+        }
+
+        // 2. CHECK STRATEGY
         if (def.ExtractionStrategy is ExtractionStrategy.JsonLd)
         {
             var maxRetries = 3;
@@ -59,7 +69,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
             yield break; // Done.
         }
 
-        // 1. PRE-SCRAPE PHASE
+        // 3. PRE-SCRAPE PHASE
         // Run any interactions (like typing zip code) required BEFORE the list appears.
         var container = def.Selectors.Single(x => x.Type == SelectorType.Container);
 
@@ -74,7 +84,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
             await ProcessSelector(page, null, step, preResult.Data);
         }
 
-        // 2. WAIT FOR CONTENT
+        // 4. WAIT FOR CONTENT
         try
         {
             await page.WaitForSelectorAsync(container.Selector, new() { Timeout = 10000 });
@@ -85,7 +95,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
             yield break;
         }
 
-        // 3. PAGINATION LOOP
+        // 5. PAGINATION LOOP
         bool hasMore = true;
         var processedSignatures = new HashSet<string>();
 
@@ -228,7 +238,17 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
             }
             else if (step.Type == SelectorType.Attribute)
             {
-                value = await targetElement.GetAttributeAsync(step.AttributeName ?? "");
+                // FIX: If we are grabbing an 'href' or 'src', ask the browser for the computed property
+                if (step.AttributeName is "href" or "src")
+                {
+                    // "el.href" returns the full absolute URL (http://...)
+                    // "el.getAttribute('href')" returns the relative string (/ticket/...)
+                    value = await targetElement.EvaluateAsync<string>($"el => el.{step.AttributeName}");
+                }
+                else
+                {
+                    value = await targetElement.GetAttributeAsync(step.AttributeName ?? "");
+                }
             }
 
             // 5. Assign to Event

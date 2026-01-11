@@ -84,6 +84,7 @@ export const Button: React.FC<ButtonProps> = ({
 
 function getVariantClass(varint: Variant | undefined) {
   switch (varint) {
+    case 'active':
     case 'primary':
       return styles.Primary;
     case 'outline-primary':

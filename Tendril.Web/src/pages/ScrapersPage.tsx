@@ -128,7 +128,48 @@ export const ScrapersPage: React.FC = () => {
     // 3. Transform Strategy Map to Array and Sort Alphabetically
     const sortedStrategies = Array.from(strategyMap.entries())
       .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
-      .map(([key, list]) => ({ key, scrapers: list }));
+      .map(([key, list]) => ({
+        key,
+        scrapers: list.sort((a, b) => {
+          if (!sort) return 0;
+
+          const aValue = a[sort.key];
+          const bValue = b[sort.key];
+
+          // 3. Handle checking for null/undefined values (optional but recommended)
+          if (aValue == null) return 1;
+          if (bValue == null) return -1;
+
+          // 4. Compare based on type
+          // If it's a string, use localeCompare for accurate text sorting
+          if (sort.key === 'lastSuccessUtc' || sort.key === 'lastFailureUtc') {
+            // Convert to timestamp (number)
+            const aTime = new Date(aValue).getTime();
+            const bTime = new Date(bValue).getTime();
+
+            // Handle invalid dates (optional safety check)
+            if (isNaN(aTime)) return 1;
+            if (isNaN(bTime)) return -1;
+
+            return sort.direction === 'asc' ? aTime - bTime : bTime - aTime;
+          }
+
+          if (typeof aValue === 'string' && typeof bValue === 'string') {
+            return sort.direction === 'asc'
+              ? aValue.localeCompare(bValue)
+              : bValue.localeCompare(aValue);
+          }
+
+          // Default comparison (numbers, dates, booleans)
+          if (aValue < bValue) {
+            return sort.direction === 'asc' ? -1 : 1;
+          }
+          if (aValue > bValue) {
+            return sort.direction === 'asc' ? 1 : -1;
+          }
+          return 0;
+        }),
+      }));
 
     // 4. Construct Final List (Strategies -> Unknown -> Disabled)
     const result = [...sortedStrategies];
