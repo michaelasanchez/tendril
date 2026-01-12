@@ -21,6 +21,7 @@ public class MappingRulesController(IMappingRuleRepository rules) : ControllerBa
             r.CombineWithField,
             r.Order,
             r.TransformType,
+            r.ConstantValue,
             r.Format,
             r.RegexPattern,
             r.RegexReplacement,
@@ -42,6 +43,7 @@ public class MappingRulesController(IMappingRuleRepository rules) : ControllerBa
             CombineWithField = request.CombineWithField,
             Order = request.Order,
             TransformType = request.TransformType,
+            ConstantValue = request.ConstantValue,
             Format = request.Format,
             RegexPattern = request.RegexPattern,
             RegexReplacement = request.RegexReplacement,
@@ -57,6 +59,7 @@ public class MappingRulesController(IMappingRuleRepository rules) : ControllerBa
             rule.CombineWithField,
             rule.Order,
             rule.TransformType,
+            rule.ConstantValue,
             rule.Format,
             rule.RegexPattern,
             rule.RegexReplacement,
@@ -78,6 +81,7 @@ public class MappingRulesController(IMappingRuleRepository rules) : ControllerBa
         if (request.Order is not null) rule.Order = request.Order.Value;
         if (request.TransformType is not null) rule.TransformType = request.TransformType ?? Core.Domain.Enums.TransformType.None;
         if (request.Format is not null) rule.Format = request.Format;
+        if (request.ConstantValue is not null) rule.ConstantValue = request.ConstantValue;
         if (request.RegexPattern is not null) rule.RegexPattern = request.RegexPattern;
         if (request.RegexReplacement is not null) rule.RegexReplacement = request.RegexReplacement;
         if (request.SplitDelimiter is not null) rule.SplitDelimiter = request.SplitDelimiter;

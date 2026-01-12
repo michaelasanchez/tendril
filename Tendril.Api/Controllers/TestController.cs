@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Tendril.Api.Dtos;
 using Tendril.Core.Domain.Entities;
 using Tendril.Core.Interfaces.Repositories;
 using Tendril.Engine.Abstractions;
@@ -142,6 +143,7 @@ public class ScraperRunsController(
         // The IngestionService now internally handles the Stream loop and DB saving
         var result = await ingestionService.Ingest(scraper, ct);
 
-        return Ok(result);
+        return Ok(new IngestResultDto(
+            ));
     }
 }

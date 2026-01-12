@@ -3,6 +3,7 @@
 public enum TransformType
 {
     None,
+    Constant,
     Trim,
     RegexExtract,
     RegexReplace,
@@ -15,5 +16,6 @@ public enum TransformType
     ToLower,
     ToUpper,
     Currency,
-    SrcSetToUrl,
+    DecodeHtml,
+    SrcSetToUrl
 }

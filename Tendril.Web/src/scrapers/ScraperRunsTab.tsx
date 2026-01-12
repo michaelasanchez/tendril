@@ -1,5 +1,11 @@
+import {
+  differenceInDays,
+  differenceInHours,
+  differenceInMinutes,
+  differenceInSeconds,
+} from 'date-fns';
 import { useState } from 'react';
-import { Card, Table } from 'react-bootstrap';
+import { Card, Spinner, Table } from 'react-bootstrap';
 import { ScrapersApi } from '../api/scrapers';
 import { SquareButton as Button } from '../components/button';
 import styles from '../pages/ScraperEditorPage.module.css';
@@ -23,8 +29,10 @@ export const ScraperRunsTab: React.FC<Props> = ({
 }) => {
   const [result, setResult] = useState<ScrapeRunResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [runStart, setRunStart] = useState<Date | null>(null);
 
   const run = async (kind: 'selectors' | 'mapping' | 'test' | 'now') => {
+    setRunStart(new Date());
     setLoading(true);
     setResult(null);
     try {
@@ -78,7 +86,15 @@ export const ScraperRunsTab: React.FC<Props> = ({
             </Button>
           </div>
 
-          {loading && <p>Running…</p>}
+          {loading && (
+            <div>
+              <div>
+                <Spinner animation="border" />
+                Running...
+              </div>
+              <div>{!!runStart && formatElapsed(runStart)}</div>
+            </div>
+          )}
 
           {result && (
             <div className="run-result">
@@ -143,3 +159,16 @@ export const ScraperRunsTab: React.FC<Props> = ({
     </>
   );
 };
+
+function formatElapsed(from: Date) {
+  const now = new Date();
+  const seconds = differenceInSeconds(now, from);
+
+  if (seconds < 60) return `${seconds}s`;
+  const minutes = differenceInMinutes(now, from);
+  if (minutes < 60) return `${minutes}m`;
+  const hours = differenceInHours(now, from);
+  if (hours < 24) return `${hours}h`;
+  const days = differenceInDays(now, from);
+  return `${days}d`;
+}

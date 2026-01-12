@@ -119,7 +119,10 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
             var result = new ScrapeYieldItem();
 
             var fieldSelectors = def.Selectors
-                .Where(x => x.Type != SelectorType.Container && !x.IsPaginationTrigger)
+                .Where(x =>
+                    x.Type != SelectorType.Container &&
+                    x.Order > container.Order &&
+                    !x.IsPaginationTrigger)
                 .OrderBy(x => x.Order);
 
             foreach (var step in fieldSelectors)

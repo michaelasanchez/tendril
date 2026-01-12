@@ -24,6 +24,7 @@ interface Props {
 
 const transformTypeOptions: SelectOption[] = [
   'None',
+  'Constant',
   'Trim',
   'RegexExtract',
   'RegexReplace',
@@ -36,6 +37,7 @@ const transformTypeOptions: SelectOption[] = [
   'ToLower',
   'ToUpper',
   'Currency',
+  'DecodeHtml',
   'SrcSetToUrl',
 ].map((o) => ({ value: o, label: o }));
 
@@ -102,6 +104,7 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
       combineWithField: '',
       order: rules?.length ?? 0,
       transformType: 'None',
+      constantValue: '',
       regexPattern: '',
       regexReplacement: '',
       splitDelimiter: '',
@@ -119,16 +122,16 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
   };
 
   const save = async () => {
-    if (!editing.targetField || !editing.sourceField || !editing.transformType)
-      return;
+    if (!editing.targetField || !editing.transformType) return;
 
     if (isNew) {
       await ScrapersApi.createMappingRule(scraperId, {
         targetField: editing.targetField,
-        sourceField: editing.sourceField,
+        sourceField: editing.sourceField ?? '',
         combineWithField: editing.combineWithField ?? null,
         order: editing.order ?? 0,
         transformType: editing.transformType,
+        constantValue: editing.constantValue ?? null,
         format: editing.format ?? null,
         regexPattern: editing.regexPattern ?? null,
         regexReplacement: editing.regexReplacement ?? null,
@@ -198,15 +201,16 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
           <Table className={tableStyles.Table} hover responsive>
             <thead>
               <tr>
-                <th>Target Field</th>
-                <th>Source Field</th>
+                <th>Target</th>
+                <th>Source</th>
                 <th>Combine With</th>
                 <th>Order</th>
                 <th>Transform</th>
                 <th>Format</th>
+                <th>Constant</th>
                 <th>Regex Pattern</th>
                 <th>Regex Replacement</th>
-                <th>Split Delimiter</th>
+                <th>Delimiter</th>
                 <th />
               </tr>
             </thead>
@@ -220,6 +224,7 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
                     <td>{emphasizeDynamicFields(r.combineWithField ?? '-')}</td>
                     <td>{r.order}</td>
                     <td>{r.transformType}</td>
+                    <td>{r.constantValue}</td>
                     <td>{r.format}</td>
                     <td>{r.regexPattern}</td>
                     <td>{r.regexReplacement}</td>
@@ -313,6 +318,18 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
                       options={sourceFieldOptions}
                     />
                   </div>
+                )}
+                {editing.transformType === 'Constant' && (
+                  <FormInput
+                    label="Constant Value"
+                    value={editing.constantValue ?? ''}
+                    onChange={(constantValue) =>
+                      setEditing({
+                        ...editing,
+                        constantValue,
+                      })
+                    }
+                  />
                 )}
                 {editing.transformType === 'ParseExact' && (
                   <FormInput

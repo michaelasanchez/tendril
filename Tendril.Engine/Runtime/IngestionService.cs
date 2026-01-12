@@ -175,6 +175,7 @@ public class IngestionService(
         current.Title = UpdateIfChanged(current.Title, incoming.Title, ref updated);
         current.Location = UpdateIfChanged(current.Location, incoming.Location, ref updated);
         current.Description = UpdateIfChanged(current.Description, incoming.Description, ref updated);
+        current.Category = UpdateIfChanged(current.Category, incoming.Category, ref updated);
 
         current.StartUtc = UpdateIfChanged(current.StartUtc, incoming.StartUtc, ref updated);
         current.EndUtc = UpdateIfChanged(current.EndUtc, incoming.EndUtc, ref updated);

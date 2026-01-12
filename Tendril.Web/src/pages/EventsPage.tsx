@@ -53,7 +53,7 @@ export const EventsPage: React.FC = () => {
   }, []);
 
   const filteredEvents = useMemo(() => {
-    const { title, startDate, endDate, location } = filter;
+    const { title, startDate, endDate, category, location } = filter;
 
     let filtered = events;
 
@@ -75,6 +75,10 @@ export const EventsPage: React.FC = () => {
     if (endDate) {
       const to = parse(endDate, 'yyyy-MM-dd', new Date());
       filtered = filtered.filter((e) => to >= new Date(e.startUtc));
+    }
+
+    if (category) {
+      filtered = filtered.filter((e) => e.category === category);
     }
 
     if (location) {
@@ -117,7 +121,7 @@ export const EventsPage: React.FC = () => {
             </p>
           </div>
           <div>
-            
+
           </div>
         </div>
         <div className={cn('d-lg-none', styles.PageControls)}>

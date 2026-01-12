@@ -41,7 +41,7 @@ export const EventModal: React.FC<Props> = ({ event, show, onHide }) => {
             <IconButton name="close" onClick={onHide} />
           </div>
           <div className={styles.BottomLeft}>
-            <Badge>
+            <Badge className={styles.Uppercase}>
               {event.category ??
                 fakeCategories[
                   (event.title.length + new Date(event.startUtc).getDate()) %

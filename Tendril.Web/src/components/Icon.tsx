@@ -1,4 +1,18 @@
-import { Calendar, Edit, ExternalLink, Funnel, Heart, MapPin, Moon, Play, SlidersHorizontal, Sun, Ticket, X } from "lucide-react";
+import {
+  Calendar,
+  Edit,
+  ExternalLink,
+  Funnel,
+  Heart,
+  MapPin,
+  Moon,
+  Play,
+  SlidersHorizontal,
+  Sun,
+  Ticket,
+  Trash,
+  X,
+} from 'lucide-react';
 
 const Icons = {
   calendar: Calendar,
@@ -10,6 +24,7 @@ const Icons = {
   filter: Funnel,
   light: Sun,
   location: MapPin,
+  remove: Trash,
   run: Play,
   sliders: SlidersHorizontal,
   ticket: Ticket,
@@ -26,7 +41,7 @@ interface IconProps {
 export const Icon: React.FC<IconProps> = ({
   name,
   size = 16,
-  color = "currentColor",
+  color = 'currentColor',
 }) => {
   const IconComponent = Icons[name];
   return IconComponent ? <IconComponent size={size} color={color} /> : null;

@@ -1,10 +1,11 @@
 // src/pages/VenuesPage.tsx
 import React, { useEffect, useState } from 'react';
-import { Form, Table } from 'react-bootstrap';
+import { Card, Form, Table } from 'react-bootstrap';
 import { VenuesApi } from '../api/venues';
 import { SquareButton as Button } from '../components/button';
 import { FormInput } from '../components/form';
-import { formStyles, pageStyles } from '../styles';
+import { Icon } from '../components/Icon';
+import { cardStyles, formStyles, pageStyles, tableStyles } from '../styles';
 import type { Venue } from '../types/api';
 
 export const VenuesPage: React.FC = () => {
@@ -69,10 +70,10 @@ export const VenuesPage: React.FC = () => {
     <section>
       <div className={pageStyles.pageHeader}>
         <h2>Venues</h2>
-        <button onClick={startNew}>New Venue</button>
+        <Button onClick={startNew}>New Venue</Button>
       </div>
 
-      <Table className="data-table" hover>
+      <Table className={tableStyles.Table} hover responsive>
         <thead>
           <tr>
             <th>Name</th>
@@ -95,9 +96,15 @@ export const VenuesPage: React.FC = () => {
                   '-'
                 )}
               </td>
-              <td>
-                <button onClick={() => startEdit(v)}>Edit</button>
-                <button onClick={() => remove(v)}>Delete</button>
+              <td className={tableStyles.TableActions}>
+                <div>
+                  <Button onClick={() => startEdit(v)}>
+                    <Icon name="edit" />
+                  </Button>
+                  <Button onClick={() => remove(v)}>
+                    <Icon name="remove" />
+                  </Button>
+                </div>
               </td>
             </tr>
           ))}
@@ -110,32 +117,35 @@ export const VenuesPage: React.FC = () => {
       </Table>
 
       {editing.name !== undefined && (
-        <div className="card edit-panel">
-          <h3>{isNew ? 'New Venue' : 'Edit Venue'}</h3>
-          <Form className={formStyles.form}>
-            <FormInput
-              label="Name"
-              value={editing.name ?? ''}
-              onChange={(name) => setEditing({ ...editing, name })}
-            />
-            <FormInput
-              label="Address"
-              value={editing.address ?? ''}
-              onChange={(address) => setEditing({ ...editing, address })}
-            />
-            <FormInput
-              label="Website"
-              value={editing.website ?? ''}
-              onChange={(website) => setEditing({ ...editing, website })}
-            />
-            <div className={formStyles.buttonRow}>
-              <Button variant="primary" onClick={save}>
-                Save
-              </Button>
-              <Button onClick={cancel}>Cancel</Button>
-            </div>
-          </Form>
-        </div>
+        <Card className={cardStyles.BgCard}>
+          <Card.Body>
+            <h3>{isNew ? 'New Venue' : 'Edit Venue'}</h3>
+            <Form className={formStyles.form}>
+              <FormInput
+                label="Name"
+                autoFocus
+                value={editing.name ?? ''}
+                onChange={(name) => setEditing({ ...editing, name })}
+              />
+              <FormInput
+                label="Address"
+                value={editing.address ?? ''}
+                onChange={(address) => setEditing({ ...editing, address })}
+              />
+              <FormInput
+                label="Website"
+                value={editing.website ?? ''}
+                onChange={(website) => setEditing({ ...editing, website })}
+              />
+              <div className={formStyles.buttonRow}>
+                <Button variant="primary" onClick={save}>
+                  Save
+                </Button>
+                <Button onClick={cancel}>Cancel</Button>
+              </div>
+            </Form>
+          </Card.Body>
+        </Card>
       )}
     </section>
   );

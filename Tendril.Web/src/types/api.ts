@@ -8,13 +8,13 @@ export interface Venue {
   website?: string;
 }
 
-export type ExecutionMode = "Static" | "Dynamic";
+export type ExecutionMode = 'Static' | 'Dynamic';
 
-export type ExtractionStrategy = "Css" | "JsonLd" | "XPath" | "Regex";
+export type ExtractionStrategy = 'Css' | 'JsonLd' | 'XPath' | 'Regex';
 
-export type PaginationType = "None" | "InfiniteScroll" | "NextButton";
+export type PaginationType = 'None' | 'InfiniteScroll' | 'NextButton';
 
-export type ScraperState = "Unknown" | "Healthy" | "Unhealthy";
+export type ScraperState = 'Unknown' | 'Healthy' | 'Unhealthy';
 
 export interface ScraperDefinition {
   id: Guid;
@@ -33,15 +33,15 @@ export interface ScraperDefinition {
 }
 
 export type SelectorType =
-  | "Container"
-  | "Text"
-  | "Attribute"
-  | "Click"
-  | "Hover"
-  | "Scroll"
-  | "Input"
-  | "CaptureLink"
-  | "FollowLink";
+  | 'Container'
+  | 'Text'
+  | 'Attribute'
+  | 'Click'
+  | 'Hover'
+  | 'Scroll'
+  | 'Input'
+  | 'CaptureLink'
+  | 'FollowLink';
 
 export interface ScraperSelector {
   id: Guid;
@@ -59,20 +59,21 @@ export interface ScraperSelector {
 }
 
 export type TransformType =
-  | "None"
-  | "Trim"
-  | "RegexExtract"
-  | "RegexReplace"
-  | "Split"
-  | "Combine"
-  | "ParseDate"
-  | "ParseTime"
-  | "ParseExact"
-  | "ParseLoose"
-  | "ToLower"
-  | "ToUpper"
-  | "Currency"
-  | "SrcSetToUrl";
+  | 'None'
+  | 'Constant'
+  | 'Trim'
+  | 'RegexExtract'
+  | 'RegexReplace'
+  | 'Split'
+  | 'Combine'
+  | 'ParseDate'
+  | 'ParseTime'
+  | 'ParseExact'
+  | 'ParseLoose'
+  | 'ToLower'
+  | 'ToUpper'
+  | 'Currency'
+  | 'SrcSetToUrl';
 
 export interface ScraperMappingRule {
   id: Guid;
@@ -82,6 +83,7 @@ export interface ScraperMappingRule {
   combineWithField: string | null;
   order: number;
   transformType: TransformType;
+  constantValue: string | null;
   format: string | null;
   regexPattern: string | null;
   regexReplacement: string | null;

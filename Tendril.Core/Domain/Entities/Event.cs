@@ -15,6 +15,7 @@ public class Event
     public string Title { get; set; } = null!;
     public string? Location { get; set; }
     public string? Description { get; set; }
+    public string? Category { get; set; }
 
     public DateTimeOffset StartUtc { get; set; }
     public DateTimeOffset? EndUtc { get; set; }
@@ -25,8 +26,6 @@ public class Event
     public string? DetailsUrl { get; set; }
     public string? ImageUrl { get; set; }
     public string? TicketUrl { get; set; }
-
-    public string? Category { get; set; }
 
     public DateTimeOffset ScrapedAtUtc { get; set; }
     public DateTimeOffset? UpdatedAtUtc { get; set; }

@@ -10,6 +10,10 @@ public class ApiMappingProfile : Profile
 {
     public ApiMappingProfile()
     {
+        CreateMap<ScraperAttemptHistory, AttemptHistoryDto>();
+
+        CreateMap<ScrapedEventRaw, ScrapedEventRawDto>();
+
         CreateMap<ScraperDefinition, ScraperDto>()
             .ForMember(d => d.State, opt => opt.MapFrom(s => s.State.ToString()))
             .ForMember(d => d.LastSuccessUtc, opt => opt.MapFrom(s => s.LastSuccessUtc.HasValue ? s.LastSuccessUtc.Value.ToString("o") : null))

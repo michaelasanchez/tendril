@@ -97,7 +97,7 @@ export const EventCard: React.FC<Props> = ({
             />
           </div>
           <div className={styles.TopRight}>
-            <Badge>
+            <Badge className={styles.Uppercase}>
               {event.category ??
                 fakeCategories[
                   (event.title.length + new Date(event.startUtc).getDate()) %

@@ -3,9 +3,14 @@
 
   cursor: pointer;
 
-  transition: border-color var(--animation) 0.3s, box-shadow var(--animation) 0.3s;
+  transition: border-color var(--animation) 0.3s,
+    box-shadow var(--animation) 0.3s;
 
   overflow: hidden;
+
+  .Uppercase {
+    text-transform: uppercase;
+  }
 
   .CardImage {
     transition: scale var(--animation) 0.3s;

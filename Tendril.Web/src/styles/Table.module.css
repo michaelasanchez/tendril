@@ -1,16 +1,16 @@
 .Table {
-  th, td {
+  th,
+  td {
     background-color: transparent;
   }
 }
 
 .TableActions {
-  /* vertical-align: middle; */
-
+  /* Requires inner div */
   & > div {
     display: flex;
     align-items: center;
-    gap: 1em;
+    gap: 0.75em;
   }
 }
 

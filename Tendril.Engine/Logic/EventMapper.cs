@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using System.Globalization;
+using System.Net;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Tendril.Core.Domain.Entities;
@@ -51,9 +52,10 @@ public class EventMapper : IEventMapper
 
         return mappedEvent;
     }
+
     private static void ApplyRule(JsonElement raw, ScraperMappingRule rule, Dictionary<string, object?> scratch)
     {
-        object? primary;
+        object? primary = null;
 
         // 1. Check Scratchpad first (precedence)
         if (scratch.TryGetValue(rule.SourceField, out var scratchVal))
@@ -66,7 +68,7 @@ public class EventMapper : IEventMapper
             primary = rawVal;
         }
         // 3. If neither, skip
-        else
+        else if (rule.TransformType != TransformType.Constant)
         {
             return;
         }
@@ -88,13 +90,9 @@ public class EventMapper : IEventMapper
 
         // Transform
         var value = ApplyTransform(
-            rule.TransformType,
+            rule,
             primary,
-            secondary,
-            rule.Format,
-            rule.RegexPattern,
-            rule.RegexReplacement,
-            rule.SplitDelimiter);
+            secondary);
 
         scratch[rule.TargetField] = value;
     }
@@ -146,17 +144,13 @@ public class EventMapper : IEventMapper
     }
 
     private static object? ApplyTransform(
-        TransformType transform,
+        ScraperMappingRule rule,
         object? primary,
-        object? secondary,
-        string? dateFormat = null,
-        string? regexPattern = null,
-        string? regexReplacement = null,
-        string? splitDelimiter = null)
+        object? secondary)
     {
         // FIX: If no transform is needed, return the raw object to preserve its type
         // (This keeps DateTimeOffset as DateTimeOffset, etc.)
-        if (transform == TransformType.None && secondary is null)
+        if (rule.TransformType == TransformType.None && secondary is null)
         {
             // If it's a JsonElement, we still might want to unbox it to a string/number
             if (primary is JsonElement)
@@ -167,35 +161,40 @@ public class EventMapper : IEventMapper
             return primary;
         }
 
-        var primaryVal = GetString(primary);
-        var secondaryVal = GetString(secondary);
+        var primaryInput = GetString(primary);
+        var secondaryInput = GetString(secondary);
 
-        switch (transform)
+        switch (rule.TransformType)
         {
+            case TransformType.Constant:
+            {
+                return rule.ConstantValue;
+            }
+
             case TransformType.Trim:
             {
-                return primaryVal?.Trim();
+                return primaryInput?.Trim();
             }
 
             case TransformType.ToLower:
             {
-                return primaryVal?.ToLowerInvariant();
+                return primaryInput?.ToLowerInvariant();
             }
 
             case TransformType.ToUpper:
             {
-                return primaryVal?.ToUpperInvariant();
+                return primaryInput?.ToUpperInvariant();
             }
 
             case TransformType.Split:
             {
-                if (string.IsNullOrWhiteSpace(primaryVal) || string.IsNullOrWhiteSpace(splitDelimiter))
+                if (string.IsNullOrWhiteSpace(primaryInput) || string.IsNullOrWhiteSpace(rule.SplitDelimiter))
                 {
-                    return primaryVal;
+                    return primaryInput;
                 }
 
-                return primaryVal
-                    .Split(splitDelimiter, StringSplitOptions.RemoveEmptyEntries)
+                return primaryInput
+                    .Split(rule.SplitDelimiter, StringSplitOptions.RemoveEmptyEntries)
                     .Select(x => x.Trim())
                     .ToList();
             }
@@ -215,7 +214,7 @@ public class EventMapper : IEventMapper
                     return datePart;
                 }
 
-                return (primaryVal, secondaryVal) switch
+                return (primaryInput, secondaryInput) switch
                 {
                     (string p, string s) => $"{p} {s}",
                     (string p, null) => p,
@@ -226,31 +225,31 @@ public class EventMapper : IEventMapper
 
             case TransformType.RegexExtract:
             {
-                if (string.IsNullOrWhiteSpace(primaryVal) || string.IsNullOrWhiteSpace(regexPattern))
+                if (string.IsNullOrWhiteSpace(primaryInput) || string.IsNullOrWhiteSpace(rule.RegexPattern))
                 {
-                    return primaryVal;
+                    return primaryInput;
                 }
 
-                var match = Regex.Match(primaryVal, regexPattern, RegexOptions.Singleline);
+                var match = Regex.Match(primaryInput, rule.RegexPattern, RegexOptions.Singleline);
 
                 return match.Success ? match.Value : null;
             }
 
             case TransformType.RegexReplace:
             {
-                if (string.IsNullOrWhiteSpace(primaryVal) ||
-                    string.IsNullOrWhiteSpace(regexPattern) ||
-                    regexReplacement is null)
+                if (string.IsNullOrWhiteSpace(primaryInput) ||
+                    string.IsNullOrWhiteSpace(rule.RegexPattern) ||
+                    rule.RegexReplacement is null)
                 {
-                    return primaryVal;
+                    return primaryInput;
                 }
 
-                return Regex.Replace(primaryVal, regexPattern, regexReplacement);
+                return Regex.Replace(primaryInput, rule.RegexPattern, rule.RegexReplacement);
             }
 
             case TransformType.ParseDate:
             {
-                if (DateTimeOffset.TryParse(primaryVal, out var dateOnly))
+                if (DateTimeOffset.TryParse(primaryInput, out var dateOnly))
                 {
                     if (dateOnly < DateTimeOffset.UtcNow.AddMonths(-3))
                     {
@@ -266,12 +265,12 @@ public class EventMapper : IEventMapper
             case TransformType.ParseTime:
             {
                 // Parse ONLY the time portion, combine with today if needed
-                if (string.IsNullOrWhiteSpace(primaryVal))
+                if (string.IsNullOrWhiteSpace(primaryInput))
                 {
                     return null;
                 }
 
-                if (DateTime.TryParse(primaryVal, out var timeOnly))
+                if (DateTime.TryParse(primaryInput, out var timeOnly))
                 {
                     var now = DateTimeOffset.UtcNow;
                     var combined = new DateTimeOffset(
@@ -286,12 +285,12 @@ public class EventMapper : IEventMapper
 
             case TransformType.ParseExact:
             {
-                if (primaryVal is null || dateFormat is null)
+                if (primaryInput is null || rule.Format is null)
                     return null;
 
                 if (DateTimeOffset.TryParseExact(
-                    primaryVal,
-                    dateFormat,
+                    primaryInput,
+                    rule.Format,
                     CultureInfo.InvariantCulture,
                     DateTimeStyles.AssumeLocal,
                     out var parsed))
@@ -305,11 +304,11 @@ public class EventMapper : IEventMapper
             // TODO: hack for now
             case TransformType.ParseLoose:
             {
-                if (string.IsNullOrWhiteSpace(primaryVal))
+                if (string.IsNullOrWhiteSpace(primaryInput))
                     return null;
 
                 // Remove weekday names
-                var cleaned = Regex.Replace(primaryVal, @"^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),\s*", "", RegexOptions.IgnoreCase);
+                var cleaned = Regex.Replace(primaryInput, @"^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),\s*", "", RegexOptions.IgnoreCase);
 
                 // Remove "@"
                 cleaned = cleaned.Replace("@", "", StringComparison.OrdinalIgnoreCase);
@@ -328,10 +327,10 @@ public class EventMapper : IEventMapper
 
             case TransformType.Currency:
             {
-                if (string.IsNullOrWhiteSpace(primaryVal))
+                if (string.IsNullOrWhiteSpace(primaryInput))
                     return null;
 
-                var cleaned = new string(primaryVal.Where(c =>
+                var cleaned = new string(primaryInput.Where(c =>
                     char.IsDigit(c) || c == '.' || c == '-').ToArray());
 
                 return decimal.TryParse(cleaned, out var money)
@@ -339,15 +338,22 @@ public class EventMapper : IEventMapper
                     : null;
             }
 
+            case TransformType.DecodeHtml:
+            {
+                if (string.IsNullOrWhiteSpace(primaryInput)) return primaryInput;
+
+                return WebUtility.HtmlDecode(primaryInput);
+            }
+
             case TransformType.SrcSetToUrl:
             {
-                return ExtractBestImageFromSrcSet(primaryVal);
+                return ExtractBestImageFromSrcSet(primaryInput);
             }
 
             default:
             {
                 // Safe fallback
-                return primaryVal;
+                return primaryInput;
             }
         }
     }

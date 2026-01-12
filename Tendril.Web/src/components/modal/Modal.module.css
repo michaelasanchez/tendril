@@ -13,6 +13,10 @@
       width: 100%;
     }
 
+    .Uppercase {
+      text-transform: uppercase;
+    }
+
     .TopRight {
       position: absolute;
       top: var(--inset);
