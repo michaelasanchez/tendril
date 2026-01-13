@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tendril.Data;
 
@@ -11,9 +12,11 @@ using Tendril.Data;
 namespace Tendril.Data.Migrations
 {
     [DbContext(typeof(TendrilDbContext))]
-    partial class TendrilDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260113022830_AddEventRevisionAgain")]
+    partial class AddEventRevisionAgain
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -99,9 +102,6 @@ namespace Tendril.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("AttemptHistoryId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<DateTimeOffset>("ChangedAtUtc")
                         .HasColumnType("datetimeoffset");
 
@@ -119,8 +119,6 @@ namespace Tendril.Data.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AttemptHistoryId");
 
                     b.HasIndex("EventId");
 
@@ -411,12 +409,6 @@ namespace Tendril.Data.Migrations
 
             modelBuilder.Entity("Tendril.Core.Domain.Entities.EventRevision", b =>
                 {
-                    b.HasOne("Tendril.Core.Domain.Entities.ScraperAttemptHistory", "AttemptHistory")
-                        .WithMany("Revisions")
-                        .HasForeignKey("AttemptHistoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("Tendril.Core.Domain.Entities.Event", "Event")
                         .WithMany()
                         .HasForeignKey("EventId")
@@ -428,8 +420,6 @@ namespace Tendril.Data.Migrations
                         .HasForeignKey("RawEventId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("AttemptHistory");
 
                     b.Navigation("Event");
 
@@ -509,8 +499,6 @@ namespace Tendril.Data.Migrations
 
             modelBuilder.Entity("Tendril.Core.Domain.Entities.ScraperAttemptHistory", b =>
                 {
-                    b.Navigation("Revisions");
-
                     b.Navigation("ScrapedEventRaws");
                 });
 

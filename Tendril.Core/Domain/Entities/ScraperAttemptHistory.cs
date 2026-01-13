@@ -8,6 +8,7 @@ public class ScraperAttemptHistory
     public ScraperDefinition ScraperDefinition { get; set; } = null!;
 
     public ICollection<ScrapedEventRaw> ScrapedEventRaws { get; set; } = [];
+    public ICollection<EventRevision> Revisions { get; set; } = [];
 
     public DateTimeOffset StartTimeUtc { get; set; }
     public DateTimeOffset EndTimeUtc { get; set; }

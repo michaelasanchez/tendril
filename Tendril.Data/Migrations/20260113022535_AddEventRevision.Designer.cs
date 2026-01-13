@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tendril.Data;
 
@@ -11,9 +12,11 @@ using Tendril.Data;
 namespace Tendril.Data.Migrations
 {
     [DbContext(typeof(TendrilDbContext))]
-    partial class TendrilDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260113022535_AddEventRevision")]
+    partial class AddEventRevision
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -91,42 +94,6 @@ namespace Tendril.Data.Migrations
                     b.HasIndex("VenueId");
 
                     b.ToTable("Event", (string)null);
-                });
-
-            modelBuilder.Entity("Tendril.Core.Domain.Entities.EventRevision", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("AttemptHistoryId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("ChangedAtUtc")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("ChangedFieldsJson")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("EventId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("RawEventId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Reason")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AttemptHistoryId");
-
-                    b.HasIndex("EventId");
-
-                    b.HasIndex("RawEventId");
-
-                    b.ToTable("EventRevision", (string)null);
                 });
 
             modelBuilder.Entity("Tendril.Core.Domain.Entities.ScrapedEventRaw", b =>
@@ -409,33 +376,6 @@ namespace Tendril.Data.Migrations
                     b.Navigation("Venue");
                 });
 
-            modelBuilder.Entity("Tendril.Core.Domain.Entities.EventRevision", b =>
-                {
-                    b.HasOne("Tendril.Core.Domain.Entities.ScraperAttemptHistory", "AttemptHistory")
-                        .WithMany("Revisions")
-                        .HasForeignKey("AttemptHistoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Tendril.Core.Domain.Entities.Event", "Event")
-                        .WithMany()
-                        .HasForeignKey("EventId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Tendril.Core.Domain.Entities.ScrapedEventRaw", "RawEvent")
-                        .WithMany()
-                        .HasForeignKey("RawEventId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("AttemptHistory");
-
-                    b.Navigation("Event");
-
-                    b.Navigation("RawEvent");
-                });
-
             modelBuilder.Entity("Tendril.Core.Domain.Entities.ScrapedEventRaw", b =>
                 {
                     b.HasOne("Tendril.Core.Domain.Entities.Event", "Event")
@@ -509,8 +449,6 @@ namespace Tendril.Data.Migrations
 
             modelBuilder.Entity("Tendril.Core.Domain.Entities.ScraperAttemptHistory", b =>
                 {
-                    b.Navigation("Revisions");
-
                     b.Navigation("ScrapedEventRaws");
                 });
 

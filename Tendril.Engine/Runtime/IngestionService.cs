@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
 using Tendril.Core.Domain.Entities;
 using Tendril.Core.Domain.Enums;
 using Tendril.Core.Interfaces.Repositories;
@@ -12,6 +13,7 @@ public class IngestionService(
     ILogger<IngestionService> logger,
     IAttemptHistoryRepository attemptHistories,
     IEventRepository events,
+    IEventRevisionRepository eventRevisions,
     IRawEventRepository rawEvents,
     IScraperRepository scrapers,
     IEventMapper mapper,
@@ -30,7 +32,7 @@ public class IngestionService(
             Id = Guid.NewGuid(),
             ScraperDefinitionId = scraper.Id,
             StartTimeUtc = start,
-            Success = false, // Will set to true at end
+            Success = false,
             ErrorMessage = "Running..."
         };
 
@@ -56,7 +58,7 @@ public class IngestionService(
                     ScraperDefinitionId = scraper.Id,
                     ScraperAttemptHistoryId = attempt.Id,
                     ScrapedAtUtc = DateTimeOffset.UtcNow,
-                    RawDataJson = System.Text.Json.JsonSerializer.Serialize(raw)
+                    RawDataJson = JsonSerializer.Serialize(raw)
                 };
 
                 await rawEvents.AddAsync(rawEntity, cancellationToken);
@@ -66,7 +68,7 @@ public class IngestionService(
                 // B. Map & Upsert Event
                 try
                 {
-                    var (mappedEvent, status, summary) = await ProcessSingleEventAsync(scraper, rawEntity);
+                    var (mappedEvent, status, summary) = await ProcessSingleEventAsync(scraper, attempt.Id, rawEntity);
 
                     if (mappedEvent is not null)
                     {
@@ -134,7 +136,7 @@ public class IngestionService(
         };
     }
 
-    private async Task<(Event? mappedEvent, string result, string message)> ProcessSingleEventAsync(ScraperDefinition scraper, ScrapedEventRaw rawEntity)
+    private async Task<(Event? mappedEvent, string result, string message)> ProcessSingleEventAsync(ScraperDefinition scraper, Guid attemptId, ScrapedEventRaw rawEntity)
     {
         var mappedEvent = mapper.Map(scraper, rawEntity);
 
@@ -144,16 +146,25 @@ public class IngestionService(
 
         if (existingEvent is not null)
         {
-            var updated = false;
+            var changes = UpdateEventFields(existingEvent, mappedEvent);
 
-            UpdateEventFields(existingEvent, mappedEvent, ref updated);
-
-            if (updated)
+            if (changes.Any())
             {
                 existingEvent.UpdatedAtUtc = DateTimeOffset.UtcNow;
                 rawEntity.EventId = existingEvent.Id;
 
                 await events.UpdateAsync(existingEvent);
+
+                await eventRevisions.AddAsync(new EventRevision
+                {
+                    Id = Guid.NewGuid(),
+                    EventId = existingEvent.Id,
+                    AttemptHistoryId = attemptId,
+                    RawEventId = rawEntity.Id,
+                    Reason = EventRevisionReason.FieldUpdate,
+                    ChangedAtUtc = DateTimeOffset.UtcNow,
+                    ChangedFieldsJson = JsonSerializer.Serialize(changes)
+                });
 
                 return (mappedEvent, "updated", $"Updated - [{existingEvent.Title}]({existingEvent.Id})");
             }
@@ -170,36 +181,47 @@ public class IngestionService(
         }
     }
 
-    private static void UpdateEventFields(Event current, Event incoming, ref bool updated)
+    private static List<UpdateResult> UpdateEventFields(Event current, Event incoming)
     {
-        current.Title = UpdateIfChanged(current.Title, incoming.Title, ref updated);
-        current.Location = UpdateIfChanged(current.Location, incoming.Location, ref updated);
-        current.Description = UpdateIfChanged(current.Description, incoming.Description, ref updated);
-        current.Category = UpdateIfChanged(current.Category, incoming.Category, ref updated);
+        var changes = new List<UpdateResult>();
 
-        current.StartUtc = UpdateIfChanged(current.StartUtc, incoming.StartUtc, ref updated);
-        current.EndUtc = UpdateIfChanged(current.EndUtc, incoming.EndUtc, ref updated);
+        current.Title = Update("Title", current.Title, incoming.Title, changes);
+        current.Location = Update("Location", current.Location, incoming.Location, changes);
+        current.Description = Update("Description", current.Description, incoming.Description, changes);
+        current.Category = Update("Category", current.Category, incoming.Category, changes);
 
-        current.MinPrice = UpdateIfChanged(current.MinPrice, incoming.MinPrice, ref updated);
-        current.MaxPrice = UpdateIfChanged(current.MaxPrice, incoming.MaxPrice, ref updated);
+        current.StartUtc = Update("StartUtc", current.StartUtc, incoming.StartUtc, changes);
+        current.EndUtc = Update("EndUtc", current.EndUtc, incoming.EndUtc, changes);
 
-        current.ImageUrl = UpdateIfChanged(current.ImageUrl, incoming.ImageUrl, ref updated);
-        current.DetailsUrl = UpdateIfChanged(current.DetailsUrl, incoming.DetailsUrl, ref updated);
-        current.TicketUrl = UpdateIfChanged(current.TicketUrl, incoming.TicketUrl, ref updated);
+        current.MinPrice = Update("MinPrice", current.MinPrice, incoming.MinPrice, changes);
+        current.MaxPrice = Update("MaxPrice", current.MaxPrice, incoming.MaxPrice, changes);
+
+        current.ImageUrl = Update("ImageUrl", current.ImageUrl, incoming.ImageUrl, changes);
+        current.DetailsUrl = Update("DetailsUrl", current.DetailsUrl, incoming.DetailsUrl, changes);
+        current.TicketUrl = Update("TicketUrl", current.TicketUrl, incoming.TicketUrl, changes);
+
+        return changes;
     }
 
-    private static T UpdateIfChanged<T>(T current, T incoming, ref bool updated)
+    private static T Update<T>(
+        string field,
+        T current,
+        T incoming,
+        List<UpdateResult> changes)
     {
         if (!EqualityComparer<T>.Default.Equals(current, incoming) &&
             !EqualityComparer<T>.Default.Equals(incoming, default))
         {
-            updated = true;
+            changes.Add(new UpdateResult(
+                Updated: true,
+                Field: field,
+                OldValue: current?.ToString(),
+                NewValue: incoming?.ToString()
+            ));
 
             return incoming;
         }
 
         return current;
     }
-
-    record UpdateResult(bool Updated, string Field, string? OldValue, string? NewValue);
 }
