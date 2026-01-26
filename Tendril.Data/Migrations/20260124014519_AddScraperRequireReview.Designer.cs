@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tendril.Data;
 
@@ -11,9 +12,11 @@ using Tendril.Data;
 namespace Tendril.Data.Migrations
 {
     [DbContext(typeof(TendrilDbContext))]
-    partial class TendrilDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260124014519_AddScraperRequireReview")]
+    partial class AddScraperRequireReview
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -38,6 +41,12 @@ namespace Tendril.Data.Migrations
                     b.Property<string>("DetailsUrl")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("Disabled")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset?>("DisabledAtUtc")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<DateTimeOffset?>("EndUtc")
                         .HasColumnType("datetimeoffset");
 
@@ -54,6 +63,9 @@ namespace Tendril.Data.Migrations
                     b.Property<decimal?>("MinPrice")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<bool>("Pending")
+                        .HasColumnType("bit");
+
                     b.Property<DateTimeOffset>("ScrapedAtUtc")
                         .HasColumnType("datetimeoffset");
 
@@ -61,13 +73,6 @@ namespace Tendril.Data.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("StartUtc")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset?>("StatusAtUtc")
                         .HasColumnType("datetimeoffset");
 
                     b.Property<string>("TicketUrl")
@@ -336,9 +341,6 @@ namespace Tendril.Data.Migrations
 
                     b.Property<int?>("Delay")
                         .HasColumnType("int");
-
-                    b.Property<bool>("Disabled")
-                        .HasColumnType("bit");
 
                     b.Property<string>("FieldName")
                         .IsRequired()

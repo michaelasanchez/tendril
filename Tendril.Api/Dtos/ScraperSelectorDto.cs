@@ -11,5 +11,6 @@ public record ScraperSelectorDto(
     int? Delay,
     string? InteractionValue,
     Guid? ChildScraperId,
-    bool IsPaginationTrigger
+    bool IsPaginationTrigger,
+    bool Disabled
 );

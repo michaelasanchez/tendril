@@ -1,4 +1,5 @@
 import cn from 'classnames';
+import { useState } from 'react';
 import { Navbar as BootstrapNavbar, Container } from 'react-bootstrap';
 import type { AppTheme } from '../../hooks';
 import { cardStyles } from '../../styles';
@@ -10,7 +11,16 @@ interface Props {
   onThemeToggle: () => void;
 }
 
+const test = [
+  // 'Built for locals, by locals',
+  'Find. Share. Enjoy.',
+  'Your neighborhood, all in one place',
+  // 'Everything, everywhere, locally',
+  // 'Find. Share. Go.',
+];
+
 export const Navbar: React.FC<Props> = ({ theme, onThemeToggle }) => {
+  const [b, setB] = useState<number>(0);
   return (
     <BootstrapNavbar className={styles.Navbar}>
       <Container>
@@ -19,9 +29,12 @@ export const Navbar: React.FC<Props> = ({ theme, onThemeToggle }) => {
             <Icon name="calendar" size={24} />
           </div>
           <div className={styles.Brand}>
-            <h3>Local Events</h3>
-            <div className={styles.Caption}>
-              Discover what's happening in your city
+            <h3>Hello Local</h3>
+            <div
+              onClick={() => setB((l) => (l + 1) % test.length)}
+              className={styles.Caption}
+            >
+              {test[b]}
             </div>
           </div>
         </div>

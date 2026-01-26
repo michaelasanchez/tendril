@@ -1,6 +1,6 @@
 ﻿namespace Tendril.Engine.Models;
 
-public record UpdateResult(
+public record RevisionResult(
     bool Updated,
     string Field,
     string? OldValue,

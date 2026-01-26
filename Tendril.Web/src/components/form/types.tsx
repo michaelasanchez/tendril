@@ -26,7 +26,7 @@ export interface FormCheckProps {
   className?: string;
   label: string;
   checked: boolean;
-  onChange: (checked: boolean) => void;
+  onChange?: (checked: boolean) => void;
   type?: FormCheckType;
   disabled?: boolean;
   inline?: boolean;

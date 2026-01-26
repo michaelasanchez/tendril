@@ -1,4 +1,6 @@
-﻿namespace Tendril.Core.Domain.Entities;
+﻿using Tendril.Core.Domain.Enums;
+
+namespace Tendril.Core.Domain.Entities;
 
 public class Event
 {
@@ -27,9 +29,9 @@ public class Event
     public string? ImageUrl { get; set; }
     public string? TicketUrl { get; set; }
 
+    public EventStatus Status { get; set; }
+
     public DateTimeOffset ScrapedAtUtc { get; set; }
     public DateTimeOffset? UpdatedAtUtc { get; set; }
-    public DateTimeOffset? DisabledAtUtc { get; set; }
-
-    public bool Disabled { get; set; }
+    public DateTimeOffset? StatusAtUtc { get; set; }
 }

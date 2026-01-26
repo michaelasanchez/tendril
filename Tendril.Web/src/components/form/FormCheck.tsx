@@ -14,7 +14,7 @@ export const FormCheck: React.FC<FormCheckProps> = ({
     type="checkbox"
     label={label}
     checked={checked}
-    onChange={(e) => onChange(e.target.checked)}
+    onChange={(e) => onChange?.(e.target.checked)}
     inline={inline}
     disabled={disabled}
   />

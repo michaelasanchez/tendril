@@ -27,5 +27,8 @@ public class EventConfig : IEntityTypeConfiguration<Event>
 
         builder.Property(x => x.ImageUrl)
             .HasMaxLength(500);
+
+        builder.Property(x => x.Status)
+            .HasConversion<string>();
     }
 }

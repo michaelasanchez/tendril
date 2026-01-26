@@ -23,6 +23,7 @@ public class ApiMappingProfile : Profile
 
         CreateMap<Event, EventDto>()
             .ForMember(d => d.VenueName, opt => opt.MapFrom(s => s.Venue!.Name))
-            .ForMember(d => d.VenueUrl, opt => opt.MapFrom(s => s.Venue!.Website));
+            .ForMember(d => d.VenueUrl, opt => opt.MapFrom(s => s.Venue!.Website))
+            .ForMember(d => d.UpdatedUtc, opt => opt.MapFrom(s => s.UpdatedAtUtc));
     }
 }

@@ -1,7 +1,13 @@
 import {
+  ArrowDownFromLine,
+  ArrowUpToLine,
   Calendar,
+  CloudDownload,
+  CloudUpload,
   Edit,
   ExternalLink,
+  Eye,
+  EyeOff,
   Funnel,
   Heart,
   MapPin,
@@ -12,22 +18,30 @@ import {
   Ticket,
   Trash,
   X,
+  Zap,
+  ZapOff,
 } from 'lucide-react';
 
 const Icons = {
   calendar: Calendar,
   close: X,
   dark: Moon,
+  disabled: ZapOff,
   edit: Edit,
+  enable: Zap,
   external: ExternalLink,
   favorite: Heart,
   filter: Funnel,
+  invisible: EyeOff,
   light: Sun,
   location: MapPin,
+  publish: CloudUpload,
   remove: Trash,
   run: Play,
   sliders: SlidersHorizontal,
   ticket: Ticket,
+  unpublish: CloudDownload,
+  visible: Eye,
 };
 
 export type IconName = keyof typeof Icons;

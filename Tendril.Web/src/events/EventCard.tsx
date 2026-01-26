@@ -1,13 +1,13 @@
 import cn from 'classnames';
 import { format } from 'date-fns';
 import { Card } from 'react-bootstrap';
+import NoImage from '../assets/no-image.svg';
 import { Badge } from '../components/badge';
 import { IconButton } from '../components/button';
 import { Icon } from '../components/Icon';
 import { cardStyles } from '../styles';
 import type { Event } from '../types/api';
 import styles from './EventCard.module.css';
-import NoImage from './no-image.svg';
 
 interface Props {
   event: Event;
@@ -17,51 +17,6 @@ interface Props {
   onFavorite?: () => void;
 }
 
-export const fakeCategories = [
-  'EXCITING',
-  'AMAZING',
-  'AWESOME',
-  'GREAT',
-  'SPECTACULAR',
-  'FANTASTIC',
-  'INCREDIBLE',
-  'MIND-BLOWING',
-  'UNBELIEVABLE',
-  'WONDERFUL',
-  'STUNNING',
-  'MAGNIFICENT',
-  'BREATH-TAKING',
-  'ASTONISHING',
-  'PHENOMENAL',
-  'MARVELOUS',
-  'SENSATIONAL',
-  'TREMENDOUS',
-  'EXHILARATING',
-  'THRILLING',
-  'RIVETING',
-  'CAPTIVATING',
-  'ENTHRALLING',
-  'GRIPPING',
-  'ENGAGING',
-  'FASCINATING',
-  'CHARMING',
-  'DELIGHTFUL',
-  'ENCHANTING',
-  'GLORIOUS',
-  'RADIANT',
-  'DAZZLING',
-  'BRILLIANT',
-  'LUMINOUS',
-  'VIBRANT',
-  'ELECTRIFYING',
-  'DYNAMIC',
-  'ENERGETIC',
-  'VIVACIOUS',
-  'SPIRITED',
-  'ZESTY',
-  'EXUBERANT',
-];
-
 export const EventCard: React.FC<Props> = ({
   className,
   event,
@@ -69,6 +24,7 @@ export const EventCard: React.FC<Props> = ({
   onClick,
   onFavorite,
 }) => {
+  console.log(event.category, !!event.category);
   return (
     <Card
       key={event.id}
@@ -97,13 +53,9 @@ export const EventCard: React.FC<Props> = ({
             />
           </div>
           <div className={styles.TopRight}>
-            <Badge className={styles.Uppercase}>
-              {event.category ??
-                fakeCategories[
-                  (event.title.length + new Date(event.startUtc).getDate()) %
-                    fakeCategories.length
-                ]}
-            </Badge>
+            {!!event.category && (
+              <Badge className={styles.Uppercase}>{event.category}</Badge>
+            )}
           </div>
         </div>
       </div>

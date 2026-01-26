@@ -24,4 +24,6 @@ public class ScraperSelector
     public Guid? ChildScraperDefinitionId { get; set; }
 
     public bool IsPaginationTrigger { get; set; }
+
+    public bool Disabled { get; set; } = false;
 }

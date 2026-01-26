@@ -72,6 +72,11 @@ public class IngestionService(
 
                     if (mappedEvent is not null)
                     {
+                        if (scraper.RequireReview)
+                        {
+                            mappedEvent.Status = EventStatus.Pending;
+                        }
+
                         mappedEntities.Add(mappedEvent);
                     }
 
@@ -146,11 +151,12 @@ public class IngestionService(
 
         if (existingEvent is not null)
         {
-            var changes = UpdateEventFields(existingEvent, mappedEvent);
+            var revisions = ReviseEventFields(existingEvent, mappedEvent);
 
-            if (changes.Any())
+            if (revisions is { Count: > 0 })
             {
                 existingEvent.UpdatedAtUtc = DateTimeOffset.UtcNow;
+
                 rawEntity.EventId = existingEvent.Id;
 
                 await events.UpdateAsync(existingEvent);
@@ -163,7 +169,7 @@ public class IngestionService(
                     RawEventId = rawEntity.Id,
                     Reason = EventRevisionReason.FieldUpdate,
                     ChangedAtUtc = DateTimeOffset.UtcNow,
-                    ChangedFieldsJson = JsonSerializer.Serialize(changes)
+                    ChangedFieldsJson = JsonSerializer.Serialize(revisions)
                 });
 
                 return (mappedEvent, "updated", $"Updated - [{existingEvent.Title}]({existingEvent.Id})");
@@ -173,17 +179,17 @@ public class IngestionService(
         }
         else
         {
-            await events.AddAsync(mappedEvent);
-
             rawEntity.EventId = mappedEvent.Id;
+
+            await events.AddAsync(mappedEvent);
 
             return (mappedEvent, "created", $"Created - [{mappedEvent.Title}]({mappedEvent.Id})");
         }
     }
 
-    private static List<UpdateResult> UpdateEventFields(Event current, Event incoming)
+    private static List<RevisionResult> ReviseEventFields(Event current, Event incoming)
     {
-        var changes = new List<UpdateResult>();
+        var changes = new List<RevisionResult>();
 
         current.Title = Update("Title", current.Title, incoming.Title, changes);
         current.Location = Update("Location", current.Location, incoming.Location, changes);
@@ -207,12 +213,12 @@ public class IngestionService(
         string field,
         T current,
         T incoming,
-        List<UpdateResult> changes)
+        List<RevisionResult> changes)
     {
         if (!EqualityComparer<T>.Default.Equals(current, incoming) &&
             !EqualityComparer<T>.Default.Equals(incoming, default))
         {
-            changes.Add(new UpdateResult(
+            changes.Add(new RevisionResult(
                 Updated: true,
                 Field: field,
                 OldValue: current?.ToString(),

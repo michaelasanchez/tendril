@@ -1,7 +1,6 @@
 import cn from 'classnames';
-import { format, parse } from 'date-fns';
 import { useMemo } from 'react';
-import { EventCard } from '.';
+import { EventCard, EventGrouper } from '.';
 import type { Event, Guid } from '../types/api';
 import styles from './EventList.module.css';
 
@@ -13,11 +12,6 @@ interface EventListProps {
   onFavorite?: (event: Event) => void;
 }
 
-interface EventGroup {
-  label: string;
-  events: Event[];
-}
-
 export const EventList: React.FC<EventListProps> = ({
   className,
   events,
@@ -25,7 +19,7 @@ export const EventList: React.FC<EventListProps> = ({
   onEventClick,
   onFavorite,
 }) => {
-  const groups = useMemo(() => groupEventsByDay(events), [events]);
+  const groups = useMemo(() => EventGrouper.byDay(events), [events]);
 
   return (
     <div className={cn(styles.EventList, className)}>
@@ -48,28 +42,4 @@ export const EventList: React.FC<EventListProps> = ({
       ))}
     </div>
   );
-
-  function groupEventsByDay(events: Event[]): EventGroup[] {
-    const grouped = events.reduce((groups, event) => {
-      const dateKey = event.startUtc.split('T')[0];
-      if (!groups[dateKey]) {
-        groups[dateKey] = [];
-      }
-
-      groups[dateKey].push(event);
-
-      return groups;
-    }, {} as Record<string, Event[]>);
-
-    return Object.keys(grouped)
-      .sort()
-      .map((g) => {
-        const dateObj = parse(g, 'yyyy-MM-dd', new Date());
-
-        return {
-          label: format(dateObj, 'MMM dd'),
-          events: grouped[g],
-        };
-      });
-  }
 };

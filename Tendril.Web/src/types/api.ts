@@ -56,6 +56,7 @@ export interface ScraperSelector {
   interactionValue: string | null;
   childScraperId: Guid | null;
   isPaginationTrigger: boolean;
+  disabled: boolean;
 }
 
 export type TransformType =
@@ -105,6 +106,8 @@ export interface ScraperAttemptHistory {
   errorMessage: string;
 }
 
+export type EventStatus = 'Pending' | 'Published' | 'Suppressed';
+
 export interface Event {
   id: Guid;
   title: string;
@@ -120,6 +123,8 @@ export interface Event {
   category: string | null;
   venueName: string | null;
   venueUrl: string | null;
+  status: EventStatus;
+  updatedUtc: string;
 }
 
 export interface ScrapeRunResponse {

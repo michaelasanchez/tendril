@@ -3,6 +3,16 @@
   td {
     background-color: transparent;
   }
+
+  tr.Disabled {
+    td {
+      color: rgba(38, 38, 38, 0.4);
+    }
+
+    /* td:not(.TableActions) {
+      opacity: 0.5;
+    } */
+  }
 }
 
 .TableActions {

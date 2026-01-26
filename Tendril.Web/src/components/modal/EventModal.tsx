@@ -1,6 +1,5 @@
 import { format } from 'date-fns';
 import { Modal } from 'react-bootstrap';
-import { fakeCategories } from '../../events';
 import type { Event } from '../../types/api';
 import { Badge } from '../badge';
 import { IconButton, SquareButton } from '../button';
@@ -41,13 +40,7 @@ export const EventModal: React.FC<Props> = ({ event, show, onHide }) => {
             <IconButton name="close" onClick={onHide} />
           </div>
           <div className={styles.BottomLeft}>
-            <Badge className={styles.Uppercase}>
-              {event.category ??
-                fakeCategories[
-                  (event.title.length + new Date(event.startUtc).getDate()) %
-                    fakeCategories.length
-                ]}
-            </Badge>
+            {event.category && <Badge className={styles.Uppercase} />}
           </div>
         </Modal.Header>
       )}

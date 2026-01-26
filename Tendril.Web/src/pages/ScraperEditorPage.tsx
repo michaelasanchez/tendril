@@ -11,6 +11,7 @@ import {
   ScraperRunsTab,
   ScraperSelectorsTab,
 } from '../scrapers';
+import { ScraperOutputTab } from '../scrapers/ScraperOutputTab';
 import { cardStyles, formStyles, pageStyles } from '../styles';
 import type {
   ExecutionMode,
@@ -24,7 +25,7 @@ import type {
 } from '../types/api';
 import styles from './ScraperEditorPage.module.css';
 
-type TabKey = 'general' | 'selectors' | 'mapping' | 'runs';
+type TabKey = 'general' | 'selectors' | 'mapping' | 'runs' | 'output';
 
 const toOptions = (arr: string[]) =>
   arr.map((item) => ({ value: item, label: item }));
@@ -190,6 +191,13 @@ export const ScraperEditorPage: React.FC = () => {
           >
             Runs
           </Button>
+          <Button
+            variant={eventKey == 'output' ? 'active' : 'default'}
+            disabled={isNew}
+            onClick={() => setEventKey('output')}
+          >
+            Output
+          </Button>
         </div>
 
         <Tab.Content>
@@ -315,6 +323,10 @@ export const ScraperEditorPage: React.FC = () => {
               attempts={attempts}
               onComplete={loadAttemptHistories}
             />
+          </Tab.Pane>
+
+          <Tab.Pane eventKey="output">
+            <ScraperOutputTab scraperId={scraperId as Guid} />
           </Tab.Pane>
         </Tab.Content>
       </Tab.Container>

@@ -177,7 +177,7 @@ th {
   font-size: var(--text-sm);
 }
 
-a:not(class*='button') {
+a:not([href]) {
   color: var(--accent);
   font-family: var(--font-mono);
   font-size: var(--text-xs);

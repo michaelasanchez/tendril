@@ -16,12 +16,6 @@ type SortKey =
 
 type SortDirection = 'asc' | 'desc';
 
-interface ScraperGroup {
-  key: string;
-  order: number;
-  scrapers: ScraperDefinition[];
-}
-
 export const ScrapersPage: React.FC = () => {
   const [scrapers, setScrapers] = useState<ScraperDefinition[]>([]);
   const [loading, setLoading] = useState(false);

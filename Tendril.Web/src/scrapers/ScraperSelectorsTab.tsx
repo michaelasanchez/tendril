@@ -3,6 +3,7 @@ import { Card, Form, Table } from 'react-bootstrap';
 import { ScrapersApi } from '../api/scrapers';
 import { SquareButton as Button } from '../components/button';
 import { FormCheck, FormInput, FormSelect } from '../components/form';
+import { Icon } from '../components/Icon';
 import { cardStyles, formStyles, pageStyles, tableStyles } from '../styles';
 import type { Guid, ScraperSelector, SelectorType } from '../types/api';
 
@@ -98,6 +99,7 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
         interactionValue: editing.interactionValue ?? null,
         childScraperId: editing.childScraperId ?? null,
         isPaginationTrigger: editing.isPaginationTrigger ?? false,
+        disabled: editing.disabled ?? false,
       });
     } else if (editing.id) {
       await ScrapersApi.updateSelector(scraperId, editing.id, {
@@ -114,6 +116,7 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
         interactionValue: editing.interactionValue ?? null,
         childScraperId: editing.childScraperId ?? null,
         isPaginationTrigger: editing.isPaginationTrigger ?? false,
+        disabled: editing.disabled ?? false,
       });
     }
     await load();
@@ -156,7 +159,7 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
               {selectors
                 .sort((a, b) => a.order - b.order)
                 .map((s) => (
-                  <tr key={s.id}>
+                  <tr key={s.id} className={s.disabled ? tableStyles.Disabled : ''}>
                     <td>{s.fieldName}</td>
                     <td>
                       <code>{s.selector}</code>
@@ -175,12 +178,14 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
                     <td>{s.isPaginationTrigger ? 'Yes' : ''}</td>
                     <td className={tableStyles.TableActions}>
                       <div>
-                        <Button onClick={() => startEdit(s)}>Edit</Button>
+                        <Button onClick={() => startEdit(s)}>
+                          <Icon name="edit" />
+                        </Button>
                         <Button
                           variant="outline-danger"
                           onClick={() => remove(s)}
                         >
-                          Delete
+                          <Icon name="remove" />
                         </Button>
                       </div>
                     </td>
@@ -283,6 +288,11 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
                     }
                   />
                 )}
+                <FormCheck
+                  label="Disabled"
+                  checked={editing.disabled ?? false}
+                  onChange={(disabled) => setEditing({ ...editing, disabled })}
+                />
                 <div className={formStyles.buttonRow}>
                   <Button variant="primary" onClick={save}>
                     Save

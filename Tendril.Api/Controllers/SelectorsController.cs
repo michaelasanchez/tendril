@@ -31,7 +31,8 @@ public class SelectorsController : ControllerBase
             s.Delay,
             s.InteractionValue,
             s.ChildScraperDefinitionId,
-            s.IsPaginationTrigger
+            s.IsPaginationTrigger,
+            s.Disabled
         )));
     }
 
@@ -52,6 +53,7 @@ public class SelectorsController : ControllerBase
             InteractionValue = request.InteractionValue,
             ChildScraperDefinitionId = request.ChildScraperId,
             IsPaginationTrigger = request.IsPaginationTrigger,
+            Disabled = request.Disabled
         };
 
         await _selectors.AddAsync(selector, cancellationToken);
@@ -75,7 +77,8 @@ public class SelectorsController : ControllerBase
         selector.Delay = request.Delay;
         selector.InteractionValue = request.InteractionValue;
         selector.ChildScraperDefinitionId = request.ChildScraperId;
-        selector.IsPaginationTrigger = request.IsPaginationTrigger;
+        selector.IsPaginationTrigger = request.IsPaginationTrigger ?? selector.IsPaginationTrigger;
+        selector.Disabled = request.Disabled ?? selector.Disabled;
 
         await _selectors.UpdateAsync(selector, cancellationToken);
 

@@ -14,7 +14,7 @@ import styles from './EventsPage.module.css';
 type View = 'list' | 'map' | 'calendar';
 
 export const EventsPage: React.FC = () => {
-  const [view, setView] = useState<View>('list');
+  const [view] = useState<View>('list');
   const [showFilters, setShowFilters] = useState<boolean>();
   const [events, setEvents] = useState<Event[]>([]);
   const [activeEvent, setActiveEvent] = useState<Event | null>(null);

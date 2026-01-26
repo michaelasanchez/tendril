@@ -14,4 +14,5 @@ public class CreateSelectorRequest
     public string? InteractionValue { get; set; }
     public Guid? ChildScraperId { get; set; }
     public bool IsPaginationTrigger { get; set; }
+    public bool Disabled { get; set; }
 }
