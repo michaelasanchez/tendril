@@ -13,7 +13,8 @@ public record MappingRuleDto(
     string? Format = null,
     string? RegexPattern = null,
     string? RegexReplacement = null,
-    string? SplitDelimiter = null
+    string? SplitDelimiter = null,
+    bool Disabled = false
 );
 
 public class CreateMappingRuleRequest
@@ -28,6 +29,7 @@ public class CreateMappingRuleRequest
     public string? RegexPattern { get; set; }
     public string? RegexReplacement { get; set; }
     public string? SplitDelimiter { get; set; }
+    public bool Disabled { get; set; } = false;
 }
 
 public class UpdateMappingRuleRequest
@@ -42,4 +44,5 @@ public class UpdateMappingRuleRequest
     public string? RegexPattern { get; set; }
     public string? RegexReplacement { get; set; }
     public string? SplitDelimiter { get; set; }
+    public bool? Disabled { get; set; }
 }

@@ -89,6 +89,7 @@ export interface ScraperMappingRule {
   regexPattern: string | null;
   regexReplacement: string | null;
   splitDelimiter: string | null;
+  disabled: boolean;
 }
 
 export interface ScraperAttemptHistory {

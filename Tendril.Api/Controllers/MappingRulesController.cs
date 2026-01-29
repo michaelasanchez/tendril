@@ -25,7 +25,8 @@ public class MappingRulesController(IMappingRuleRepository rules) : ControllerBa
             r.Format,
             r.RegexPattern,
             r.RegexReplacement,
-            r.SplitDelimiter
+            r.SplitDelimiter,
+            r.Disabled
         ));
 
         return Ok(dtos);
@@ -47,7 +48,8 @@ public class MappingRulesController(IMappingRuleRepository rules) : ControllerBa
             Format = request.Format,
             RegexPattern = request.RegexPattern,
             RegexReplacement = request.RegexReplacement,
-            SplitDelimiter = request.SplitDelimiter
+            SplitDelimiter = request.SplitDelimiter,
+            Disabled = request.Disabled
         };
 
         await rules.AddAsync(rule, cancellationToken);
@@ -63,7 +65,8 @@ public class MappingRulesController(IMappingRuleRepository rules) : ControllerBa
             rule.Format,
             rule.RegexPattern,
             rule.RegexReplacement,
-            rule.SplitDelimiter
+            rule.SplitDelimiter,
+            rule.Disabled
         );
 
         return CreatedAtAction(nameof(Get), new { scraperId }, dto);
@@ -79,12 +82,13 @@ public class MappingRulesController(IMappingRuleRepository rules) : ControllerBa
         if (request.SourceField is not null) rule.SourceField = request.SourceField;
         if (request.CombineWithField is not null) rule.CombineWithField = request.CombineWithField;
         if (request.Order is not null) rule.Order = request.Order.Value;
-        if (request.TransformType is not null) rule.TransformType = request.TransformType ?? Core.Domain.Enums.TransformType.None;
+        if (request.TransformType is not null) rule.TransformType = request.TransformType.Value;
         if (request.Format is not null) rule.Format = request.Format;
         if (request.ConstantValue is not null) rule.ConstantValue = request.ConstantValue;
         if (request.RegexPattern is not null) rule.RegexPattern = request.RegexPattern;
         if (request.RegexReplacement is not null) rule.RegexReplacement = request.RegexReplacement;
         if (request.SplitDelimiter is not null) rule.SplitDelimiter = request.SplitDelimiter;
+        if (request.Disabled is not null) rule.Disabled = request.Disabled.Value;
 
         await rules.UpdateAsync(rule, cancellationToken);
 

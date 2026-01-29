@@ -23,4 +23,6 @@ public class ScraperMappingRule
     public string? RegexPattern { get; set; }
     public string? RegexReplacement { get; set; }
     public string? SplitDelimiter { get; set; }
+
+    public bool Disabled { get; set; } = false;
 }

@@ -4,61 +4,61 @@ using Tendril.Core.Interfaces.Repositories;
 
 namespace Tendril.Data.Repositories;
 
-public class ScraperRepository : IScraperRepository
+public class ScraperRepository(TendrilDbContext db) : IScraperRepository
 {
-    private readonly TendrilDbContext _db;
-
-    public ScraperRepository(TendrilDbContext db)
-    {
-        _db = db;
-    }
-
     public async Task<List<ScraperDefinition>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await _db.Scrapers
+        return await db.Scrapers
             .AsNoTracking()
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<ScraperDefinition>> GetAllWithDetailsAsync(CancellationToken cancellationToken = default)
+    {
+        return await db.Scrapers
+            .Include(s => s.Selectors.Where(z => !z.Disabled))
+            .Include(s => s.MappingRules.Where(z => !z.Disabled))
             .ToListAsync(cancellationToken);
     }
 
     public async Task<ScraperDefinition?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await _db.Scrapers
+        return await db.Scrapers
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
 
-    public async Task<ScraperDefinition?> GetByIdWithDetailsAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<ScraperDefinition?> GetByIdWithDisabledDetailsAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await _db.Scrapers
+        return await db.Scrapers
             .Include(s => s.Selectors)
             .Include(s => s.MappingRules)
             .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
     }
 
+    public async Task<ScraperDefinition?> GetByIdWithDetailsAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await db.Scrapers
+            .Include(s => s.Selectors.Where(z => !z.Disabled))
+            .Include(s => s.MappingRules.Where(z => !z.Disabled))
+            .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+    }
+
     public async Task AddAsync(ScraperDefinition scraper, CancellationToken cancellationToken = default)
     {
-        _db.Scrapers.Add(scraper);
-        await _db.SaveChangesAsync(cancellationToken);
+        db.Scrapers.Add(scraper);
+        await db.SaveChangesAsync(cancellationToken);
     }
 
     public async Task UpdateAsync(ScraperDefinition scraper, CancellationToken cancellationToken = default)
     {
-        _db.Scrapers.Update(scraper);
-        await _db.SaveChangesAsync(cancellationToken);
+        db.Scrapers.Update(scraper);
+        await db.SaveChangesAsync(cancellationToken);
     }
 
     public async Task DeleteAsync(ScraperDefinition scraper, CancellationToken cancellationToken = default)
     {
-        _db.Scrapers.Remove(scraper);
-        await _db.SaveChangesAsync(cancellationToken);
-    }
-
-    // Used by Worker to pull full scraper config for execution
-    public async Task<List<ScraperDefinition>> GetAllWithDetailsAsync(CancellationToken cancellationToken = default)
-    {
-        return await _db.Scrapers
-            .Include(x => x.Selectors)
-            .Include(x => x.MappingRules)
-            .ToListAsync(cancellationToken);
+        db.Scrapers.Remove(scraper);
+        await db.SaveChangesAsync(cancellationToken);
     }
 }

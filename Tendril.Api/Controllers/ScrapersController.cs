@@ -23,7 +23,7 @@ public class ScrapersController(
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<ScraperDto>> GetById(Guid id, CancellationToken cancellationToken)
     {
-        var scraper = await scrapers.GetByIdWithDetailsAsync(id, cancellationToken);
+        var scraper = await scrapers.GetByIdWithDisabledDetailsAsync(id, cancellationToken);
 
         if (scraper is null) return NotFound();
 

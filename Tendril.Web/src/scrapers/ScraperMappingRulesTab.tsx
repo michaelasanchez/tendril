@@ -3,11 +3,13 @@ import { Card, Form, Table } from 'react-bootstrap';
 import { ScrapersApi } from '../api/scrapers';
 import { SquareButton as Button } from '../components/button';
 import {
+  FormCheck,
   FormInput,
   FormInputSelect,
   FormSelect,
   type SelectOption,
 } from '../components/form';
+import { Icon } from '../components/Icon';
 import { cardStyles, pageStyles, tableStyles } from '../styles';
 import formStyles from '../styles/Form.module.css';
 import type {
@@ -64,7 +66,7 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
   const [isNew, setIsNew] = useState(false);
 
   const [sourceFieldOptions, setSourceFieldOptions] = useState<SelectOption[]>(
-    []
+    [],
   );
 
   const load = async () => {
@@ -85,14 +87,14 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
     const eventTargetFields = targetFieldOptions.map((o) => o.value);
 
     const dynamicFields = ruleTargetFields.filter(
-      (r) => !eventTargetFields.includes(r)
+      (r) => !eventTargetFields.includes(r),
     );
 
     setSourceFieldOptions(
       [...sourceFields, ...dynamicFields].map((o) => ({
         value: o,
         label: o,
-      }))
+      })),
     );
   }, [rules, selectors]);
 
@@ -102,12 +104,13 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
       targetField: '',
       sourceField: '',
       combineWithField: '',
-      order: rules?.length ?? 0,
+      order: rules.filter((r) => !r.disabled)?.length ?? 0,
       transformType: 'None',
       constantValue: '',
       regexPattern: '',
       regexReplacement: '',
       splitDelimiter: '',
+      disabled: false,
     } as Partial<ScraperMappingRule>);
   };
 
@@ -136,6 +139,7 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
         regexPattern: editing.regexPattern ?? null,
         regexReplacement: editing.regexReplacement ?? null,
         splitDelimiter: editing.splitDelimiter ?? null,
+        disabled: editing.disabled ?? false,
       });
     } else if (editing.id) {
       await ScrapersApi.updateMappingRule(scraperId, editing.id, {
@@ -144,10 +148,12 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
         combineWithField: editing.combineWithField,
         order: editing.order,
         transformType: editing.transformType,
+        constantValue: editing.constantValue ?? null,
         format: editing.format ?? null,
         regexPattern: editing.regexPattern ?? null,
         regexReplacement: editing.regexReplacement ?? null,
         splitDelimiter: editing.splitDelimiter ?? null,
+        disabled: editing.disabled ?? false,
       });
     }
     await load();
@@ -188,7 +194,7 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
                         cur,
                       ]
                     : [cur],
-                [] as JSX.Element[]
+                [] as JSX.Element[],
               )}
           </div>
         </div>
@@ -218,7 +224,10 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
               {rules
                 .sort((a, b) => a.order - b.order)
                 .map((r) => (
-                  <tr key={r.id}>
+                  <tr
+                    key={r.id}
+                    className={r.disabled ? tableStyles.Disabled : ''}
+                  >
                     <td>{emphasizeDynamicFields(r.targetField)}</td>
                     <td>{emphasizeDynamicFields(r.sourceField)}</td>
                     <td>{emphasizeDynamicFields(r.combineWithField ?? '-')}</td>
@@ -231,12 +240,14 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
                     <td>{r.splitDelimiter}</td>
                     <td className={tableStyles.TableActions}>
                       <div>
-                        <Button onClick={() => startEdit(r)}>Edit</Button>
+                        <Button onClick={() => startEdit(r)}>
+                          <Icon name="edit" />
+                        </Button>
                         <Button
                           variant="outline-danger"
                           onClick={() => remove(r)}
                         >
-                          Delete
+                          <Icon name="remove" />
                         </Button>
                       </div>
                     </td>
@@ -302,20 +313,14 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
                 />
                 {editing.transformType === 'Combine' && (
                   <div className={formStyles.formGroup}>
-                    <FormInput
+                    <FormInputSelect
                       label="Combine With Field"
                       value={editing.combineWithField ?? ''}
-                      onChange={(combineWithField) =>
-                        setEditing({ ...editing, combineWithField })
-                      }
-                    />
-                    <FormSelect
-                      label="Selectors"
-                      value={editing.combineWithField ?? ''}
-                      onChange={(combineWithField) =>
-                        setEditing({ ...editing, combineWithField })
-                      }
                       options={sourceFieldOptions}
+                      clearable
+                      onChange={(combineWithField) =>
+                        setEditing({ ...editing, combineWithField })
+                      }
                     />
                   </div>
                 )}
@@ -380,6 +385,11 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
                     }
                   />
                 )}
+                <FormCheck
+                  label="Disabled"
+                  checked={editing.disabled ?? false}
+                  onChange={(disabled) => setEditing({ ...editing, disabled })}
+                />
                 <div className={formStyles.buttonRow}>
                   <Button variant="primary" onClick={save}>
                     Save
