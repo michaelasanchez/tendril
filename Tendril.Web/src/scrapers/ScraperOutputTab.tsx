@@ -11,6 +11,8 @@ import styles from './ScraperOutputTab.module.css';
 
 interface Props {
   scraperId: Guid;
+  events: Event[];
+  loadEvents: () => Promise<void>;
 }
 
 interface Stats {
@@ -19,20 +21,29 @@ interface Stats {
   suppressed: number;
 }
 
+interface Show {
+  pending: boolean;
+  published: boolean;
+  suppressed: boolean;
+}
+
 const defaultStats = () => ({
   pending: 0,
   published: 0,
   suppressed: 0,
 });
 
-export const ScraperOutputTab: React.FC<Props> = ({ scraperId }) => {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [showSuppressed, setShowDisabled] = useState<boolean>(true);
+export const ScraperOutputTab: React.FC<Props> = ({ scraperId, events, loadEvents }) => {
+  const [show, setShow] = useState<Show>({
+    pending: true,
+    published: true,
+    suppressed: false,
+  });
   const [stats, setStats] = useState<Stats>(defaultStats());
 
-  const load = async () => {
+  useEffect(() => {
     if (scraperId !== 'new') {
-      const events = await EventsApi.getByScraperId(scraperId);
+      
 
       const stats = events.reduce((a, c) => {
         if (c.status === 'Pending') {
@@ -47,24 +58,31 @@ export const ScraperOutputTab: React.FC<Props> = ({ scraperId }) => {
         return a;
       }, defaultStats());
 
-      setEvents(events);
-      // setStats(events.((a, c) => {}, ))
+      setStats(stats);
     }
-  };
+  }, [events]);
 
   useEffect(() => {
-    void load();
+    void loadEvents();
   }, [scraperId]);
 
   const filteredEvents = useMemo(() => {
     let filtered: Event[] = [...events];
 
-    if (!showSuppressed) {
+    if (!show.pending) {
+      filtered = filtered.filter((e) => e.status !== 'Pending');
+    }
+
+    if (!show.published) {
+      filtered = filtered.filter((e) => e.status !== 'Published');
+    }
+
+    if (!show.suppressed) {
       filtered = filtered.filter((e) => e.status !== 'Suppressed');
     }
 
     return filtered;
-  }, [events, showSuppressed]);
+  }, [events, show]);
 
   return (
     <>
@@ -72,12 +90,37 @@ export const ScraperOutputTab: React.FC<Props> = ({ scraperId }) => {
         <h3>Output</h3>
       </div>
       <Card className={cardStyles.BgCard} style={{ marginBottom: '1em' }}>
-        <Card.Body>
-          <FormCheck
-            label="Show Suppressed"
-            checked={showSuppressed}
-            onChange={() => setShowDisabled(!showSuppressed)}
-          />
+        <Card.Body
+          style={{
+            display: 'flex',
+            gap: '1em',
+            justifyContent: 'space-between',
+          }}
+        >
+          <div>
+            <div>Pending: {stats.pending}</div>
+            <div>Published: {stats.published}</div>
+            <div>Suppressed: {stats.suppressed}</div>
+          </div>
+          <div>
+            <FormCheck
+              label="Show Pending"
+              checked={show.pending}
+              onChange={() => setShow({ ...show, pending: !show.pending })}
+            />
+            <FormCheck
+              label="Show Published"
+              checked={show.published}
+              onChange={() => setShow({ ...show, published: !show.published })}
+            />
+            <FormCheck
+              label="Show Suppressed"
+              checked={show.suppressed}
+              onChange={() =>
+                setShow({ ...show, suppressed: !show.suppressed })
+              }
+            />
+          </div>
         </Card.Body>
       </Card>
       <div
@@ -99,6 +142,8 @@ export const ScraperOutputTab: React.FC<Props> = ({ scraperId }) => {
                 flexDirection: 'row',
                 flexGrow: 1,
                 opacity: e.status === 'Suppressed' ? 0.4 : 1,
+                border:
+                  e.status === 'Pending' ? '2px dashed orange' : undefined,
               }}
             >
               {
@@ -122,7 +167,7 @@ export const ScraperOutputTab: React.FC<Props> = ({ scraperId }) => {
                 onClick={() =>
                   EventsApi.patch(e.id, {
                     status: e.status === 'Pending' ? 'Published' : 'Pending',
-                  }).then(() => load())
+                  }).then(() => loadEvents())
                 }
               >
                 <Icon name={e.status === 'Pending' ? 'publish' : 'unpublish'} />
@@ -133,7 +178,7 @@ export const ScraperOutputTab: React.FC<Props> = ({ scraperId }) => {
                   EventsApi.patch(e.id, {
                     status:
                       e.status === 'Published' ? 'Suppressed' : 'Published',
-                  }).then(() => load())
+                  }).then(() => loadEvents())
                 }
               >
                 <Icon

@@ -9,8 +9,14 @@ async function handleResponse<T>(res: Response): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export async function apiGet<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`, { credentials: 'include' });
+export async function apiGet<T>(
+  path: string,
+  signal?: AbortSignal,
+): Promise<T> {
+  const res = await fetch(`${BASE_URL}${path}`, {
+    credentials: 'include',
+    signal,
+  });
   return handleResponse<T>(res);
 }
 

@@ -1,6 +1,5 @@
-// src/api/venues.ts
-import { apiGet, apiPost, apiPut, apiDelete } from "./client";
-import type { Venue, Guid } from "../types/api";
+import type { Guid, Venue } from '../types/api';
+import { apiDelete, apiGet, apiPost, apiPut } from './client';
 
 export interface CreateVenueRequest {
   name: string;
@@ -11,12 +10,12 @@ export interface CreateVenueRequest {
 export interface UpdateVenueRequest extends Partial<CreateVenueRequest> {}
 
 export const VenuesApi = {
-  getAll(): Promise<Venue[]> {
-    return apiGet("/api/venues");
+  getAll(signal?: AbortSignal): Promise<Venue[]> {
+    return apiGet('/api/venues', signal);
   },
 
   create(req: CreateVenueRequest): Promise<Venue> {
-    return apiPost("/api/venues", req);
+    return apiPost('/api/venues', req);
   },
 
   update(id: Guid, req: UpdateVenueRequest): Promise<void> {
@@ -25,5 +24,5 @@ export const VenuesApi = {
 
   delete(id: Guid): Promise<void> {
     return apiDelete(`/api/venues/${id}`);
-  }
+  },
 };

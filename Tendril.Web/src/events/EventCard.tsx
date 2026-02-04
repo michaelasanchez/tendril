@@ -13,6 +13,7 @@ interface Props {
   event: Event;
   className?: string | CSSModuleClasses;
   favorite?: boolean;
+  ref?: (node: HTMLDivElement | null) => void;
   onClick?: () => void;
   onFavorite?: () => void;
 }
@@ -21,14 +22,15 @@ export const EventCard: React.FC<Props> = ({
   className,
   event,
   favorite,
+  ref,
   onClick,
   onFavorite,
 }) => {
-  console.log(event.category, !!event.category);
   return (
     <Card
       key={event.id}
       className={cn(cardStyles.BgCard, styles.EventCard, className)}
+      ref={ref}
       onClick={onClick}
     >
       <div className={cn(styles.CardHeader, !event.imageUrl && styles.NoImage)}>

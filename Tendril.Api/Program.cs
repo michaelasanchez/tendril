@@ -38,14 +38,15 @@ builder.Services.AddAutoMapper(
     typeof(ApiMappingProfile).Assembly       // scan this assembly for profiles
 );
 
+// TODO: move this to configuration
+var origins = new[] { "http://localhost:5173", "https://hl.michaelsanchez.dev" };
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowVite",
         policy =>
         {
-            policy.WithOrigins(
-                    "http://localhost:5173",
-                    "https://hl.michaelsanchez.dev")
+            policy.WithOrigins(origins)
                   .AllowAnyHeader()
                   .AllowAnyMethod()
                   .AllowCredentials();

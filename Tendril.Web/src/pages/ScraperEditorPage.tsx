@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Form, Tab } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
+import { EventsApi } from '../api/events';
 import { ScrapersApi } from '../api/scrapers';
 import { VenuesApi } from '../api/venues';
 import { SquareButton as Button, SquareButton } from '../components/button';
@@ -14,6 +15,7 @@ import {
 import { ScraperOutputTab } from '../scrapers/ScraperOutputTab';
 import { cardStyles, formStyles, pageStyles } from '../styles';
 import type {
+  Event,
   ExecutionMode,
   ExtractionStrategy,
   Guid,
@@ -48,10 +50,20 @@ const paginationTypeOptions = toOptions([
 export const ScraperEditorPage: React.FC = () => {
   const { scraperId } = useParams();
   const navigate = useNavigate();
+  const [events, setEvents] = useState<Event[]>([]);
   const [scraper, setScraper] = useState<ScraperDefinition | null>(null);
   const [venues, setVenues] = useState<Venue[]>([]);
   const [error, setError] = useState<string | null>(null);
   const isNew = scraperId === 'new';
+
+  /* Events */
+  const loadEvents = async () => {
+    if (!scraperId) return;
+
+    const events = await EventsApi.getByScraperId(scraperId);
+    setEvents(events);
+  };
+  /* Events */
 
   /* Selectors */
   const [selectors, setSelectors] = useState<ScraperSelector[]>([]);
@@ -61,7 +73,6 @@ export const ScraperEditorPage: React.FC = () => {
     const data = await ScrapersApi.getSelectors(scraperId);
     setSelectors(data);
   };
-
   /* Selectors */
 
   /* Attempts */
@@ -76,6 +87,7 @@ export const ScraperEditorPage: React.FC = () => {
 
   useEffect(() => {
     if (scraperId !== 'new') {
+      void loadEvents();
       void loadSelectors();
       void loadAttemptHistories();
     }
@@ -107,7 +119,7 @@ export const ScraperEditorPage: React.FC = () => {
             lastFailureUtc: null,
             lastErrorMessage: null,
             venueId: null,
-          }
+          },
         );
       } catch (e: any) {
         setError(e.message ?? 'Error loading scraper.');
@@ -232,7 +244,7 @@ export const ScraperEditorPage: React.FC = () => {
                       })
                     }
                     options={[{ value: '', label: '(none)' }].concat(
-                      venues.map((v) => ({ value: v.id, label: v.name }))
+                      venues.map((v) => ({ value: v.id, label: v.name })),
                     )}
                   />
 
@@ -321,12 +333,19 @@ export const ScraperEditorPage: React.FC = () => {
             <ScraperRunsTab
               scraperId={scraperId as Guid}
               attempts={attempts}
-              onComplete={loadAttemptHistories}
+              onComplete={() => {
+                loadEvents();
+                loadAttemptHistories();
+              }}
             />
           </Tab.Pane>
 
           <Tab.Pane eventKey="output">
-            <ScraperOutputTab scraperId={scraperId as Guid} />
+            <ScraperOutputTab
+              scraperId={scraperId as Guid}
+              events={events}
+              loadEvents={loadEvents}
+            />
           </Tab.Pane>
         </Tab.Content>
       </Tab.Container>

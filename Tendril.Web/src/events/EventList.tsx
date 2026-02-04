@@ -8,6 +8,7 @@ interface EventListProps {
   className?: string;
   events: Event[];
   favorites?: Set<Guid>;
+  lastRef?: (node: HTMLDivElement | null) => void;
   onEventClick?: (event: Event) => void;
   onFavorite?: (event: Event) => void;
 }
@@ -16,6 +17,7 @@ export const EventList: React.FC<EventListProps> = ({
   className,
   events,
   favorites,
+  lastRef,
   onEventClick,
   onFavorite,
 }) => {
@@ -33,6 +35,7 @@ export const EventList: React.FC<EventListProps> = ({
                 className={styles.EventCard}
                 event={e}
                 favorite={favorites?.has(e.id)}
+                ref={e === g.events[g.events.length - 1] ? lastRef : undefined}
                 onClick={() => onEventClick?.(e)}
                 onFavorite={() => onFavorite?.(e)}
               />

@@ -1,25 +1,20 @@
 import cn from 'classnames';
 import { Card } from 'react-bootstrap';
+import type { EventFilter } from '../api/events';
 import { Button } from '../components/button';
 import { FormInput } from '../components/form';
 import { Icon } from '../components/Icon';
 import cardStyles from '../styles/Card.module.css';
+import type { Venue } from '../types/api';
 import styles from './FiltersCard.module.css';
-
-export interface EventFilter {
-  title?: string;
-  startDate?: string;
-  endDate?: string;
-  favoritesOnly?: boolean;
-  category?: string | null;
-  location?: string | null;
-}
 
 interface Props {
   className?: string;
+  favoritesOnly?: boolean;
   filter: EventFilter;
-  locations: string[];
+  venues: Venue[];
   onChange: (update: Partial<EventFilter>) => void;
+  onToggleFavoritesOnly: () => void;
 }
 
 const categories = [
@@ -34,9 +29,11 @@ const categories = [
 
 export const FiltersCard: React.FC<Props> = ({
   className,
+  favoritesOnly,
   filter,
-  locations,
+  venues,
   onChange,
+  onToggleFavoritesOnly,
 }) => {
   return (
     <Card className={cn(cardStyles.BgCard, styles.FiltersCard, className)}>
@@ -66,17 +63,14 @@ export const FiltersCard: React.FC<Props> = ({
           onChange={(endDate) => onChange({ endDate })}
         />
 
-        <div
-          className={styles.Checkbox}
-          onClick={() => onChange({ favoritesOnly: !filter.favoritesOnly })}
-        >
+        <div className={styles.Checkbox} onClick={onToggleFavoritesOnly}>
           <input
             className="form-check-input"
             type="checkbox"
-            checked={filter.favoritesOnly ?? false}
+            checked={favoritesOnly ?? false}
             onChange={(e) => {
               e.stopPropagation();
-              onChange({ favoritesOnly: !filter.favoritesOnly });
+              onToggleFavoritesOnly();
             }}
           />
           <label>Show Favorites Only</label>
@@ -85,41 +79,59 @@ export const FiltersCard: React.FC<Props> = ({
         <label>Category</label>
         <div className={styles.ButtonGroup}>
           <Button
-            variant={!filter.category ? 'active' : 'default'}
-            onClick={() => onChange({ category: null })}
+            variant={!filter.categories?.length ? 'active' : 'default'}
+            onClick={() => onChange({ categories: [] })}
           >
             All
           </Button>
 
-          {categories.map((c, i) => (
-            <Button
-              key={i}
-              variant={filter.category === c ? 'active' : 'default'}
-              onClick={() => onChange({ category: c })}
-            >
-              {c}
-            </Button>
-          ))}
+          {categories.map((c, i) => {
+            const active = filter.categories?.includes(c);
+            return (
+              <Button
+                key={i}
+                variant={active ? 'active' : 'default'}
+                onClick={() =>
+                  onChange({
+                    categories: active
+                      ? filter.categories?.filter((cat) => cat !== c)
+                      : [...(filter.categories ?? []), c],
+                  })
+                }
+              >
+                {c}
+              </Button>
+            );
+          })}
         </div>
 
         <label>Location</label>
         <div className={styles.ButtonGroup}>
           <Button
-            variant={!filter.location ? 'active' : 'default'}
-            onClick={() => onChange({ location: null })}
+            variant={!filter.venueIds?.length ? 'active' : 'default'}
+            onClick={() => onChange({ venueIds: [] })}
           >
             All Locations
           </Button>
 
-          {locations.map((l, i) => (
-            <Button
-              key={i}
-              variant={filter.location === l ? 'active' : 'default'}
-              onClick={() => onChange({ location: l })}
-            >
-              {l}
-            </Button>
-          ))}
+          {venues.map((v, i) => {
+            const active = filter.venueIds?.includes(v.id);
+            return (
+              <Button
+                key={i}
+                variant={active ? 'active' : 'default'}
+                onClick={() =>
+                  onChange({
+                    venueIds: active
+                      ? (filter.venueIds?.filter((id) => id !== v.id) ?? [])
+                      : [...(filter.venueIds ?? []), v.id],
+                  })
+                }
+              >
+                {v.name}
+              </Button>
+            );
+          })}
         </div>
       </Card.Body>
     </Card>

@@ -107,6 +107,12 @@ export interface ScraperAttemptHistory {
   errorMessage: string;
 }
 
+export interface PagedResponse {
+  items: Event[];
+  nextCursor: Guid | null;
+  hasNextPage: boolean;
+}
+
 export type EventStatus = 'Pending' | 'Published' | 'Suppressed';
 
 export interface Event {

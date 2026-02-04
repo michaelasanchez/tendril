@@ -1,15 +1,13 @@
-import {
-  differenceInDays,
-  differenceInHours,
-  differenceInMinutes,
-  differenceInSeconds,
-} from 'date-fns';
+import { differenceInDays, differenceInHours, differenceInMinutes, differenceInSeconds } from 'date-fns';
 import { useState } from 'react';
-import { Card, Spinner, Table } from 'react-bootstrap';
+import { Card, Table } from 'react-bootstrap';
+
 import { ScrapersApi } from '../api/scrapers';
 import { SquareButton as Button } from '../components/button';
+import { ElapsedClock } from '../components/ElapsedClock';
 import styles from '../pages/ScraperEditorPage.module.css';
 import { cardStyles, pageStyles, tableStyles } from '../styles';
+
 import type {
   Guid,
   ScraperAttemptHistory,
@@ -87,13 +85,8 @@ export const ScraperRunsTab: React.FC<Props> = ({
           </div>
 
           {loading && (
-            <div>
-              <div>
-                <Spinner animation="border" />
-                Running...
-              </div>
-              <div>{!!runStart && formatElapsed(runStart)}</div>
-            </div>
+            <ElapsedClock runStart={runStart} formatElapsed={formatElapsed} />
+            
           )}
 
           {result && (

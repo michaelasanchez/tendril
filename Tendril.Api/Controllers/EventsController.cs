@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Tendril.Api.Dtos;
+using Tendril.Core.Domain;
 using Tendril.Core.Domain.Enums;
 using Tendril.Core.Interfaces.Repositories;
+using Tendril.Data.Models;
 
 namespace Tendril.Api.Controllers;
 
@@ -11,14 +13,33 @@ namespace Tendril.Api.Controllers;
 public class EventsController(IEventRepository events, IMapper mapper) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<EventDto>>> GetAll(
+    public async Task<ActionResult<PagedResponse<EventDto>>> GetAll(
         [FromQuery] DateTimeOffset? startDate,
         [FromQuery] DateTimeOffset? endDate,
+        [FromQuery] string? title,
+        [FromQuery(Name = "category")] List<string>? categories,
+        [FromQuery(Name = "venue")] List<Guid>? venueIds,
+        [FromQuery] int? limit,
+        [FromQuery] Guid? cursor,
         CancellationToken cancellationToken)
     {
-        var list = await events.GetAllAsync(startDate ?? DateTime.Today, endDate, cancellationToken);
+        var filter = new EventFilter
+        {
+            StartDate = startDate ?? DateTime.Today,
+            EndDate = endDate,
+            Title = title,
+            Categories = categories,
+            VenueIds = venueIds
+        };
 
-        return Ok(mapper.Map<IEnumerable<EventDto>>(list));
+        var result = await events.GetAllAsync(filter, limit, cursor, cancellationToken);
+
+        return Ok(new PagedResponse<EventDto>
+        {
+            Items = mapper.Map<List<EventDto>>(result.Items),
+            NextCursor = result.NextCursor,
+            HasNextPage = result.HasNextPage
+        });
     }
 
     [HttpGet("{scraperId:guid}")]

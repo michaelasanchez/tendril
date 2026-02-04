@@ -8,7 +8,7 @@ import { ScrapersPage } from './pages/ScrapersPage';
 import { VenuesPage } from './pages/VenuesPage';
 
 export default function App() {
-  const { theme, toggleTheme } = useBootstrapTheme('light');
+  const { theme, toggleTheme } = useBootstrapTheme();
 
   return (
     <>

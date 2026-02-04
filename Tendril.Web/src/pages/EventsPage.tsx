@@ -1,24 +1,45 @@
 import cn from 'classnames';
-import { format, parse } from 'date-fns';
-import React, { useEffect, useMemo, useState } from 'react';
+import { format } from 'date-fns';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { Col, Container, Row } from 'react-bootstrap';
-import { EventsApi } from '../api/events';
+import { EventsApi, type EventFilter } from '../api/events';
+import { VenuesApi } from '../api/venues';
 import { SquareButton } from '../components/button';
 import { Icon } from '../components/Icon';
 import { EventModal } from '../components/modal';
-import { EventList, FiltersCard, type EventFilter } from '../events';
+import { EventList, FiltersCard } from '../events';
 import { pageStyles } from '../styles';
-import type { Event, Guid } from '../types/api';
+import type { Event, Guid, Venue } from '../types/api';
 import styles from './EventsPage.module.css';
 
 type View = 'list' | 'map' | 'calendar';
+
+interface Loading {
+  events: boolean;
+  venues: boolean;
+}
 
 export const EventsPage: React.FC = () => {
   const [view] = useState<View>('list');
   const [showFilters, setShowFilters] = useState<boolean>();
   const [events, setEvents] = useState<Event[]>([]);
+  const [venues, setVenues] = useState<Venue[]>([]);
+  const [loading, setLoading] = useState<Loading>({
+    events: false,
+    venues: false,
+  });
+  const [nextCursor, setNextCursor] = useState<Guid | null>(null);
   const [activeEvent, setActiveEvent] = useState<Event | null>(null);
+
   const [favorites, setFavorites] = useState<Set<Guid>>(new Set());
+
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState<boolean>(false);
   const [filter, setFilter] = useState<EventFilter>({
     startDate: format(new Date(), 'yyyy-MM-dd'),
   });
@@ -43,52 +64,86 @@ export const EventsPage: React.FC = () => {
     setFilter((prev) => ({ ...prev, ...update }));
   };
 
-  // Initial load
-  useEffect(() => {
-    void (async () => {
-      const data = await EventsApi.getAll();
+  const loadEvents = useCallback(
+    async (
+      filter: EventFilter | null,
+      cursor: string | null,
+      signal?: AbortSignal,
+      shouldAppend = false,
+    ) => {
+      setLoading((prev) => ({ ...prev, events: true }));
 
-      setEvents(data);
-    })();
+      try {
+        const result = await EventsApi.get(filter, cursor, signal);
+        setEvents((prev) =>
+          shouldAppend ? [...prev, ...result.items] : result.items,
+        );
+        setNextCursor(result.nextCursor);
+      } finally {
+        setLoading((prev) => ({ ...prev, events: false }));
+      }
+    },
+    [],
+  );
+
+  const loadVenues = useCallback(async (signal?: AbortSignal) => {
+    setLoading((prev) => ({ ...prev, venues: true }));
+
+    try {
+      const result = await VenuesApi.getAll(signal);
+
+      setVenues(result);
+    } catch (err) {
+      console.error('Failed to fetch venues', err);
+    } finally {
+      setLoading((prev) => ({ ...prev, venues: false }));
+    }
   }, []);
 
+  useEffect(() => {
+    const controller = new AbortController();
+
+    loadVenues(controller.signal);
+
+    return () => controller.abort();
+  }, [loadVenues]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    loadEvents(filter, null, controller.signal, false);
+
+    return () => {
+      controller.abort();
+    };
+  }, [filter, loadEvents]);
+
+  const observer = useRef<IntersectionObserver>(null);
+
+  const lastElementRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (loading.events) return;
+
+      if (observer.current) observer.current.disconnect();
+
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && nextCursor) {
+          loadEvents(filter, nextCursor, undefined, true);
+        }
+      });
+
+      if (node) observer.current.observe(node);
+    },
+    // Fix dependencies to be specific
+    [loading.events, nextCursor, loadEvents, filter],
+  );
   const filteredEvents = useMemo(() => {
-    const { title, startDate, endDate, category, location } = filter;
-
-    let filtered = events;
-
-    if (filter.favoritesOnly) {
-      filtered = filtered.filter((e) => favorites.has(e.id));
+    if (showFavoritesOnly) {
+      return events.filter((e) => favorites.has(e.id));
     }
 
-    if (title) {
-      filtered = filtered.filter((e) =>
-        e.title.toLowerCase().includes(title.toLowerCase())
-      );
-    }
-
-    if (startDate) {
-      const from = parse(startDate, 'yyyy-MM-dd', new Date());
-      filtered = filtered.filter((e) => from <= new Date(e.startUtc));
-    }
-
-    if (endDate) {
-      const to = parse(endDate, 'yyyy-MM-dd', new Date());
-      filtered = filtered.filter((e) => to >= new Date(e.startUtc));
-    }
-
-    if (category) {
-      filtered = filtered.filter((e) => e.category === category);
-    }
-
-    if (location) {
-      filtered = filtered.filter(
-        (e) => e.location === location || e.venueName === location
-      );
-    }
-
-    return filtered;
-  }, [events, favorites, filter]);
+    return events;
+  }, [events, favorites, showFavoritesOnly]);
 
   // const calendarEvents = useMemo(
   //   () =>
@@ -105,11 +160,6 @@ export const EventsPage: React.FC = () => {
   //   [events]
   // );
 
-  const locations = useMemo(
-    () => Array.from(new Set(events.map((e) => e.location ?? e.venueName))),
-    [events]
-  ) as string[];
-
   return (
     <Container>
       <section>
@@ -120,9 +170,7 @@ export const EventsPage: React.FC = () => {
               {filteredEvents?.length ?? 0} events found
             </p>
           </div>
-          <div>
-
-          </div>
+          <div></div>
         </div>
         <div className={cn('d-lg-none', styles.PageControls)}>
           <SquareButton
@@ -142,8 +190,9 @@ export const EventsPage: React.FC = () => {
                 <FiltersCard
                   className={styles.FiltersCard}
                   filter={filter}
-                  locations={locations}
+                  venues={venues}
                   onChange={handleSetFilter}
+                  onToggleFavoritesOnly={() => setShowFavoritesOnly((v) => !v)}
                 />
               </div>
             </Col>
@@ -152,9 +201,11 @@ export const EventsPage: React.FC = () => {
                 className={styles.EventList}
                 events={filteredEvents}
                 favorites={favorites}
+                lastRef={lastElementRef}
                 onEventClick={setActiveEvent}
                 onFavorite={handleFavorite}
               />
+              {loading.events && <p>Loading more...</p>}
             </Col>
           </Row>
         )}
