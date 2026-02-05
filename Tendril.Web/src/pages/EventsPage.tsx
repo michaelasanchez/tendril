@@ -35,6 +35,7 @@ export const EventsPage: React.FC = () => {
     venues: false,
   });
   const [nextCursor, setNextCursor] = useState<Guid | null>(null);
+  const [totalCount, setTotalCount] = useState<number>(0);
   const [activeEvent, setActiveEvent] = useState<Event | null>(null);
 
   const [favorites, setFavorites] = useState<Set<Guid>>(new Set());
@@ -60,10 +61,6 @@ export const EventsPage: React.FC = () => {
     });
   };
 
-  const handleSetFilter = (update: Partial<EventFilter>) => {
-    setFilter((prev) => ({ ...prev, ...update }));
-  };
-
   const loadEvents = useCallback(
     async (
       filter: EventFilter | null,
@@ -79,6 +76,7 @@ export const EventsPage: React.FC = () => {
           shouldAppend ? [...prev, ...result.items] : result.items,
         );
         setNextCursor(result.nextCursor);
+        setTotalCount(result.totalCount);
       } finally {
         setLoading((prev) => ({ ...prev, events: false }));
       }
@@ -166,9 +164,7 @@ export const EventsPage: React.FC = () => {
         <div className={styles.PageHeader}>
           <div>
             <h1>Upcoming Events</h1>
-            <p className={pageStyles.SubHeader}>
-              {filteredEvents?.length ?? 0} events found
-            </p>
+            <p className={pageStyles.SubHeader}>{totalCount} events found</p>
           </div>
           <div></div>
         </div>
@@ -190,8 +186,11 @@ export const EventsPage: React.FC = () => {
                 <FiltersCard
                   className={styles.FiltersCard}
                   filter={filter}
+                  favoritesOnly={showFavoritesOnly}
                   venues={venues}
-                  onChange={handleSetFilter}
+                  onChange={(update) =>
+                    setFilter((prev) => ({ ...prev, ...update }))
+                  }
                   onToggleFavoritesOnly={() => setShowFavoritesOnly((v) => !v)}
                 />
               </div>

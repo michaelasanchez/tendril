@@ -111,6 +111,7 @@ export interface PagedResponse {
   items: Event[];
   nextCursor: Guid | null;
   hasNextPage: boolean;
+  totalCount: number;
 }
 
 export type EventStatus = 'Pending' | 'Published' | 'Suppressed';

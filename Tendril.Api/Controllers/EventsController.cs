@@ -38,7 +38,8 @@ public class EventsController(IEventRepository events, IMapper mapper) : Control
         {
             Items = mapper.Map<List<EventDto>>(result.Items),
             NextCursor = result.NextCursor,
-            HasNextPage = result.HasNextPage
+            HasNextPage = result.HasNextPage,
+            TotalCount = result.TotalCount
         });
     }
 

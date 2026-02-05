@@ -1,6 +1,4 @@
 import {
-  ArrowDownFromLine,
-  ArrowUpToLine,
   Calendar,
   CloudDownload,
   CloudUpload,
@@ -19,7 +17,7 @@ import {
   Trash,
   X,
   Zap,
-  ZapOff,
+  ZapOff
 } from 'lucide-react';
 
 const Icons = {

@@ -9,7 +9,7 @@ namespace Tendril.Data.Repositories;
 
 public class EventRepository(TendrilDbContext _context) : IEventRepository
 {
-    private const int defaultLimit = 10;
+    private const int defaultLimit = 20;
 
     public async Task<PagedResponse<Event>> GetAllAsync(
         EventFilter filter,
@@ -57,6 +57,8 @@ public class EventRepository(TendrilDbContext _context) : IEventRepository
             }
         }
 
+        var totalCount = await query.CountAsync();
+
         var actualLimit = limit ?? defaultLimit;
 
         var results = await query
@@ -76,7 +78,8 @@ public class EventRepository(TendrilDbContext _context) : IEventRepository
         {
             Items = results,
             NextCursor = hasNextPage ? results.LastOrDefault()?.Id : null,
-            HasNextPage = hasNextPage
+            HasNextPage = hasNextPage,
+            TotalCount = totalCount
         };
     }
 

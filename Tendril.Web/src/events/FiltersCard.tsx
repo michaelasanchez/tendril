@@ -70,7 +70,6 @@ export const FiltersCard: React.FC<Props> = ({
             checked={favoritesOnly ?? false}
             onChange={(e) => {
               e.stopPropagation();
-              onToggleFavoritesOnly();
             }}
           />
           <label>Show Favorites Only</label>
