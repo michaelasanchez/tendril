@@ -70,3 +70,26 @@
     justify-content: flex-start;
   }
 }
+
+.ModalNavButton {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1060; /* CRITICAL: Must be > 1055 to sit over backdrop */
+  transition: transform 0.2s opacity 0.2s;
+
+  --padding: 8%;
+
+  &:hover {
+    opacity: 0.7;
+    transform: translateY(-50%) scale(1.1);
+  }
+
+  &.ModalPrev {
+    left: var(--padding);
+  }
+
+  &.ModalNext {
+    right: var(--padding);
+  }
+}

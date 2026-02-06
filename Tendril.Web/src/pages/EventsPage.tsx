@@ -7,7 +7,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Col, Container, Row } from 'react-bootstrap';
+import { Col, Row } from 'react-bootstrap';
 import { EventsApi, type EventFilter } from '../api/events';
 import { VenuesApi } from '../api/venues';
 import { SquareButton } from '../components/button';
@@ -36,7 +36,7 @@ export const EventsPage: React.FC = () => {
   });
   const [nextCursor, setNextCursor] = useState<Guid | null>(null);
   const [totalCount, setTotalCount] = useState<number>(0);
-  const [activeEvent, setActiveEvent] = useState<Event | null>(null);
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   const [favorites, setFavorites] = useState<Set<Guid>>(new Set());
 
@@ -45,7 +45,16 @@ export const EventsPage: React.FC = () => {
     startDate: format(new Date(), 'yyyy-MM-dd'),
   });
 
-  const handleModalClose = () => setActiveEvent(null);
+  const handleModalClose = () => setActiveIndex(null);
+
+  const handleOnNext = () =>
+    setActiveIndex((prev) =>
+      prev !== null ? Math.min(prev + 1, filteredEvents.length - 1) : null,
+    );
+
+  const handleOnPrev = () => {
+    setActiveIndex((prev) => (prev !== null ? Math.max(prev - 1, 0) : null));
+  };
 
   const handleFavorite = (event: Event) => {
     setFavorites((prev) => {
@@ -135,6 +144,7 @@ export const EventsPage: React.FC = () => {
     // Fix dependencies to be specific
     [loading.events, nextCursor, loadEvents, filter],
   );
+
   const filteredEvents = useMemo(() => {
     if (showFavoritesOnly) {
       return events.filter((e) => favorites.has(e.id));
@@ -159,7 +169,7 @@ export const EventsPage: React.FC = () => {
   // );
 
   return (
-    <Container>
+    <>
       <section>
         <div className={styles.PageHeader}>
           <div>
@@ -201,22 +211,28 @@ export const EventsPage: React.FC = () => {
                 events={filteredEvents}
                 favorites={favorites}
                 lastRef={lastElementRef}
-                onEventClick={setActiveEvent}
+                onEventClick={(clicked) => {
+                  const index = filteredEvents.findIndex(
+                    (e) => e.id === clicked.id,
+                  );
+
+                  setActiveIndex(index);
+                }}
                 onFavorite={handleFavorite}
               />
               {loading.events && <p>Loading more...</p>}
             </Col>
           </Row>
         )}
-
-        {/* {view === "calendar" && <EventCalendar events={calendarEvents} />} */}
-
-        <EventModal
-          event={activeEvent}
-          show={!!activeEvent}
-          onHide={handleModalClose}
-        />
       </section>
-    </Container>
+
+      <EventModal
+        event={activeIndex !== null ? filteredEvents[activeIndex] : null}
+        show={activeIndex !== null}
+        onHide={handleModalClose}
+        onNext={handleOnNext}
+        onPrev={handleOnPrev}
+      />
+    </>
   );
 };

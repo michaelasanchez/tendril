@@ -1,4 +1,6 @@
 import {
+  ArrowLeft,
+  ArrowRight,
   Calendar,
   CloudDownload,
   CloudUpload,
@@ -17,7 +19,7 @@ import {
   Trash,
   X,
   Zap,
-  ZapOff
+  ZapOff,
 } from 'lucide-react';
 
 const Icons = {
@@ -33,6 +35,8 @@ const Icons = {
   invisible: EyeOff,
   light: Sun,
   location: MapPin,
+  next: ArrowRight,
+  previous: ArrowLeft,
   publish: CloudUpload,
   remove: Trash,
   run: Play,
