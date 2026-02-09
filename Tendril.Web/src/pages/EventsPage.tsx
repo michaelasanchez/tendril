@@ -47,14 +47,32 @@ export const EventsPage: React.FC = () => {
 
   const handleModalClose = () => setActiveIndex(null);
 
-  const handleOnNext = () =>
+  const handleOnNext = () => {
     setActiveIndex((prev) =>
       prev !== null ? Math.min(prev + 1, filteredEvents.length - 1) : null,
     );
+  };
 
   const handleOnPrev = () => {
     setActiveIndex((prev) => (prev !== null ? Math.max(prev - 1, 0) : null));
   };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    if (
+      activeIndex !== null &&
+      activeIndex + 1 == filteredEvents.length &&
+      nextCursor
+    ) {
+      loadEvents(filter, nextCursor, signal, true);
+    }
+
+    return () => {
+      controller.abort();
+    };
+  }, [activeIndex]); // Only re-runs when activeIndex changes
 
   const handleFavorite = (event: Event) => {
     setFavorites((prev) => {

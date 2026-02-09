@@ -1,6 +1,9 @@
 .Modal {
   --inset: calc(var(--spacing) * 6);
 
+  touch-action: pan-y;
+  overscroll-behavior-x: none;
+
   .Header {
     padding: 0;
 
@@ -80,10 +83,10 @@
 
   --padding: 8%;
 
-  &:hover {
+  /* &:hover {
     opacity: 0.7;
     transform: translateY(-50%) scale(1.1);
-  }
+  } */
 
   &.ModalPrev {
     left: var(--padding);
