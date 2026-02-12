@@ -28,6 +28,7 @@
   --background: rgba(255, 255, 255, 1);
   /* The default color for elements or text that appears on top of the background. */
   --foreground: rgba(38, 38, 38, 1);
+  --muted-foreground: rgba(103, 103, 103, 1);
   /* The background color for cards, modals, and other containers. */
   --card: rgba(247, 247, 247, 1);
   /* The default color for text or elements that appear on top of cards, modals and other background containers. */
@@ -110,6 +111,8 @@
   --foreground: rgba(222, 226, 230, 1);
   --border: rgba(255, 255, 255, 0.2);
   --card: rgba(255, 255, 255, 0.05);
+
+  --muted-foreground: rgba(153, 159, 164, 1);
 }
 
 /* Typography Styles */

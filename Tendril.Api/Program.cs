@@ -38,19 +38,15 @@ builder.Services.AddAutoMapper(
     typeof(ApiMappingProfile).Assembly       // scan this assembly for profiles
 );
 
-// TODO: move this to configuration
-var origins = new[] { "http://localhost:5173", "https://hl.michaelsanchez.dev" };
-
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowVite",
-        policy =>
-        {
-            policy.WithOrigins(origins)
-                  .AllowAnyHeader()
-                  .AllowAnyMethod()
-                  .AllowCredentials();
-        });
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("http://localhost:5173")
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
+    });
 });
 
 var app = builder.Build();
@@ -63,7 +59,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseCors("AllowVite");
+app.UseCors();
 
 app.UseAuthorization();
 

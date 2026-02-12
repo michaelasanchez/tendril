@@ -16,7 +16,7 @@ export const FormInput: React.FC<FormInputProps> = ({
     <Form.Control
       type={type}
       value={value}
-      onBlur={(e) => onChange(e.target.value)}
+      onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       disabled={disabled}
       autoFocus={autoFocus}

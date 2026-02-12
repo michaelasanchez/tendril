@@ -6,7 +6,7 @@ using Tendril.Core.Interfaces.Repositories;
 namespace Tendril.Api.Controllers;
 
 [ApiController]
-[Route("api/scrapers/{scraperId:guid}/mapping-rules")]
+[Route("scrapers/{scraperId:guid}/mapping-rules")]
 public class MappingRulesController(IMappingRuleRepository rules) : ControllerBase
 {
     [HttpGet]

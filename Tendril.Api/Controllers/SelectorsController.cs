@@ -5,7 +5,7 @@ using Tendril.Core.Domain.Entities;
 namespace Tendril.Api.Controllers;
 
 [ApiController]
-[Route("api/scrapers/{scraperId:guid}/selectors")]
+[Route("scrapers/{scraperId:guid}/selectors")]
 public class SelectorsController : ControllerBase
 {
     private readonly ISelectorRepository _selectors;

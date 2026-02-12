@@ -117,7 +117,13 @@ export const EventsPage: React.FC = () => {
     try {
       const result = await VenuesApi.getAll(signal);
 
-      setVenues(result);
+      const sortProp = (v: Venue) => v.name.replace(/^The\s+/i, ''); // Ignore "The" at the start for sorting
+
+      const sorted = result.sort((a, b) =>
+        sortProp(a).localeCompare(sortProp(b)),
+      );
+
+      setVenues(sorted);
     } catch (err) {
       console.error('Failed to fetch venues', err);
     } finally {
@@ -189,20 +195,17 @@ export const EventsPage: React.FC = () => {
   return (
     <>
       <section>
-        <div className={styles.PageHeader}>
-          <div>
-            <h1>Upcoming Events</h1>
-            <p className={pageStyles.SubHeader}>{totalCount} events found</p>
+        <h1 className={styles.PageTitle}>Upcoming Events</h1>
+        <div className={styles.SubHeaderRow}>
+          <div className={pageStyles.SubHeader}>{totalCount} events found</div>
+          <div className={cn('d-lg-none', styles.PageControls)}>
+            <SquareButton
+              variant={showFilters ? 'primary' : undefined}
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <Icon name="sliders" /> Filters
+            </SquareButton>
           </div>
-          <div></div>
-        </div>
-        <div className={cn('d-lg-none', styles.PageControls)}>
-          <SquareButton
-            variant={showFilters ? 'primary' : undefined}
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            <Icon name="sliders" /> Filters
-          </SquareButton>
         </div>
 
         {view === 'list' && (

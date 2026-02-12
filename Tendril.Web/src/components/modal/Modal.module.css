@@ -67,6 +67,11 @@
         color: var(--accent);
       }
     }
+
+    .VenueLink {
+      color: var(--muted-foreground);
+      text-decoration: none;
+    }
   }
 
   .Footer {

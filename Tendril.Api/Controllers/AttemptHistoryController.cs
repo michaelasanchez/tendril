@@ -5,7 +5,7 @@ using Tendril.Api.Dtos;
 using Tendril.Core.Interfaces.Repositories;
 
 [ApiController]
-[Route("api/scrapers/{scraperId:guid}/attempt-histories")]
+[Route("scrapers/{scraperId:guid}/attempt-histories")]
 public sealed class AttemptHistoryController(IAttemptHistoryRepository query) : ControllerBase
 {
     [HttpGet]

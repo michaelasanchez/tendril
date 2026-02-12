@@ -129,8 +129,8 @@ export interface Event {
   detailsUrl: string | null;
   ticketUrl: string | null;
   category: string | null;
-  venueName: string | null;
-  venueUrl: string | null;
+  venueName: string;
+  venueUrl: string;
   status: EventStatus;
   updatedUtc: string;
 }

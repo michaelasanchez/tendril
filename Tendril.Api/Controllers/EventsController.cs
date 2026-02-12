@@ -9,7 +9,7 @@ using Tendril.Data.Models;
 namespace Tendril.Api.Controllers;
 
 [ApiController]
-[Route("api/events")]
+[Route("events")]
 public class EventsController(IEventRepository events, IMapper mapper) : ControllerBase
 {
     [HttpGet]

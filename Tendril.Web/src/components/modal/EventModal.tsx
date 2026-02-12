@@ -65,6 +65,8 @@ const EventRow: React.FC<{
 
 const minSwipeDistance = 50;
 
+type Direction = -1 | 0 | 1; // -1: Prev, 0: No movement, 1: Next
+
 export const EventModal: React.FC<Props> = ({
   event,
   show,
@@ -72,12 +74,9 @@ export const EventModal: React.FC<Props> = ({
   onNext,
   onPrev,
 }) => {
-  // Track direction: 1 = Next (Left), -1 = Prev (Right)
-  const [direction, setDirection] = useState(0);
+  const [direction, setDirection] = useState<Direction>(0);
 
-  // Wrappers to update direction state before triggering parent logic
   const handleNext = () => {
-    console.log('MODAL');
     setDirection(1);
     onNext();
   };
@@ -155,10 +154,6 @@ export const EventModal: React.FC<Props> = ({
         </>
       )}
 
-      {/* The "Ghost" Modal Shell 
-         - animation={false} disables Bootstrap's default fade
-         - contentClassName clears styling so the shell is invisible
-      */}
       <Modal
         className={styles.Modal}
         show={show}

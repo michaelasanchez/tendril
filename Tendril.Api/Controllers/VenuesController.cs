@@ -7,13 +7,14 @@ using Tendril.Core.Interfaces.Repositories;
 namespace Tendril.Api.Controllers;
 
 [ApiController]
-[Route("api/venues")]
+[Route("venues")]
 public class VenuesController(IVenueRepository venues, IMapper mapper) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<IEnumerable<VenueDto>>> GetAll(CancellationToken cancellationToken)
     {
         var list = await venues.GetAllAsync(cancellationToken);
+
         return Ok(mapper.Map<IEnumerable<VenueDto>>(list));
     }
 

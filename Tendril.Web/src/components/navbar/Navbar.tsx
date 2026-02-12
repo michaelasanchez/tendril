@@ -2,6 +2,7 @@ import cn from 'classnames';
 import { Navbar as BootstrapNavbar, Container } from 'react-bootstrap';
 import type { AppTheme } from '../../hooks';
 import { cardStyles } from '../../styles';
+import { SquareButton } from '../button';
 import { Icon } from '../Icon';
 import styles from './Navbar.module.css';
 interface Props {
@@ -9,7 +10,7 @@ interface Props {
   onThemeToggle: () => void;
 }
 
-export const Navbar: React.FC<Props> = (/*{ theme, onThemeToggle }*/) => {
+export const Navbar: React.FC<Props> = ({ theme, onThemeToggle }) => {
   return (
     <BootstrapNavbar className={styles.Navbar}>
       <Container>
@@ -26,9 +27,11 @@ export const Navbar: React.FC<Props> = (/*{ theme, onThemeToggle }*/) => {
           <div className={cn(cardStyles.BgCard, styles.Location)}>
             Grand Rapids, MI
           </div>
-          {/* <SquareButton onClick={onThemeToggle}>
-            <Icon name={theme} />
-          </SquareButton> */}
+          <div className="d-none d-sm-block">
+            <SquareButton onClick={onThemeToggle}>
+              <Icon name={theme} />
+            </SquareButton>
+          </div>
         </div>
       </Container>
     </BootstrapNavbar>

@@ -15,17 +15,12 @@ export default function App() {
       <Navbar theme={theme} onThemeToggle={toggleTheme} />
       <Container>
         <Routes>
-          {/* Default redirect */}
-          <Route path="/" element={<Navigate to="/events" replace />} />
-
-          {/* Main app pages */}
-          <Route path="/events" element={<EventsPage />} />
+          <Route path="/" element={<EventsPage />} />
           <Route path="/scrapers" element={<ScrapersPage />} />
           <Route path="/scrapers/:scraperId" element={<ScraperEditorPage />} />
           <Route path="/venues" element={<VenuesPage />} />
 
-          {/* Catch-all */}
-          <Route path="*" element={<Navigate to="/events" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Container>
     </>

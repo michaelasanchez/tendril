@@ -8,7 +8,7 @@ using Tendril.Engine.Models;
 namespace Tendril.Api.Controllers;
 
 [ApiController]
-[Route("api/scrapers/{scraperId:guid}/runs")]
+[Route("scrapers/{scraperId:guid}/runs")]
 public class ScraperRunsController(
     IScraperRepository scrapers,
     IRawEventRepository rawEvents,

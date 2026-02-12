@@ -7,7 +7,7 @@ using Tendril.Core.Interfaces.Repositories;
 namespace Tendril.Api.Controllers;
 
 [ApiController]
-[Route("api/scrapers")]
+[Route("scrapers")]
 public class ScrapersController(
     IScraperRepository scrapers,
     IMapper mapper) : ControllerBase
