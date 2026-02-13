@@ -1,4 +1,4 @@
-// src/api/scrapers.ts
+// src/scrapers.ts
 import type {
   ExecutionMode,
   ExtractionStrategy,
@@ -28,78 +28,78 @@ export interface UpdateScraperRequest extends Partial<CreateScraperRequest> {}
 
 export const ScrapersApi = {
   getAll(): Promise<ScraperDefinition[]> {
-    return apiGet("/api/scrapers");
+    return apiGet("/scrapers");
   },
 
   getById(id: Guid): Promise<ScraperDefinition> {
-    return apiGet(`/api/scrapers/${id}`);
+    return apiGet(`/scrapers/${id}`);
   },
 
   create(req: CreateScraperRequest): Promise<ScraperDefinition> {
-    return apiPost("/api/scrapers", req);
+    return apiPost("/scrapers", req);
   },
 
   update(id: Guid, req: UpdateScraperRequest): Promise<void> {
-    return apiPut(`/api/scrapers/${id}`, req);
+    return apiPut(`/scrapers/${id}`, req);
   },
 
   delete(id: Guid): Promise<void> {
-    return apiDelete(`/api/scrapers/${id}`);
+    return apiDelete(`/scrapers/${id}`);
   },
 
   // Selectors
   getSelectors(scraperId: Guid): Promise<ScraperSelector[]> {
-    return apiGet(`/api/scrapers/${scraperId}/selectors`);
+    return apiGet(`/scrapers/${scraperId}/selectors`);
   },
 
   createSelector(scraperId: Guid, req: Omit<ScraperSelector, "id" | "scraperDefinitionId">): Promise<ScraperSelector> {
-    return apiPost(`/api/scrapers/${scraperId}/selectors`, req);
+    return apiPost(`/scrapers/${scraperId}/selectors`, req);
   },
 
   updateSelector(scraperId: Guid, selectorId: Guid, req: Partial<ScraperSelector>): Promise<void> {
-    return apiPut(`/api/scrapers/${scraperId}/selectors/${selectorId}`, req);
+    return apiPut(`/scrapers/${scraperId}/selectors/${selectorId}`, req);
   },
 
   deleteSelector(scraperId: Guid, selectorId: Guid): Promise<void> {
-    return apiDelete(`/api/scrapers/${scraperId}/selectors/${selectorId}`);
+    return apiDelete(`/scrapers/${scraperId}/selectors/${selectorId}`);
   },
 
   // Mapping rules
   getMappingRules(scraperId: Guid): Promise<ScraperMappingRule[]> {
-    return apiGet(`/api/scrapers/${scraperId}/mapping-rules`);
+    return apiGet(`/scrapers/${scraperId}/mapping-rules`);
   },
 
   createMappingRule(scraperId: Guid, req: Omit<ScraperMappingRule, "id" | "scraperDefinitionId">): Promise<ScraperMappingRule> {
-    return apiPost(`/api/scrapers/${scraperId}/mapping-rules`, req);
+    return apiPost(`/scrapers/${scraperId}/mapping-rules`, req);
   },
 
   updateMappingRule(scraperId: Guid, ruleId: Guid, req: Partial<ScraperMappingRule>): Promise<void> {
-    return apiPut(`/api/scrapers/${scraperId}/mapping-rules/${ruleId}`, req);
+    return apiPut(`/scrapers/${scraperId}/mapping-rules/${ruleId}`, req);
   },
 
   deleteMappingRule(scraperId: Guid, ruleId: Guid): Promise<void> {
-    return apiDelete(`/api/scrapers/${scraperId}/mapping-rules/${ruleId}`);
+    return apiDelete(`/scrapers/${scraperId}/mapping-rules/${ruleId}`);
   },
 
   // Attempt Histories
   getAttemptHistories(scraperId: Guid): Promise<ScraperAttemptHistory[]> {
-    return apiGet(`/api/scrapers/${scraperId}/attempt-histories`);
+    return apiGet(`/scrapers/${scraperId}/attempt-histories`);
   },
 
   // Runs
   testSelectors(scraperId: Guid): Promise<ScrapeRunResponse> {
-    return apiPost(`/api/scrapers/${scraperId}/runs/test-selectors`);
+    return apiPost(`/scrapers/${scraperId}/runs/test-selectors`);
   },
 
   testMapping(scraperId: Guid): Promise<ScrapeRunResponse> {
-    return apiPost(`/api/scrapers/${scraperId}/runs/test-mapping`);
+    return apiPost(`/scrapers/${scraperId}/runs/test-mapping`);
   },
 
   testRun(scraperId: Guid): Promise<ScrapeRunResponse> {
-    return apiPost(`/api/scrapers/${scraperId}/runs/test-run`);
+    return apiPost(`/scrapers/${scraperId}/runs/test-run`);
   },
 
   runNow(scraperId: Guid): Promise<ScrapeRunResponse> {
-    return apiPost(`/api/scrapers/${scraperId}/runs/run-now`);
+    return apiPost(`/scrapers/${scraperId}/runs/run-now`);
   }
 };

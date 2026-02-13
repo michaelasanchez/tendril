@@ -1,4 +1,5 @@
 import cn from 'classnames';
+import { useState } from 'react';
 import { Card } from 'react-bootstrap';
 import type { EventFilter } from '../api/events';
 import { Button } from '../components/button';
@@ -27,6 +28,9 @@ const categories = [
   'Other',
 ];
 
+const numCategories = 4;
+const numVenues = 4;
+
 export const FiltersCard: React.FC<Props> = ({
   className,
   favoritesOnly,
@@ -35,6 +39,9 @@ export const FiltersCard: React.FC<Props> = ({
   onChange,
   onToggleFavoritesOnly,
 }) => {
+  const [showMoreCategories, setMoreCategories] = useState<boolean>(false);
+  const [showMoreVenues, setShowMoreVenues] = useState<boolean>(false);
+
   return (
     <Card className={cn(cardStyles.BgCard, styles.FiltersCard, className)}>
       <Card.Body className={cardStyles.CardBody}>
@@ -84,24 +91,37 @@ export const FiltersCard: React.FC<Props> = ({
             All
           </Button>
 
-          {categories.map((c, i) => {
-            const active = filter.categories?.includes(c);
-            return (
-              <Button
-                key={i}
-                variant={active ? 'active' : 'default'}
-                onClick={() =>
-                  onChange({
-                    categories: active
-                      ? filter.categories?.filter((cat) => cat !== c)
-                      : [...(filter.categories ?? []), c],
-                  })
-                }
-              >
-                {c}
-              </Button>
-            );
-          })}
+          {categories
+            .slice(0, showMoreCategories ? categories.length : numCategories)
+            .map((c, i) => {
+              const active = filter.categories?.includes(c);
+
+              return (
+                <Button
+                  key={i}
+                  variant={active ? 'active' : 'default'}
+                  onClick={() =>
+                    onChange({
+                      categories: active
+                        ? filter.categories?.filter((cat) => cat !== c)
+                        : [...(filter.categories ?? []), c],
+                    })
+                  }
+                >
+                  {c}
+                </Button>
+              );
+            })}
+
+          <Button
+            variant="default"
+            onClick={() => setMoreCategories(!showMoreCategories)}
+          >
+            {showMoreCategories
+              ? 'Show less'
+              : `+ ${categories.length - numCategories} More`}{' '}
+            <Icon name={showMoreCategories ? 'up' : 'down'} />
+          </Button>
         </div>
 
         <label>Location</label>
@@ -113,24 +133,36 @@ export const FiltersCard: React.FC<Props> = ({
             All Locations
           </Button>
 
-          {venues.map((v, i) => {
-            const active = filter.venueIds?.includes(v.id);
-            return (
-              <Button
-                key={i}
-                variant={active ? 'active' : 'default'}
-                onClick={() =>
-                  onChange({
-                    venueIds: active
-                      ? (filter.venueIds?.filter((id) => id !== v.id) ?? [])
-                      : [...(filter.venueIds ?? []), v.id],
-                  })
-                }
-              >
-                {v.name}
-              </Button>
-            );
-          })}
+          {venues
+            .slice(0, showMoreVenues ? venues.length : numVenues)
+            .map((v, i) => {
+              const active = filter.venueIds?.includes(v.id);
+              return (
+                <Button
+                  key={i}
+                  variant={active ? 'active' : 'default'}
+                  onClick={() =>
+                    onChange({
+                      venueIds: active
+                        ? (filter.venueIds?.filter((id) => id !== v.id) ?? [])
+                        : [...(filter.venueIds ?? []), v.id],
+                    })
+                  }
+                >
+                  {v.name}
+                </Button>
+              );
+            })}
+
+          <Button
+            variant="default"
+            onClick={() => setShowMoreVenues(!showMoreVenues)}
+          >
+            {showMoreVenues
+              ? 'Show less'
+              : `+ ${venues.length - numVenues} More`}{' '}
+            <Icon name={showMoreVenues ? 'up' : 'down'} />
+          </Button>
         </div>
       </Card.Body>
     </Card>

@@ -158,7 +158,7 @@ export const EventsPage: React.FC = () => {
       if (observer.current) observer.current.disconnect();
 
       observer.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && nextCursor) {
+        if (entries[0].isIntersecting && nextCursor && !showFavoritesOnly) {
           loadEvents(filter, nextCursor, undefined, true);
         }
       });

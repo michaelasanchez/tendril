@@ -11,18 +11,18 @@ export interface UpdateVenueRequest extends Partial<CreateVenueRequest> {}
 
 export const VenuesApi = {
   getAll(signal?: AbortSignal): Promise<Venue[]> {
-    return apiGet('/api/venues', signal);
+    return apiGet('/venues', signal);
   },
 
   create(req: CreateVenueRequest): Promise<Venue> {
-    return apiPost('/api/venues', req);
+    return apiPost('/venues', req);
   },
 
   update(id: Guid, req: UpdateVenueRequest): Promise<void> {
-    return apiPut(`/api/venues/${id}`, req);
+    return apiPut(`/venues/${id}`, req);
   },
 
   delete(id: Guid): Promise<void> {
-    return apiDelete(`/api/venues/${id}`);
+    return apiDelete(`/venues/${id}`);
   },
 };

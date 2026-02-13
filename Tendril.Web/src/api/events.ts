@@ -43,14 +43,14 @@ export const EventsApi = {
 
     const queryString = !!params.size ? `?${params.toString()}` : '';
 
-    return apiGet(`/api/events${queryString}`, signal);
+    return apiGet(`/events${queryString}`, signal);
   },
 
   getByScraperId(scraperId: Guid): Promise<Event[]> {
-    return apiGet(`/api/events/${scraperId}`);
+    return apiGet(`/events/${scraperId}`);
   },
 
   patch(eventId: Guid, request: PatchEventRequest): Promise<void> {
-    return apiPatch(`/api/events/${eventId}`, request);
+    return apiPatch(`/events/${eventId}`, request);
   },
 };

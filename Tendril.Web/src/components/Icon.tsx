@@ -2,6 +2,8 @@ import {
   ArrowLeft,
   ArrowRight,
   Calendar,
+  ChevronDown,
+  ChevronUp,
   CloudDownload,
   CloudUpload,
   Edit,
@@ -27,6 +29,7 @@ const Icons = {
   close: X,
   dark: Moon,
   disabled: ZapOff,
+  down: ChevronDown,
   edit: Edit,
   enable: Zap,
   external: ExternalLink,
@@ -43,6 +46,7 @@ const Icons = {
   sliders: SlidersHorizontal,
   ticket: Ticket,
   unpublish: CloudDownload,
+  up: ChevronUp,
   visible: Eye,
 };
 
