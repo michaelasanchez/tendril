@@ -2,6 +2,7 @@ import { Container } from 'react-bootstrap';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { Navbar } from './components/navbar';
 import { useBootstrapTheme } from './hooks';
+import { CategoriesPage } from './pages/CategoriesPage';
 import { EventsPage } from './pages/EventsPage';
 import { ScraperEditorPage } from './pages/ScraperEditorPage';
 import { ScrapersPage } from './pages/ScrapersPage';
@@ -18,6 +19,7 @@ export default function App() {
           <Route path="/" element={<EventsPage />} />
           <Route path="/scrapers" element={<ScrapersPage />} />
           <Route path="/scrapers/:scraperId" element={<ScraperEditorPage />} />
+          <Route path="/categories" element={<CategoriesPage />} />
           <Route path="/venues" element={<VenuesPage />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -19,11 +19,13 @@ public class ApiMappingProfile : Profile
             .ForMember(d => d.LastSuccessUtc, opt => opt.MapFrom(s => s.LastSuccessUtc.HasValue ? s.LastSuccessUtc.Value.ToString("o") : null))
             .ForMember(d => d.LastFailureUtc, opt => opt.MapFrom(s => s.LastFailureUtc.HasValue ? s.LastFailureUtc.Value.ToString("o") : null));
 
-        CreateMap<Venue, VenueDto>();
-
         CreateMap<Event, EventDto>()
             .ForMember(d => d.VenueName, opt => opt.MapFrom(s => s.Venue!.Name))
             .ForMember(d => d.VenueUrl, opt => opt.MapFrom(s => s.Venue!.Website))
             .ForMember(d => d.UpdatedUtc, opt => opt.MapFrom(s => s.UpdatedAtUtc));
+
+        CreateMap<Category, CategoryDto>();
+
+        CreateMap<Venue, VenueDto>();
     }
 }

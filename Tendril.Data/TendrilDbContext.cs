@@ -20,6 +20,7 @@ public class TendrilDbContext : DbContext
     public DbSet<ScrapedEventRaw> RawEvents => Set<ScrapedEventRaw>();
     public DbSet<Event> Events => Set<Event>();
     public DbSet<EventRevision> EventRevisions => Set<EventRevision>();
+    public DbSet<Category> Categories => Set<Category>();
     public DbSet<Venue> Venues => Set<Venue>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -31,6 +32,7 @@ public class TendrilDbContext : DbContext
         modelBuilder.ApplyConfiguration(new ScrapedEventRawConfig());
         modelBuilder.ApplyConfiguration(new EventConfig());
         modelBuilder.ApplyConfiguration(new EventRevisionConfig());
+        modelBuilder.ApplyConfiguration(new CategoryConfig());
         modelBuilder.ApplyConfiguration(new VenueConfig());
     }
 }

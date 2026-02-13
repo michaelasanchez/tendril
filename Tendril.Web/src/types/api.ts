@@ -1,6 +1,12 @@
 // src/types/api.ts
 export type Guid = string;
 
+export interface Category {
+  id: Guid;
+  name: string;
+  description: string;
+}
+
 export interface Venue {
   id: Guid;
   name: string;
