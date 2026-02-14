@@ -27,6 +27,8 @@ public class ApiMappingProfile : Profile
 
         CreateMap<Category, CategoryDto>();
 
+        CreateMap<Tag, TagDto>();
+
         CreateMap<Venue, VenueDto>();
     }
 }
