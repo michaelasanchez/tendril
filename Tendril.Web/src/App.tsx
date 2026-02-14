@@ -2,11 +2,14 @@ import { Container } from 'react-bootstrap';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { Navbar } from './components/navbar';
 import { useBootstrapTheme } from './hooks';
-import { CategoriesPage } from './pages/CategoriesPage';
-import { EventsPage } from './pages/EventsPage';
-import { ScraperEditorPage } from './pages/ScraperEditorPage';
-import { ScrapersPage } from './pages/ScrapersPage';
-import { VenuesPage } from './pages/VenuesPage';
+import {
+  CategoriesPage,
+  EventsPage,
+  ScraperEditorPage,
+  ScrapersPage,
+  TagsPage,
+  VenuesPage,
+} from './pages';
 
 export default function App() {
   const { theme, toggleTheme } = useBootstrapTheme();
@@ -20,6 +23,7 @@ export default function App() {
           <Route path="/scrapers" element={<ScrapersPage />} />
           <Route path="/scrapers/:scraperId" element={<ScraperEditorPage />} />
           <Route path="/categories" element={<CategoriesPage />} />
+          <Route path="/tags" element={<TagsPage />} />
           <Route path="/venues" element={<VenuesPage />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,10 +1,8 @@
 ﻿namespace Tendril.Core.Domain.Entities;
 
-public class Category
+public class Tag
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
-
-    public List<Event> Events { get; set; } = [];
+    public ICollection<EventTag> EventTags { get; set; } = [];
 }

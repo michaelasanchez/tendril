@@ -7,16 +7,16 @@ using Tendril.Core.Domain.Entities;
 using Tendril.Core.Domain.Enums;
 using Tendril.Engine.Abstractions;
 
-namespace Tendril.Engine.Logic;
+namespace Tendril.Engine.Services;
 
-public class EventMapper : IEventMapper
+public class MapperService : IMapperService
 {
     private static readonly Dictionary<string, System.Reflection.PropertyInfo> _eventProperties =
         typeof(Event).GetProperties()
         .Where(p => p.CanWrite)
         .ToDictionary(p => p.Name, p => p, StringComparer.OrdinalIgnoreCase);
 
-    public Event Map(ScraperDefinition scraper, ScrapedEventRaw raw)
+    public Event MapEvent(ScraperDefinition scraper, ScrapedEventRaw raw)
     {
         if (scraper.VenueId is null)
             throw new InvalidOperationException("Scraper must be associated with a Venue before mapping events.");

@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 using Tendril.Engine.Abstractions;
 using Tendril.Engine.Models;
 
-namespace Tendril.Engine.Logic;
+namespace Tendril.Engine.Services;
 
 public class JsonLdProcessor : IJsonLdProcessor
 {

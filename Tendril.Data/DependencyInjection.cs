@@ -21,11 +21,13 @@ public static class DependencyInjection
         services.AddScoped<IAttemptHistoryRepository, AttemptHistoryRepository>();
         services.AddScoped<IEventRepository, EventRepository>();
         services.AddScoped<IEventRevisionRepository, EventRevisionRepository>();
+        services.AddScoped<IClassificationRuleRepository, ClassificationRuleRepository>();
         services.AddScoped<IMappingRuleRepository, MappingRuleRepository>();
         services.AddScoped<IRawEventRepository, RawEventRepository>();
         services.AddScoped<IScraperRepository, ScraperRepository>();
         services.AddScoped<ISelectorRepository, SelectorRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
+        services.AddScoped<ITagRepository, TagRepository>();
         services.AddScoped<IVenueRepository, VenueRepository>();
 
         return services;

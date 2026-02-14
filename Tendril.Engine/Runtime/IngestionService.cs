@@ -1,10 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using Tendril.Core.Domain.Entities;
 using Tendril.Core.Domain.Enums;
 using Tendril.Core.Interfaces.Repositories;
 using Tendril.Engine.Abstractions;
+using Tendril.Engine.Interfaces;
 using Tendril.Engine.Models;
 
 namespace Tendril.Engine.Runtime;
@@ -16,7 +16,8 @@ public class IngestionService(
     IEventRevisionRepository eventRevisions,
     IRawEventRepository rawEvents,
     IScraperRepository scrapers,
-    IEventMapper mapper,
+    IMapperService mapper,
+    IClassificationService classifier,
     IScrapeExecutor executor) : IIngestionService
 {
     public async Task<IngestResult> Ingest(ScraperDefinition scraper, CancellationToken cancellationToken = default)
@@ -141,11 +142,13 @@ public class IngestionService(
         };
     }
 
-    private async Task<(Event? mappedEvent, string result, string message)> ProcessSingleEventAsync(ScraperDefinition scraper, Guid attemptId, ScrapedEventRaw rawEntity)
+    private async Task<(Event? mappedEvent, string result, string message)> ProcessSingleEventAsync(ScraperDefinition scraper, Guid attemptId, ScrapedEventRaw rawEvent)
     {
-        var mappedEvent = mapper.Map(scraper, rawEntity);
+        var mappedEvent = mapper.MapEvent(scraper, rawEvent);
 
         if (mappedEvent.StartUtc == default) return (mappedEvent, "skipped", "Skipped - Missing start date");
+
+        classifier.ClassifyEvent(scraper, rawEvent, mappedEvent);
 
         var existingEvent = await events.Find(mappedEvent);
 
@@ -157,7 +160,7 @@ public class IngestionService(
             {
                 existingEvent.UpdatedAtUtc = DateTimeOffset.UtcNow;
 
-                rawEntity.EventId = existingEvent.Id;
+                rawEvent.EventId = existingEvent.Id;
 
                 await events.UpdateAsync(existingEvent);
 
@@ -166,7 +169,7 @@ public class IngestionService(
                     Id = Guid.NewGuid(),
                     EventId = existingEvent.Id,
                     AttemptHistoryId = attemptId,
-                    RawEventId = rawEntity.Id,
+                    RawEventId = rawEvent.Id,
                     Reason = EventRevisionReason.FieldUpdate,
                     ChangedAtUtc = DateTimeOffset.UtcNow,
                     ChangedFieldsJson = JsonSerializer.Serialize(revisions)
@@ -179,7 +182,7 @@ public class IngestionService(
         }
         else
         {
-            rawEntity.EventId = mappedEvent.Id;
+            rawEvent.EventId = mappedEvent.Id;
 
             await events.AddAsync(mappedEvent);
 

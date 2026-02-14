@@ -15,6 +15,5 @@ public class ScrapedEventRaw
 
     public DateTimeOffset ScrapedAtUtc { get; set; }
 
-    // JSON blob of all raw fields + values
     public string RawDataJson { get; set; } = null!;
 }

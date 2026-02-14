@@ -7,6 +7,11 @@ export interface Category {
   description: string;
 }
 
+export interface Tag {
+  id: Guid;
+  name: string;
+}
+
 export interface Venue {
   id: Guid;
   name: string;

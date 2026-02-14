@@ -8,7 +8,7 @@ using Tendril.Engine.Abstractions;
 using Tendril.Engine.Extensions;
 using Tendril.Engine.Models;
 
-namespace Tendril.Engine.Runtime;
+namespace Tendril.Engine.Scrapers;
 
 public class StaticScraper(IJsonLdProcessor jsonLd)
 {

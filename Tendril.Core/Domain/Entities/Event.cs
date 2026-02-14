@@ -9,10 +9,12 @@ public class Event
     public Guid ScraperDefinitionId { get; set; }
     public ScraperDefinition Scraper { get; set; } = null!;
 
-    public ICollection<ScrapedEventRaw> ScrapedEventRaws { get; set; } = [];
+    public ICollection<EventRevision> Revisions { get; set; } = [];
 
     public Guid? CategoryId { get; set; }
     public Category? Category { get; set; } = null!;
+
+    public ICollection<EventTag> EventTags { get; set; } = [];
 
     public Guid? VenueId { get; set; }
     public Venue? Venue { get; set; } = null;

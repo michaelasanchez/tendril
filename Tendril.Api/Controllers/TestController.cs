@@ -13,7 +13,7 @@ public class ScraperRunsController(
     IScraperRepository scrapers,
     IRawEventRepository rawEvents,
     IScrapeExecutor executor,
-    IEventMapper mapper,
+    IMapperService mapper,
     IIngestionService ingestionService) : ControllerBase
 {
     // 1️⃣ Test selectors only (Stream -> List in memory)
@@ -69,7 +69,7 @@ public class ScraperRunsController(
         if (raw == null)
             return BadRequest("No raw events available to test mapping.");
 
-        var mapped = mapper.Map(scraper, raw);
+        var mapped = mapper.MapEvent(scraper, raw);
 
         return Ok(new
         {
@@ -105,7 +105,7 @@ public class ScraperRunsController(
                     RawDataJson = System.Text.Json.JsonSerializer.Serialize(raw)
                 };
 
-                var mappedEvent = mapper.Map(scraper, rawEntity);
+                var mappedEvent = mapper.MapEvent(scraper, rawEntity);
                 mappedEvents.Add(mappedEvent);
             }
 

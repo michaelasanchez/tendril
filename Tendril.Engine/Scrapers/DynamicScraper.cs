@@ -1,12 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Playwright;
+﻿using Microsoft.Playwright;
 using Tendril.Core.Domain.Entities;
 using Tendril.Core.Domain.Enums;
 using Tendril.Engine.Abstractions;
 using Tendril.Engine.Extensions;
 using Tendril.Engine.Models;
 
-namespace Tendril.Engine.Runtime;
+namespace Tendril.Engine.Scrapers;
 
 public class DynamicScraper(IJsonLdProcessor jsonLd)
 {

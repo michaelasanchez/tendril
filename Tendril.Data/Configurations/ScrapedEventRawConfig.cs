@@ -22,7 +22,7 @@ public class ScrapedEventRawConfig : IEntityTypeConfiguration<ScrapedEventRaw>
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(raw => raw.Event)
-            .WithMany(evt => evt.ScrapedEventRaws)
+            .WithMany()
             .HasForeignKey(raw => raw.EventId)
             .OnDelete(DeleteBehavior.Restrict);
     }

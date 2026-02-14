@@ -30,5 +30,6 @@ public class ScraperDefinition
 
     public List<ScraperSelector> Selectors { get; set; } = [];
     public List<ScraperMappingRule> MappingRules { get; set; } = [];
+    public List<ScraperClassificationRule> ClassificationRules { get; set; } = [];
     public List<ScraperAttemptHistory> AttemptHistory { get; set; } = [];
 }

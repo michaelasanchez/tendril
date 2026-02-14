@@ -13,7 +13,7 @@ public class EventRevisionConfig : IEntityTypeConfiguration<EventRevision>
         builder.HasKey(x => x.Id);
 
         builder.HasOne(r => r.Event)
-            .WithMany()
+            .WithMany(e => e.Revisions)
             .HasForeignKey(r => r.EventId)
             .OnDelete(DeleteBehavior.Restrict);
 

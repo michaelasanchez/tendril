@@ -5,6 +5,7 @@ using Tendril.Core.Interfaces.Repositories;
 using Tendril.Engine.Abstractions;
 using Tendril.Engine.Extensions;
 using Tendril.Engine.Models;
+using Tendril.Engine.Scrapers;
 
 namespace Tendril.Engine.Runtime;
 
