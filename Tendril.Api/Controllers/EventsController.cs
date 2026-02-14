@@ -17,7 +17,7 @@ public class EventsController(IEventRepository events, IMapper mapper) : Control
         [FromQuery] DateTimeOffset? startDate,
         [FromQuery] DateTimeOffset? endDate,
         [FromQuery] string? title,
-        [FromQuery(Name = "category")] List<string>? categories,
+        [FromQuery(Name = "category")] List<Guid>? categoryIds,
         [FromQuery(Name = "venue")] List<Guid>? venueIds,
         [FromQuery] int? limit,
         [FromQuery] Guid? cursor,
@@ -28,7 +28,7 @@ public class EventsController(IEventRepository events, IMapper mapper) : Control
             StartDate = startDate ?? DateTime.Today,
             EndDate = endDate,
             Title = title,
-            Categories = categories,
+            CategoryIds = categoryIds,
             VenueIds = venueIds
         };
 
@@ -65,9 +65,9 @@ public class EventsController(IEventRepository events, IMapper mapper) : Control
 
         if (@event is not null)
         {
-            if (request.Category is string category)
+            if (Guid.TryParse(request.CategoryId, out var categoryId))
             {
-                @event.Category = category;
+                @event.CategoryId = categoryId;
             }
 
             if (request.Status is EventStatus status)

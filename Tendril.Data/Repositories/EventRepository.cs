@@ -18,6 +18,7 @@ public class EventRepository(TendrilDbContext _context) : IEventRepository
         CancellationToken ct = default)
     {
         var query = _context.Events
+            .Include(x => x.Category)
             .Include(x => x.Venue)
             .Where(x => x.Status != EventStatus.Suppressed)
             .AsNoTracking();
@@ -32,9 +33,9 @@ public class EventRepository(TendrilDbContext _context) : IEventRepository
             query = query.Where(x => x.StartUtc <= filter.EndDate);
         }
 
-        if (filter.Categories is { Count: > 0 })
+        if (filter.CategoryIds is { Count: > 0 })
         {
-            query = query.Where(x => filter.Categories!.Contains(x.Category!));
+            query = query.Where(x => filter.CategoryIds!.Contains(x.CategoryId!.Value));
         }
 
         if (filter.VenueIds is { Count: > 0 })
@@ -86,6 +87,7 @@ public class EventRepository(TendrilDbContext _context) : IEventRepository
     public async Task<Event?> GetById(Guid eventId, CancellationToken ct = default)
     {
         var query = _context.Events
+            .Include(x => x.Category)
             .Include(x => x.Venue)
             .Where(x => x.Id == eventId)
             .AsNoTracking();
@@ -96,6 +98,7 @@ public class EventRepository(TendrilDbContext _context) : IEventRepository
     public async Task<List<Event>> GetByScraperIdAsync(Guid id, DateTimeOffset? startDate, DateTimeOffset? endDate, CancellationToken ct = default)
     {
         var query = _context.Events
+            .Include(x => x.Category)
             .Include(x => x.Venue)
             .Where(x => x.ScraperDefinitionId == id)
             .AsNoTracking();

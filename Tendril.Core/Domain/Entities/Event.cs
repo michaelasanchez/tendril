@@ -11,13 +11,15 @@ public class Event
 
     public ICollection<ScrapedEventRaw> ScrapedEventRaws { get; set; } = [];
 
+    public Guid? CategoryId { get; set; }
+    public Category? Category { get; set; } = null!;
+
     public Guid? VenueId { get; set; }
-    public Venue? Venue { get; set; }
+    public Venue? Venue { get; set; } = null;
 
     public string Title { get; set; } = null!;
     public string? Location { get; set; }
     public string? Description { get; set; }
-    public string? Category { get; set; }
 
     public DateTimeOffset StartUtc { get; set; }
     public DateTimeOffset? EndUtc { get; set; }

@@ -20,6 +20,7 @@ public class ApiMappingProfile : Profile
             .ForMember(d => d.LastFailureUtc, opt => opt.MapFrom(s => s.LastFailureUtc.HasValue ? s.LastFailureUtc.Value.ToString("o") : null));
 
         CreateMap<Event, EventDto>()
+            .ForMember(d => d.Category, opt => opt.MapFrom(s => s.Category!.Name))
             .ForMember(d => d.VenueName, opt => opt.MapFrom(s => s.Venue!.Name))
             .ForMember(d => d.VenueUrl, opt => opt.MapFrom(s => s.Venue!.Website))
             .ForMember(d => d.UpdatedUtc, opt => opt.MapFrom(s => s.UpdatedAtUtc));
