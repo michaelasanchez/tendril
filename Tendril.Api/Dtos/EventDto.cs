@@ -12,7 +12,7 @@ public record EventDto
     public string? Description { get; set; }
 
     public Guid? CategoryId { get; set; }
-    public string? Category { get; set; }
+    public string? CategoryName { get; set; }
 
     public DateTimeOffset StartUtc { get; set; }
     public DateTimeOffset? EndUtc { get; set; }

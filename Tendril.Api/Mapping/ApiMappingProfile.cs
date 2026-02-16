@@ -21,7 +21,7 @@ public class ApiMappingProfile : Profile
 
         CreateMap<Event, EventDto>()
             .ForMember(d => d.CategoryId, opt => opt.MapFrom(s => s.Category!.Id))
-            .ForMember(d => d.Category, opt => opt.MapFrom(s => s.Category!.Name))
+            .ForMember(d => d.CategoryName, opt => opt.MapFrom(s => s.Category!.Name))
             .ForMember(d => d.VenueName, opt => opt.MapFrom(s => s.Venue!.Name))
             .ForMember(d => d.VenueUrl, opt => opt.MapFrom(s => s.Venue!.Website))
             .ForMember(d => d.UpdatedUtc, opt => opt.MapFrom(s => s.UpdatedAtUtc));

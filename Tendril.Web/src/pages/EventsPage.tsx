@@ -58,13 +58,25 @@ export const EventsPage: React.FC = () => {
   const handleModalClose = () => navigate('/');
 
   const handleOnNext = () => {
-    // setActiveIndex((prev) =>
-    //   prev !== null ? Math.min(prev + 1, filteredEvents.length - 1) : null,
-    // );
+    const currentIndex = filteredEvents.findIndex(
+      (e) => e.id === activeEventId,
+    );
+
+    if (currentIndex >= 0 && currentIndex < filteredEvents.length - 1) {
+      const nextEvent = filteredEvents[currentIndex + 1];
+      navigate(`/event/${nextEvent.id}`);
+    }
   };
 
   const handleOnPrev = () => {
-    // setActiveIndex((prev) => (prev !== null ? Math.max(prev - 1, 0) : null));
+    const currentIndex = filteredEvents.findIndex(
+      (e) => e.id === activeEventId,
+    );
+
+    if (currentIndex > 0) {
+      const prevEvent = filteredEvents[currentIndex - 1];
+      navigate(`/event/${prevEvent.id}`);
+    }
   };
 
   const handleFavorite = (event: Event) => {

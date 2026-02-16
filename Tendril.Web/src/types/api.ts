@@ -171,7 +171,8 @@ export interface Event {
   imageUrl: string | null;
   detailsUrl: string | null;
   ticketUrl: string | null;
-  category: string | null;
+  categoryId: Guid | null;
+  categoryName: string | null;
   venueName: string;
   venueUrl: string;
   status: EventStatus;

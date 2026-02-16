@@ -1,5 +1,5 @@
 import { Container } from 'react-bootstrap';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import { Navbar } from './components/navbar';
 import { useBootstrapTheme } from './hooks';
 import {
@@ -19,14 +19,13 @@ export default function App() {
       <Navbar theme={theme} onThemeToggle={toggleTheme} />
       <Container>
         <Routes>
-          <Route path="/" element={<EventsPage />} />
           <Route path="/scrapers" element={<ScrapersPage />} />
           <Route path="/scrapers/:scraperId" element={<ScraperEditorPage />} />
           <Route path="/categories" element={<CategoriesPage />} />
           <Route path="/tags" element={<TagsPage />} />
           <Route path="/venues" element={<VenuesPage />} />
 
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<EventsPage />} />
         </Routes>
       </Container>
     </>

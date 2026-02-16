@@ -186,9 +186,9 @@ export const EventModal: React.FC<Props> = ({
                       <IconButton name="close" onClick={onHide} />
                     </div>
                     <div className={styles.BottomLeft}>
-                      {event.category && (
+                      {event.categoryName && (
                         <Badge className={styles.Uppercase}>
-                          {event.category}
+                          {event.categoryName}
                         </Badge>
                       )}
                     </div>
@@ -226,16 +226,28 @@ export const EventModal: React.FC<Props> = ({
                 </Modal.Body>
 
                 {/* --- Footer --- */}
-                {event.ticketUrl && (
+                {(!!event.ticketUrl || !!event.detailsUrl) && (
                   <Modal.Footer className={styles.Footer}>
-                    <SquareButton
-                      variant="primary"
-                      href={event.ticketUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Get Tickets <Icon name="external" />
-                    </SquareButton>
+                    {event.detailsUrl && (
+                      <SquareButton
+                        variant="outline-primary"
+                        href={event.detailsUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Event Page <Icon name="external" />
+                      </SquareButton>
+                    )}
+                    {event.ticketUrl && (
+                      <SquareButton
+                        variant="primary"
+                        href={event.ticketUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Get Tickets <Icon name="external" />
+                      </SquareButton>
+                    )}
                   </Modal.Footer>
                 )}
               </motion.div>

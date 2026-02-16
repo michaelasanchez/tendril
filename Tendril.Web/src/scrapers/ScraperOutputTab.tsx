@@ -17,13 +17,6 @@ interface Props {
   loadEvents: () => Promise<void>;
 }
 
-interface Stats {
-  past: number;
-  pending: number;
-  published: number;
-  suppressed: number;
-}
-
 interface Show {
   past: boolean;
   pending: boolean;
@@ -31,11 +24,25 @@ interface Show {
   suppressed: boolean;
 }
 
-const defaultStats = () => ({
-  past: 0,
-  pending: 0,
-  published: 0,
-  suppressed: 0,
+interface CategoryStats {
+  [category: string]: number;
+}
+
+type StatusStats = { [key in keyof Show]: number };
+
+interface Stats {
+  status: StatusStats;
+  category: CategoryStats;
+}
+
+const defaultStats = (): Stats => ({
+  status: {
+    past: 0,
+    pending: 0,
+    published: 0,
+    suppressed: 0,
+  },
+  category: {},
 });
 
 const today = new Date().toISOString();
@@ -56,22 +63,30 @@ export const ScraperOutputTab: React.FC<Props> = ({
 
   useEffect(() => {
     if (scraperId !== 'new') {
-      const stats = events.reduce((a, c) => {
-        switch (c.status) {
+      const stats = events.reduce((a, e) => {
+        switch (e.status) {
           case 'Pending':
-            a.pending++;
+            a.status.pending++;
             break;
           case 'Published':
-            a.published++;
+            a.status.published++;
             break;
           case 'Suppressed':
-            a.suppressed++;
+            a.status.suppressed++;
             break;
+        }
+
+        if (!!e.categoryName) {
+          if (!a.category[e.categoryName]) {
+            a.category[e.categoryName] = 0;
+          }
+
+          a.category[e.categoryName]++;
         }
         return a;
       }, defaultStats());
 
-      stats.past = events.filter((e) => e.startUtc < today).length;
+      stats.status.past = events.filter((e) => e.startUtc < today).length;
 
       setStats(stats);
     }
@@ -117,10 +132,17 @@ export const ScraperOutputTab: React.FC<Props> = ({
           }}
         >
           <div>
-            <div>Past: {stats.past}</div>
-            <div>Pending: {stats.pending}</div>
-            <div>Published: {stats.published}</div>
-            <div>Suppressed: {stats.suppressed}</div>
+            <div>Past: {stats.status.past}</div>
+            <div>Pending: {stats.status.pending}</div>
+            <div>Published: {stats.status.published}</div>
+            <div>Suppressed: {stats.status.suppressed}</div>
+          </div>
+          <div>
+            {Object.entries(stats?.category).map(([category, count]) => (
+              <div key={category}>
+                {category}: {count}
+              </div>
+            ))}
           </div>
           <div>
             <FormCheck
@@ -189,7 +211,9 @@ export const ScraperOutputTab: React.FC<Props> = ({
             </Card>
             <div style={{ minWidth: '120px', width: '120px' }}>
               <FormSelect
-                value={categories?.find((c) => c.name == e.category)?.id ?? ''}
+                value={
+                  categories?.find((c) => c.name == e.categoryName)?.id ?? ''
+                }
                 options={[
                   { value: '', label: 'None' },
                   ...(categories?.map((c) => ({

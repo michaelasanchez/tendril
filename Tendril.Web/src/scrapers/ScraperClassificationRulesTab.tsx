@@ -1,7 +1,6 @@
 import cn from 'classnames';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Card, Form, Table } from 'react-bootstrap';
-import { CategoriesApi } from '../api/categories';
 import { ScrapersApi } from '../api/scrapers';
 import { TagApi } from '../api/tags';
 import { SquareButton as Button } from '../components/button';
@@ -25,7 +24,7 @@ import type {
 
 interface Props {
   scraperId: Guid;
-  categories: Category[]
+  categories: Category[];
 }
 
 const conditionTypeOptions: SelectOption[] = [
@@ -46,7 +45,7 @@ const conditionTypeOptions: SelectOption[] = [
 
 export const ScraperClassificationRulesTab: React.FC<Props> = ({
   scraperId,
-  categories
+  categories,
 }) => {
   const [rules, setRules] = useState<ScraperClassificationRule[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
@@ -159,11 +158,6 @@ export const ScraperClassificationRulesTab: React.FC<Props> = ({
     await ScrapersApi.deleteClassificationRule(scraperId, rule.id);
     await load();
   };
-
-  const categoryId = editing.assignments?.find((a) => a.categoryId)?.categoryId;
-  const categoryName = categories.find((c) => c.id === categoryId)?.name ?? '';
-
-  console.log('category name', categoryName);
 
   return (
     <>
@@ -282,7 +276,10 @@ export const ScraperClassificationRulesTab: React.FC<Props> = ({
                 />
                 <FormSelect
                   label="Category"
-                  value={categoryId ?? ''}
+                  value={
+                    editing.assignments?.find((a) => a.categoryId)
+                      ?.categoryId ?? ''
+                  }
                   onChange={(categoryId) => {
                     const assignments =
                       editing.assignments?.filter((a) => !a.categoryId) ?? [];

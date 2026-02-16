@@ -55,8 +55,8 @@ export const EventCard: React.FC<Props> = ({
             />
           </div>
           <div className={styles.TopRight}>
-            {!!event.category && (
-              <Badge className={styles.Uppercase}>{event.category}</Badge>
+            {!!event.categoryName && (
+              <Badge className={styles.Uppercase}>{event.categoryName}</Badge>
             )}
           </div>
         </div>
