@@ -5,6 +5,7 @@ import type {
   Guid,
   PaginationType,
   ScraperAttemptHistory,
+  ScraperClassificationRule,
   ScraperDefinition,
   ScraperMappingRule,
   ScraperSelector,
@@ -62,6 +63,23 @@ export const ScrapersApi = {
 
   deleteSelector(scraperId: Guid, selectorId: Guid): Promise<void> {
     return apiDelete(`/scrapers/${scraperId}/selectors/${selectorId}`);
+  },
+
+  // Classification rules
+  getClassificationRules(scraperId: Guid, signal?: AbortSignal): Promise<ScraperClassificationRule[]> {
+    return apiGet(`/scrapers/${scraperId}/classification-rules`, signal);
+  },
+
+  createClassificationRule(scraperId: Guid, req: Omit<ScraperClassificationRule, "id" | "scraperDefinitionId">): Promise<ScraperClassificationRule> {
+    return apiPost(`/scrapers/${scraperId}/classification-rules`, req);
+  },
+
+  updateClassificationRule(scraperId: Guid, ruleId: Guid, req: Partial<ScraperClassificationRule>): Promise<void> {
+    return apiPut(`/scrapers/${scraperId}/classification-rules/${ruleId}`, req);
+  },
+
+  deleteClassificationRule(scraperId: Guid, ruleId: Guid): Promise<void> {
+    return apiDelete(`/scrapers/${scraperId}/classification-rules/${ruleId}`);
   },
 
   // Mapping rules

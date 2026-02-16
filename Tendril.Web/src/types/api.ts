@@ -103,6 +103,38 @@ export interface ScraperMappingRule {
   disabled: boolean;
 }
 
+export type ConditionType =
+  | 'Default'
+  | 'Equals'
+  | 'NotEquals'
+  | 'Contains'
+  | 'NotContains'
+  | 'StartsWith'
+  | 'EndsWith'
+  | 'GreaterThan'
+  | 'LessThan'
+  | 'GreaterThanOrEqualTo'
+  | 'LessThanOrEqualTo'
+  | 'RegexMatch'
+  | 'RegexNotMatch';
+
+export interface RuleAssignment {
+  id: Guid;
+  categoryId: Guid | null;
+  tagId: Guid | null;
+}
+
+export interface ScraperClassificationRule {
+  id: Guid;
+  scraperDefinitionId: Guid;
+  order: number;
+  disabled: boolean;
+  sourceJsonPath: string;
+  conditionType: ConditionType;
+  conditionValue: string;
+  assignments: RuleAssignment[];
+}
+
 export interface ScraperAttemptHistory {
   id: Guid;
   startTimeUtc: string;

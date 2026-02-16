@@ -21,7 +21,8 @@ public class ClassificationRulesController(IClassificationRuleRepository rules) 
             r.Disabled,
             r.SourceJsonPath,
             r.ConditionType,
-            r.ConditionValue
+            r.ConditionValue,
+            [.. r.Assignments.Select(a => new RuleAssignmentDto(a.Id, a.CategoryId, a.TagId))]
         ));
 
         return Ok(dtos);
@@ -38,7 +39,8 @@ public class ClassificationRulesController(IClassificationRuleRepository rules) 
             Disabled = request.Disabled,
             SourceJsonPath = request.SourceJsonPath,
             ConditionType = request.ConditionType,
-            ConditionValue = request.ConditionValue
+            ConditionValue = request.ConditionValue,
+            Assignments = [.. request.Assignments.Select(a => new RuleAssignment { Id = default, CategoryId = a.CategoryId, TagId = a.TagId })]
         };
 
         await rules.AddAsync(rule, cancellationToken);
@@ -50,7 +52,8 @@ public class ClassificationRulesController(IClassificationRuleRepository rules) 
             rule.Disabled,
             rule.SourceJsonPath,
             rule.ConditionType,
-            rule.ConditionValue
+            rule.ConditionValue,
+            [.. rule.Assignments.Select(a => new RuleAssignmentDto(a.Id, a.CategoryId, a.TagId))]
         );
 
         return CreatedAtAction(nameof(Get), new { scraperId }, dto);
@@ -69,6 +72,15 @@ public class ClassificationRulesController(IClassificationRuleRepository rules) 
         if (request.SourceJsonPath is not null) rule.SourceJsonPath = request.SourceJsonPath;
         if (request.ConditionType is not null) rule.ConditionType = request.ConditionType.Value;
         if (request.ConditionValue is not null) rule.ConditionValue = request.ConditionValue;
+        if (request.Assignments is not null && request.Assignments.Count > 0)
+        {
+            rule.Assignments = [.. request.Assignments.Select(x => new RuleAssignment {
+                Id = x.Id ?? default,
+                ScraperClassificationRuleId = scraperId,
+                CategoryId = x.CategoryId,
+                TagId = x.TagId
+            })];
+        }
 
         await rules.UpdateAsync(rule, cancellationToken);
 

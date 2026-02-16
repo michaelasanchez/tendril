@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Card, Form, Tab } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
+import { CategoriesApi } from '../api/categories';
 import { EventsApi } from '../api/events';
 import { ScrapersApi } from '../api/scrapers';
 import { VenuesApi } from '../api/venues';
@@ -12,9 +13,11 @@ import {
   ScraperRunsTab,
   ScraperSelectorsTab,
 } from '../scrapers';
+import { ScraperClassificationRulesTab } from '../scrapers/ScraperClassificationRulesTab';
 import { ScraperOutputTab } from '../scrapers/ScraperOutputTab';
 import { cardStyles, formStyles, pageStyles } from '../styles';
 import type {
+  Category,
   Event,
   ExecutionMode,
   ExtractionStrategy,
@@ -27,7 +30,13 @@ import type {
 } from '../types/api';
 import styles from './ScraperEditorPage.module.css';
 
-type TabKey = 'general' | 'selectors' | 'mapping' | 'runs' | 'output';
+type TabKey =
+  | 'general'
+  | 'selectors'
+  | 'mapping'
+  | 'classification'
+  | 'runs'
+  | 'output';
 
 const toOptions = (arr: string[]) =>
   arr.map((item) => ({ value: item, label: item }));
@@ -85,11 +94,34 @@ export const ScraperEditorPage: React.FC = () => {
   };
   /* Attempts */
 
+  /* Categories */
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  const loadCategories = useCallback(async (signal?: AbortSignal) => {
+    try {
+      const result = await CategoriesApi.getAll(signal);
+
+      const sortProp = (c: Category) => c.name;
+
+      const sorted = result.sort((a, b) =>
+        sortProp(a).localeCompare(sortProp(b)),
+      );
+
+      setCategories(sorted);
+    } catch (err) {
+      console.error('Failed to fetch categories', err);
+    }
+  }, []);
+  /* Categories */
+
   useEffect(() => {
     if (scraperId !== 'new') {
+      var abortController = new AbortController();
+
       void loadEvents();
       void loadSelectors();
       void loadAttemptHistories();
+      void loadCategories(abortController.signal);
     }
   }, [scraperId]);
 
@@ -194,7 +226,14 @@ export const ScraperEditorPage: React.FC = () => {
             disabled={isNew}
             onClick={() => setEventKey('mapping')}
           >
-            Mapping Rules
+            Mapping
+          </Button>
+          <Button
+            variant={eventKey == 'classification' ? 'active' : 'default'}
+            disabled={isNew}
+            onClick={() => setEventKey('classification')}
+          >
+            Classification
           </Button>
           <Button
             variant={eventKey == 'runs' ? 'active' : 'default'}
@@ -329,6 +368,13 @@ export const ScraperEditorPage: React.FC = () => {
             />
           </Tab.Pane>
 
+          <Tab.Pane eventKey="classification">
+            <ScraperClassificationRulesTab
+              scraperId={scraperId as Guid}
+              categories={categories}
+            />
+          </Tab.Pane>
+
           <Tab.Pane eventKey="runs">
             <ScraperRunsTab
               scraperId={scraperId as Guid}
@@ -343,6 +389,7 @@ export const ScraperEditorPage: React.FC = () => {
           <Tab.Pane eventKey="output">
             <ScraperOutputTab
               scraperId={scraperId as Guid}
+              categories={categories}
               events={events}
               loadEvents={loadEvents}
             />

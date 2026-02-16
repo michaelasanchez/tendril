@@ -9,7 +9,8 @@ public record ClassificationRuleDto(
     bool Disabled,
     string SourceJsonPath,
     ConditionType ConditionType,
-    string ConditionValue
+    string ConditionValue,
+    List<RuleAssignmentDto> Assignments
 );
 
 public class CreateClassificationRuleRequest
@@ -20,6 +21,7 @@ public class CreateClassificationRuleRequest
     public string SourceJsonPath { get; set; } = null!;
     public ConditionType ConditionType { get; set; }
     public string ConditionValue { get; set; } = null!;
+    public List<CreateRuleAssignment> Assignments { get; set; } = [];
 }
 
 public class UpdateClassificationRuleRequest
@@ -30,4 +32,5 @@ public class UpdateClassificationRuleRequest
     public string? SourceJsonPath { get; set; } = null!;
     public ConditionType? ConditionType { get; set; }
     public string? ConditionValue { get; set; } = null!;
+    public List<UpdateRuleAssignment>? Assignments { get; set; } = [];
 }

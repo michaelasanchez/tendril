@@ -38,7 +38,7 @@ export interface SelectOption {
 }
 
 export interface FormSelectProps {
-  label: string;
+  label?: string;
   value: string;
   onChange: (value: string) => void;
   options: SelectOption[];

@@ -4,6 +4,6 @@ namespace Tendril.Api.Dtos;
 
 public record PatchEventRequest
 {
-    public string? CategoryId { get; set; }
+    public Guid? CategoryId { get; set; }
     public EventStatus? Status { get; set; } = null;
 };

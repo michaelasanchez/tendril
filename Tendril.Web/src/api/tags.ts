@@ -7,7 +7,7 @@ export interface CreateTagRequest {
 
 export interface UpdateTagRequest extends Partial<CreateTagRequest> {}
 
-export const TagsApi = {
+export const TagApi = {
   getAll(signal?: AbortSignal): Promise<Tag[]> {
     return apiGet('/tags', signal);
   },

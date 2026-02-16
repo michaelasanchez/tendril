@@ -65,9 +65,9 @@ public class EventsController(IEventRepository events, IMapper mapper) : Control
 
         if (@event is not null)
         {
-            if (Guid.TryParse(request.CategoryId, out var categoryId))
+            if (request.CategoryId is not null && request.CategoryId != Guid.Empty)
             {
-                @event.CategoryId = categoryId;
+                @event.CategoryId = request.CategoryId;
             }
 
             if (request.Status is EventStatus status)

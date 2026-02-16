@@ -23,19 +23,18 @@ public class ClassificationService(TendrilDbContext context) : IClassificationSe
 
         foreach (var rule in rules)
         {
-            // 2. Use TryGetProperty on the root element
+            var valueToCompare = string.Empty;
+
             if (root.TryGetProperty(rule.SourceJsonPath, out var jsonElement))
             {
-                // jsonElement.GetString() works if the value is a string. 
-                // GetRawText() is a safer fallback if it's a number/bool you want to match as text.
-                string? valueToCompare = jsonElement.ValueKind == JsonValueKind.String
+                valueToCompare = jsonElement.ValueKind == JsonValueKind.String
                     ? jsonElement.GetString()
                     : jsonElement.GetRawText();
+            }
 
-                if (IsMatch(rule, valueToCompare))
-                {
-                    ApplyAssignments(targetEvent, rule.Assignments);
-                }
+            if (IsMatch(rule, valueToCompare))
+            {
+                ApplyAssignments(targetEvent, rule.Assignments);
             }
         }
     }
@@ -44,13 +43,11 @@ public class ClassificationService(TendrilDbContext context) : IClassificationSe
     {
         foreach (var assignment in assignments)
         {
-            // 2. Handle Category Assignment (1-to-1)
             if (assignment.CategoryId.HasValue)
             {
                 targetEvent.CategoryId = assignment.CategoryId.Value;
             }
 
-            // 3. Handle Tag Assignment (Many-to-Many)
             if (assignment.TagId.HasValue)
             {
                 // Avoid duplicates if the tag is already there
@@ -68,11 +65,12 @@ public class ClassificationService(TendrilDbContext context) : IClassificationSe
 
     private static bool IsMatch(ScraperClassificationRule rule, string? text)
     {
+        if (rule.ConditionType is ConditionType.Default) return true;
+
         if (string.IsNullOrEmpty(text)) return false;
 
         return rule.ConditionType switch
         {
-            ConditionType.Default => true,
             ConditionType.Equals => text.Equals(rule.ConditionValue, StringComparison.OrdinalIgnoreCase),
             ConditionType.NotEquals => !text.Equals(rule.ConditionValue, StringComparison.OrdinalIgnoreCase),
             ConditionType.Contains => text.Contains(rule.ConditionValue, StringComparison.OrdinalIgnoreCase),

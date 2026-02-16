@@ -1,8 +1,8 @@
-import cn from "classnames";
-import type React from "react";
-import { Button, Form } from "react-bootstrap";
-import type { FormSelectProps } from ".";
-import styles from "../../styles/Form.module.css";
+import cn from 'classnames';
+import type React from 'react';
+import { Button, Form } from 'react-bootstrap';
+import type { FormSelectProps } from '.';
+import styles from '../../styles/Form.module.css';
 
 export const FormSelect: React.FC<FormSelectProps> = ({
   label,
@@ -14,7 +14,7 @@ export const FormSelect: React.FC<FormSelectProps> = ({
   disabled = false,
 }) => (
   <Form.Group className={styles.FormSelect}>
-    <Form.Label>{label}</Form.Label>
+    {!!label && <Form.Label>{label}</Form.Label>}
     <Form.Select
       value={value}
       onChange={(e) => onChange(e.target.value)}
@@ -31,7 +31,7 @@ export const FormSelect: React.FC<FormSelectProps> = ({
       <Button
         className={cn(styles.ClearButton, !value && styles.Show)}
         variant="outline-secondary"
-        onClick={() => onChange("")}
+        onClick={() => onChange('')}
       >
         x
       </Button>

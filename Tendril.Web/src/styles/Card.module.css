@@ -7,6 +7,10 @@
   border: 1px solid var(--border);
   border-radius: var(--card-border-radius);
 
+  &.MarginBottom {
+    margin-bottom: 1em;
+  }
+
   .CardImage {
     aspect-ratio: 16 / 12;
     object-fit: cover;

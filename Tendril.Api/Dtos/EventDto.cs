@@ -10,6 +10,8 @@ public record EventDto
     public string? Title { get; set; }
     public string? Location { get; set; }
     public string? Description { get; set; }
+
+    public Guid? CategoryId { get; set; }
     public string? Category { get; set; }
 
     public DateTimeOffset StartUtc { get; set; }

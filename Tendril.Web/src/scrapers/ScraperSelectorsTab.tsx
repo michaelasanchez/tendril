@@ -1,3 +1,4 @@
+import cn from 'classnames';
 import React, { useEffect, useState } from 'react';
 import { Card, Form, Table } from 'react-bootstrap';
 import { ScrapersApi } from '../api/scrapers';
@@ -137,7 +138,7 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
           Add Selector
         </Button>
       </div>
-      <Card className={cardStyles.BgCard}>
+      <Card className={cn(cardStyles.BgCard, cardStyles.MarginBottom)}>
         <Card.Body>
           <Table className={tableStyles.Table} hover responsive>
             <thead>
@@ -159,7 +160,10 @@ export const ScraperSelectorsTab: React.FC<Props> = ({
               {selectors
                 .sort((a, b) => a.order - b.order)
                 .map((s) => (
-                  <tr key={s.id} className={s.disabled ? tableStyles.Disabled : ''}>
+                  <tr
+                    key={s.id}
+                    className={s.disabled ? tableStyles.Disabled : ''}
+                  >
                     <td>{s.fieldName}</td>
                     <td>
                       <code>{s.selector}</code>

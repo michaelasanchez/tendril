@@ -25,8 +25,8 @@
 }
 
 .GroupHeader td {
-  background: #fafafa;
+  background: var(--table-header-background);
   font-weight: 600;
   text-transform: uppercase;
-  border-top: 2px solid #ddd;
+  border-top: 2px solid var(--border);
 }

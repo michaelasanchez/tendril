@@ -2,7 +2,7 @@ import type { Event, EventStatus, Guid, PagedResponse } from '../types/api';
 import { apiGet, apiPatch } from './client';
 
 export interface PatchEventRequest {
-  category?: string;
+  categoryId?: Guid;
   status?: EventStatus;
 }
 

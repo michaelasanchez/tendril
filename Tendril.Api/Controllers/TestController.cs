@@ -143,7 +143,14 @@ public class ScraperRunsController(
         // The IngestionService now internally handles the Stream loop and DB saving
         var result = await ingestionService.Ingest(scraper, ct);
 
-        return Ok(new IngestResultDto(
-            ));
+        return Ok(new IngestResultDto
+        {
+            Attempt = null,
+            Success = result.Success,
+            Errors = result.Errors,
+            Raw = null,
+            Mapped = null,
+            MappingSummary = result.MappingSummary
+        });
     }
 }

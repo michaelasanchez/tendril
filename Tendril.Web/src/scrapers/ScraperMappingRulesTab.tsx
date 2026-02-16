@@ -1,3 +1,4 @@
+import cn from 'classnames';
 import React, { useEffect, useState, type JSX } from 'react';
 import { Card, Form, Table } from 'react-bootstrap';
 import { ScrapersApi } from '../api/scrapers';
@@ -54,7 +55,6 @@ const targetFieldOptions: SelectOption[] = [
   'ImageUrl',
   'DetailsUrl',
   'TicketUrl',
-  'Category',
 ].map((o) => ({ value: o, label: o }));
 
 export const ScraperMappingRulesTab: React.FC<Props> = ({
@@ -202,7 +202,7 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
           Add&nbsp;Rule
         </Button>
       </div>
-      <Card className={cardStyles.BgCard}>
+      <Card className={cn(cardStyles.BgCard, cardStyles.MarginBottom)}>
         <Card.Body>
           <Table className={tableStyles.Table} hover responsive>
             <thead>
@@ -255,7 +255,7 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
                 ))}
               {rules.length === 0 && (
                 <tr>
-                  <td colSpan={5}>No mapping rules yet.</td>
+                  <td colSpan={5}>No rules yet.</td>
                 </tr>
               )}
             </tbody>
@@ -265,7 +265,7 @@ export const ScraperMappingRulesTab: React.FC<Props> = ({
 
       {editing.targetField !== undefined && (
         <>
-          <h4>{isNew ? 'New Selector' : 'Edit Selector'}</h4>
+          <h4>{isNew ? 'New Rule' : 'Edit Rule'}</h4>
           <Card className={cardStyles.BgCard}>
             <Card.Body>
               <Form className={formStyles.form}>

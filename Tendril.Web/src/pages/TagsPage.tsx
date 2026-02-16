@@ -1,7 +1,7 @@
 // src/pages/TagsPage.tsx
 import React, { useEffect, useState } from 'react';
 import { Card, Form, Table } from 'react-bootstrap';
-import { TagsApi } from '../api/tags';
+import { TagApi } from '../api/tags';
 import { SquareButton as Button } from '../components/button';
 import { FormInput } from '../components/form';
 import { Icon } from '../components/Icon';
@@ -14,7 +14,7 @@ export const TagsPage: React.FC = () => {
   const [isNew, setIsNew] = useState(false);
 
   const load = async () => {
-    const data = await TagsApi.getAll();
+    const data = await TagApi.getAll();
     setTags(
       data.sort((a, b) =>
         a.name.replace('The ', '').localeCompare(b.name.replace('The ', '')),
@@ -44,11 +44,11 @@ export const TagsPage: React.FC = () => {
   const save = async () => {
     if (!editing.name) return;
     if (isNew) {
-      await TagsApi.create({
+      await TagApi.create({
         name: editing.name,
       });
     } else if (editing.id) {
-      await TagsApi.update(editing.id, {
+      await TagApi.update(editing.id, {
         name: editing.name,
       });
     }
@@ -58,7 +58,7 @@ export const TagsPage: React.FC = () => {
 
   const remove = async (v: Tag) => {
     if (!window.confirm(`Delete tag "${v.name}"?`)) return;
-    await TagsApi.delete(v.id);
+    await TagApi.delete(v.id);
     await load();
   };
 

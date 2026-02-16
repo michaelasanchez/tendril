@@ -1,40 +1,53 @@
+import cn from 'classnames';
 import { useEffect, useMemo, useState } from 'react';
 import { Card } from 'react-bootstrap';
 import { EventsApi } from '../api/events';
 import NoImage from '../assets/no-image.svg';
 import { SquareButton as Button } from '../components/button';
-import { FormCheck } from '../components/form';
+import { FormCheck, FormSelect } from '../components/form';
 import { Icon } from '../components/Icon';
 import { cardStyles, pageStyles } from '../styles';
-import type { Event, Guid } from '../types/api';
+import type { Category, Event, Guid } from '../types/api';
 import styles from './ScraperOutputTab.module.css';
 
 interface Props {
   scraperId: Guid;
+  categories: Category[];
   events: Event[];
   loadEvents: () => Promise<void>;
 }
 
 interface Stats {
+  past: number;
   pending: number;
   published: number;
   suppressed: number;
 }
 
 interface Show {
+  past: boolean;
   pending: boolean;
   published: boolean;
   suppressed: boolean;
 }
 
 const defaultStats = () => ({
+  past: 0,
   pending: 0,
   published: 0,
   suppressed: 0,
 });
 
-export const ScraperOutputTab: React.FC<Props> = ({ scraperId, events, loadEvents }) => {
+const today = new Date().toISOString();
+
+export const ScraperOutputTab: React.FC<Props> = ({
+  scraperId,
+  categories,
+  events,
+  loadEvents,
+}) => {
   const [show, setShow] = useState<Show>({
+    past: false,
     pending: true,
     published: true,
     suppressed: false,
@@ -43,20 +56,22 @@ export const ScraperOutputTab: React.FC<Props> = ({ scraperId, events, loadEvent
 
   useEffect(() => {
     if (scraperId !== 'new') {
-      
-
       const stats = events.reduce((a, c) => {
-        if (c.status === 'Pending') {
-          a.pending++;
-        }
-        if (c.status === 'Published') {
-          a.published++;
-        }
-        if (c.status === 'Suppressed') {
-          a.suppressed++;
+        switch (c.status) {
+          case 'Pending':
+            a.pending++;
+            break;
+          case 'Published':
+            a.published++;
+            break;
+          case 'Suppressed':
+            a.suppressed++;
+            break;
         }
         return a;
       }, defaultStats());
+
+      stats.past = events.filter((e) => e.startUtc < today).length;
 
       setStats(stats);
     }
@@ -68,6 +83,10 @@ export const ScraperOutputTab: React.FC<Props> = ({ scraperId, events, loadEvent
 
   const filteredEvents = useMemo(() => {
     let filtered: Event[] = [...events];
+
+    if (!show.past) {
+      filtered = filtered.filter((e) => e.startUtc > today);
+    }
 
     if (!show.pending) {
       filtered = filtered.filter((e) => e.status !== 'Pending');
@@ -89,7 +108,7 @@ export const ScraperOutputTab: React.FC<Props> = ({ scraperId, events, loadEvent
       <div className={pageStyles.pageHeader}>
         <h3>Output</h3>
       </div>
-      <Card className={cardStyles.BgCard} style={{ marginBottom: '1em' }}>
+      <Card className={cn(cardStyles.BgCard, cardStyles.MarginBottom)}>
         <Card.Body
           style={{
             display: 'flex',
@@ -98,11 +117,17 @@ export const ScraperOutputTab: React.FC<Props> = ({ scraperId, events, loadEvent
           }}
         >
           <div>
+            <div>Past: {stats.past}</div>
             <div>Pending: {stats.pending}</div>
             <div>Published: {stats.published}</div>
             <div>Suppressed: {stats.suppressed}</div>
           </div>
           <div>
+            <FormCheck
+              label="Show Past Events"
+              checked={show.past}
+              onChange={() => setShow({ ...show, past: !show.past })}
+            />
             <FormCheck
               label="Show Pending"
               checked={show.pending}
@@ -158,9 +183,27 @@ export const ScraperOutputTab: React.FC<Props> = ({ scraperId, events, loadEvent
               }
               <Card.Body>
                 <h3>{e.title}</h3>
+                <p className={styles.Clamp}>{e.description}</p>
                 <label>{e.startUtc}</label>
               </Card.Body>
             </Card>
+            <div style={{ minWidth: '120px', width: '120px' }}>
+              <FormSelect
+                value={categories?.find((c) => c.name == e.category)?.id ?? ''}
+                options={[
+                  { value: '', label: 'None' },
+                  ...(categories?.map((c) => ({
+                    value: c.id,
+                    label: c.name,
+                  })) ?? []),
+                ]}
+                onChange={(value) =>
+                  EventsApi.patch(e.id, { categoryId: value }).then(() =>
+                    loadEvents(),
+                  )
+                }
+              />
+            </div>
             <div className={styles.ActionContainer}>
               <Button
                 disabled={e.status === 'Suppressed'}

@@ -89,8 +89,7 @@ public class EventRepository(TendrilDbContext _context) : IEventRepository
         var query = _context.Events
             .Include(x => x.Category)
             .Include(x => x.Venue)
-            .Where(x => x.Id == eventId)
-            .AsNoTracking();
+            .Where(x => x.Id == eventId);
 
         return await query.FirstOrDefaultAsync(ct);
     }

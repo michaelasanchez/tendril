@@ -8,6 +8,7 @@ import React, {
   useState,
 } from 'react';
 import { Col, Row } from 'react-bootstrap';
+import { useMatch, useNavigate } from 'react-router-dom';
 import { EventsApi, type EventFilter } from '../api/events';
 import { VenuesApi } from '../api/venues';
 import { SquareButton } from '../components/button';
@@ -36,7 +37,7 @@ export const EventsPage: React.FC = () => {
   });
   const [nextCursor, setNextCursor] = useState<Guid | null>(null);
   const [totalCount, setTotalCount] = useState<number>(0);
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  // const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   const [favorites, setFavorites] = useState<Set<Guid>>(new Set());
 
@@ -45,16 +46,39 @@ export const EventsPage: React.FC = () => {
     startDate: format(new Date(), 'yyyy-MM-dd'),
   });
 
-  const handleModalClose = () => setActiveIndex(null);
+  const navigate = useNavigate();
+  const eventMatch = useMatch('/event/:id');
+
+  const activeEventId = eventMatch?.params.id;
+
+  const activeIndex = activeEventId
+    ? events.findIndex((e) => e.id === activeEventId)
+    : -1;
+
+  const handleModalClose = () => navigate('/');
 
   const handleOnNext = () => {
-    setActiveIndex((prev) =>
-      prev !== null ? Math.min(prev + 1, filteredEvents.length - 1) : null,
-    );
+    // setActiveIndex((prev) =>
+    //   prev !== null ? Math.min(prev + 1, filteredEvents.length - 1) : null,
+    // );
   };
 
   const handleOnPrev = () => {
-    setActiveIndex((prev) => (prev !== null ? Math.max(prev - 1, 0) : null));
+    // setActiveIndex((prev) => (prev !== null ? Math.max(prev - 1, 0) : null));
+  };
+
+  const handleFavorite = (event: Event) => {
+    setFavorites((prev) => {
+      const updated = new Set(prev);
+
+      if (updated.has(event.id)) {
+        updated.delete(event.id);
+      } else {
+        updated.add(event.id);
+      }
+
+      return updated;
+    });
   };
 
   useEffect(() => {
@@ -73,20 +97,6 @@ export const EventsPage: React.FC = () => {
       controller.abort();
     };
   }, [activeIndex]); // Only re-runs when activeIndex changes
-
-  const handleFavorite = (event: Event) => {
-    setFavorites((prev) => {
-      const updated = new Set(prev);
-
-      if (updated.has(event.id)) {
-        updated.delete(event.id);
-      } else {
-        updated.add(event.id);
-      }
-
-      return updated;
-    });
-  };
 
   const loadEvents = useCallback(
     async (
@@ -232,13 +242,7 @@ export const EventsPage: React.FC = () => {
                 events={filteredEvents}
                 favorites={favorites}
                 lastRef={lastElementRef}
-                onEventClick={(clicked) => {
-                  const index = filteredEvents.findIndex(
-                    (e) => e.id === clicked.id,
-                  );
-
-                  setActiveIndex(index);
-                }}
+                onEventClick={(clicked) => navigate(`/event/${clicked.id}`)}
                 onFavorite={handleFavorite}
               />
               {loading.events && <p>Loading more...</p>}
@@ -248,8 +252,8 @@ export const EventsPage: React.FC = () => {
       </section>
 
       <EventModal
-        event={activeIndex !== null ? filteredEvents[activeIndex] : null}
-        show={activeIndex !== null}
+        event={activeIndex >= 0 ? filteredEvents[activeIndex] : null}
+        show={activeIndex >= 0}
         onHide={handleModalClose}
         onNext={handleOnNext}
         onPrev={handleOnPrev}
