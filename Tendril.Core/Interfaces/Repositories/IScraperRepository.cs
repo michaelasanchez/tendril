@@ -1,4 +1,5 @@
-﻿using Tendril.Core.Domain.Entities;
+﻿using Tendril.Core.Domain;
+using Tendril.Core.Domain.Entities;
 
 namespace Tendril.Core.Interfaces.Repositories;
 
@@ -14,4 +15,5 @@ public interface IScraperRepository
 
     // Used by Worker
     Task<List<ScraperDefinition>> GetAllWithDetailsAsync(CancellationToken cancellationToken = default);
+    Task<ScraperSummary?> GetSummaryByIdAsync(Guid id, CancellationToken cancellationToken);
 }

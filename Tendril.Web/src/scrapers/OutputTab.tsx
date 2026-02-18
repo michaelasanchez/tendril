@@ -8,7 +8,7 @@ import { FormCheck, FormSelect } from '../components/form';
 import { Icon } from '../components/Icon';
 import { cardStyles, pageStyles } from '../styles';
 import type { Category, Event, Guid } from '../types/api';
-import styles from './ScraperOutputTab.module.css';
+import styles from './Tab.module.css';
 
 interface Props {
   scraperId: Guid;
@@ -47,7 +47,7 @@ const defaultStats = (): Stats => ({
 
 const today = new Date().toISOString();
 
-export const ScraperOutputTab: React.FC<Props> = ({
+export const OutputTab: React.FC<Props> = ({
   scraperId,
   categories,
   events,

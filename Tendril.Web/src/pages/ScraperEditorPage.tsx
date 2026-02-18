@@ -9,12 +9,13 @@ import { SquareButton as Button, SquareButton } from '../components/button';
 import { FormCheck, FormInput, FormSelect, FormText } from '../components/form';
 import { Icon } from '../components/Icon';
 import {
-  ScraperMappingRulesTab,
-  ScraperRunsTab,
-  ScraperSelectorsTab,
+  MappingRulesTab,
+  RunsTab,
+  SelectorsTab,
+  SummaryTab,
 } from '../scrapers';
-import { ScraperClassificationRulesTab } from '../scrapers/ScraperClassificationRulesTab';
-import { ScraperOutputTab } from '../scrapers/ScraperOutputTab';
+import { ClassificationRulesTab } from '../scrapers/ClassificationRulesTab';
+import { OutputTab } from '../scrapers/OutputTab';
 import { cardStyles, formStyles, pageStyles } from '../styles';
 import type {
   Category,
@@ -36,6 +37,7 @@ type TabKey =
   | 'mapping'
   | 'classification'
   | 'runs'
+  | 'summary'
   | 'output';
 
 const toOptions = (arr: string[]) =>
@@ -236,6 +238,13 @@ export const ScraperEditorPage: React.FC = () => {
             Classification
           </Button>
           <Button
+            variant={eventKey == 'summary' ? 'active' : 'default'}
+            disabled={isNew}
+            onClick={() => setEventKey('summary')}
+          >
+            Summary
+          </Button>
+          <Button
             variant={eventKey == 'runs' ? 'active' : 'default'}
             disabled={isNew}
             onClick={() => setEventKey('runs')}
@@ -354,7 +363,7 @@ export const ScraperEditorPage: React.FC = () => {
           </Tab.Pane>
 
           <Tab.Pane eventKey="selectors">
-            <ScraperSelectorsTab
+            <SelectorsTab
               scraperId={scraperId as Guid}
               selectors={selectors}
               refresh={loadSelectors}
@@ -362,21 +371,27 @@ export const ScraperEditorPage: React.FC = () => {
           </Tab.Pane>
 
           <Tab.Pane eventKey="mapping">
-            <ScraperMappingRulesTab
+            <MappingRulesTab
               scraperId={scraperId as Guid}
               selectors={selectors}
             />
           </Tab.Pane>
 
           <Tab.Pane eventKey="classification">
-            <ScraperClassificationRulesTab
+            <ClassificationRulesTab
               scraperId={scraperId as Guid}
               categories={categories}
             />
           </Tab.Pane>
 
+          <Tab.Pane eventKey="summary">
+            <SummaryTab
+              scraperId={scraperId as Guid}
+            />
+          </Tab.Pane>
+
           <Tab.Pane eventKey="runs">
-            <ScraperRunsTab
+            <RunsTab
               scraperId={scraperId as Guid}
               attempts={attempts}
               onComplete={() => {
@@ -387,7 +402,7 @@ export const ScraperEditorPage: React.FC = () => {
           </Tab.Pane>
 
           <Tab.Pane eventKey="output">
-            <ScraperOutputTab
+            <OutputTab
               scraperId={scraperId as Guid}
               categories={categories}
               events={events}

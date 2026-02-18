@@ -9,6 +9,7 @@ import type {
   ScraperDefinition,
   ScraperMappingRule,
   ScraperSelector,
+  ScraperSummary,
   ScrapeRunResponse
 } from "../types/api";
 import { apiDelete, apiGet, apiPost, apiPut } from "./client";
@@ -102,6 +103,11 @@ export const ScrapersApi = {
   // Attempt Histories
   getAttemptHistories(scraperId: Guid): Promise<ScraperAttemptHistory[]> {
     return apiGet(`/scrapers/${scraperId}/attempt-histories`);
+  },
+
+  // Summaries
+  getScraperSummary(scraperId: Guid, signal?: AbortSignal): Promise<ScraperSummary> {
+    return apiGet(`/scrapers/${scraperId}/summaries`, signal);
   },
 
   // Runs

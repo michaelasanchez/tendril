@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Tendril.Core.Domain;
 using Tendril.Core.Domain.Entities;
 using Tendril.Core.Interfaces.Repositories;
 
@@ -63,5 +64,35 @@ public class ScraperRepository(TendrilDbContext db) : IScraperRepository
     {
         db.Scrapers.Remove(scraper);
         await db.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<ScraperSummary?> GetSummaryByIdAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var scraper = await db.Scrapers
+            .Include(x => x.MappingRules.Where(x => !x.Disabled))
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+
+        if (scraper is null)
+        {
+            return null;
+        }
+
+        return new ScraperSummary
+        {
+            Mapping = new MappingSummary
+            {
+                Title = scraper.MappingRules.Any(x => x.TargetField == TargetField.Title),
+                Description = scraper.MappingRules.Any(x => x.TargetField == TargetField.Description),
+                Location = scraper.MappingRules.Any(x => x.TargetField == TargetField.Location),
+                Venue = scraper.VenueId is not null,
+                StartUtc = scraper.MappingRules.Any(x => x.TargetField == TargetField.StartUtc),
+                EndUtc = scraper.MappingRules.Any(x => x.TargetField == TargetField.EndUtc),
+                MinPrice = scraper.MappingRules.Any(x => x.TargetField == TargetField.MinPrice),
+                MaxPrice = scraper.MappingRules.Any(x => x.TargetField == TargetField.MaxPrice),
+                DetailsUrl = scraper.MappingRules.Any(x => x.TargetField == TargetField.DetailsUrl),
+                ImageUrl = scraper.MappingRules.Any(x => x.TargetField == TargetField.ImageUrl),
+                TicketUrl = scraper.MappingRules.Any(x => x.TargetField == TargetField.TicketUrl)
+            }
+        };
     }
 }

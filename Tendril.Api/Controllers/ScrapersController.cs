@@ -80,4 +80,14 @@ public class ScrapersController(
         await scrapers.DeleteAsync(scraper, cancellationToken);
         return NoContent();
     }
+
+    [HttpGet("{id:guid}/summaries")]
+    public async Task<ActionResult> Summarize(Guid id, CancellationToken cancellationToken)
+    {
+        var summary = await scrapers.GetSummaryByIdAsync(id, cancellationToken);
+
+        if (summary is null) return NotFound();
+
+        return Ok(summary);
+    }
 }

@@ -34,7 +34,7 @@ interface Option {
   value: string;
 }
 
-export const ScraperSelectorsTab: React.FC<Props> = ({
+export const SelectorsTab: React.FC<Props> = ({
   scraperId,
   selectors,
   refresh: load,

@@ -43,7 +43,7 @@ const conditionTypeOptions: SelectOption[] = [
   'RegexNotMatch',
 ].map((o) => ({ value: o, label: o }));
 
-export const ScraperClassificationRulesTab: React.FC<Props> = ({
+export const ClassificationRulesTab: React.FC<Props> = ({
   scraperId,
   categories,
 }) => {

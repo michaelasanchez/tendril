@@ -20,7 +20,7 @@ interface Props {
   onComplete?: () => void;
 }
 
-export const ScraperRunsTab: React.FC<Props> = ({
+export const RunsTab: React.FC<Props> = ({
   scraperId,
   attempts,
   onComplete,

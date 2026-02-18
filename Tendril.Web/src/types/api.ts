@@ -150,6 +150,24 @@ export interface ScraperAttemptHistory {
   errorMessage: string;
 }
 
+export interface MappingSummary {
+  title: boolean;
+  description: boolean;
+  location: boolean;
+  venue: boolean;
+  startUtc: boolean;
+  endUtc: boolean;
+  minPrice: boolean;
+  maxPrice: boolean;
+  detailsUrl: boolean;
+  imageUrl: boolean;
+  ticketUrl: boolean;
+}
+
+export interface ScraperSummary {
+  mapping: MappingSummary;
+}
+
 export interface PagedResponse {
   items: Event[];
   nextCursor: Guid | null;

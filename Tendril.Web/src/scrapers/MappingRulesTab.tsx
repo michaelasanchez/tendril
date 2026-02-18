@@ -57,7 +57,7 @@ const targetFieldOptions: SelectOption[] = [
   'TicketUrl',
 ].map((o) => ({ value: o, label: o }));
 
-export const ScraperMappingRulesTab: React.FC<Props> = ({
+export const MappingRulesTab: React.FC<Props> = ({
   scraperId,
   selectors,
 }) => {
