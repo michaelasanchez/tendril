@@ -4,6 +4,18 @@
   touch-action: pan-y;
   overscroll-behavior-x: none;
 
+  .NoWrapper {
+    background-color: transparent;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .Wrapper {
+    overflow: hidden;
+    padding: 10px;
+    margin: -10px;
+  }
+
   .Header {
     padding: 0;
 

@@ -1,8 +1,9 @@
 import cn from 'classnames';
 import { format } from 'date-fns';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, type Variants } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import { Modal } from 'react-bootstrap';
+import NoImage from '../../assets/no-image.svg';
 import type { Event } from '../../types/api';
 import { Badge } from '../badge';
 import { IconButton, SquareButton } from '../button';
@@ -10,8 +11,30 @@ import { Icon, type IconName } from '../Icon';
 import styles from './Modal.module.css';
 
 // --- Animation Variants ---
-// We use absolute positioning on 'exit' so the old modal
-// floats on top/bottom while the new one slides in underneath/over.
+const shellVariants: Variants = {
+  initial: {
+    opacity: 0,
+    y: -50,
+    scale: 0.95,
+  },
+  animate: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      type: 'spring',
+      damping: 25,
+      stiffness: 300,
+    },
+  },
+  exit: {
+    opacity: 0,
+    y: 30, // Slight slide down on close feels more natural than sliding back up
+    scale: 0.95,
+    transition: { duration: 0.2 },
+  },
+};
+
 const variants = {
   enter: (direction: number) => ({
     x: direction > 0 ? 500 : -500,
@@ -74,6 +97,7 @@ export const EventModal: React.FC<Props> = ({
   onNext,
   onPrev,
 }) => {
+  const [internalShow, setInternalShow] = useState(show);
   const [direction, setDirection] = useState<Direction>(0);
 
   const handleNext = () => {
@@ -86,8 +110,24 @@ export const EventModal: React.FC<Props> = ({
     onPrev();
   };
 
+  const handleStartClose = () => {
+    setInternalShow(false); // Triggers <motion.div exit="exit">
+  };
+
+  const handleExitComplete = () => {
+    // Only call parent's onHide once the animation is 100% finished
+    if (!internalShow) {
+      onHide();
+    }
+  };
+
   // --- Swipe & Keyboard Logic ---
   const touchStart = useRef<number | null>(null);
+
+  // Sync internal state with prop when opening
+  useEffect(() => {
+    if (show) setInternalShow(true);
+  }, [show]);
 
   useEffect(() => {
     if (!show) return;
@@ -157,103 +197,123 @@ export const EventModal: React.FC<Props> = ({
       <Modal
         className={styles.Modal}
         show={show}
-        onHide={onHide}
+        onHide={handleStartClose}
         centered
-        contentClassName="bg-transparent border-0 shadow-none"
+        contentClassName={styles.NoWrapper}
+        animation={true}
       >
-        {/* Overflow hidden wrapper handles the sliding elements going out of bounds */}
-        <div style={{ overflow: 'hidden', padding: '10px', margin: '-10px' }}>
-          <AnimatePresence initial={false} custom={direction} mode="popLayout">
-            {event && (
-              <motion.div
-                key={event.id ?? event.title} // Changing key triggers animation
-                custom={direction}
-                variants={variants}
-                initial={direction !== 0 ? 'enter' : 'center'}
-                animate="center"
-                exit="exit"
-                transition={{
-                  x: { type: 'spring', stiffness: 300, damping: 30 },
-                  opacity: { duration: 0.2 },
-                }}
-                className="modal-content"
-              >
-                {/* --- Header --- */}
-                {!!event.imageUrl && (
-                  <Modal.Header className={styles.Header}>
-                    <img src={event.imageUrl} alt={event.title} />
-                    <div className={styles.TopRight}>
-                      <IconButton name="close" onClick={onHide} />
-                    </div>
-                    <div className={styles.BottomLeft}>
-                      {event.categoryName && (
-                        <Badge className={styles.Uppercase}>
-                          {event.categoryName}
-                        </Badge>
-                      )}
-                    </div>
-                  </Modal.Header>
-                )}
+        <AnimatePresence onExitComplete={handleExitComplete}>
+          {internalShow && (
+            <motion.div
+              variants={shellVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+            >
+              <div className={styles.Wrapper}>
+                <AnimatePresence
+                  key="modal-shell"
+                  initial={false}
+                  custom={direction}
+                  mode="popLayout"
+                >
+                  {event && (
+                    <motion.div
+                      key={event.id ?? event.title}
+                      custom={direction}
+                      variants={variants}
+                      initial={direction !== 0 ? 'enter' : 'center'}
+                      animate="center"
+                      exit="exit"
+                      transition={{
+                        x: { type: 'spring', stiffness: 300, damping: 30 },
+                        opacity: { duration: 0.2 },
+                      }}
+                      className="modal-content"
+                    >
+                      {/* --- Header --- */}
+                      <Modal.Header className={styles.Header}>
+                        <img
+                          src={event.imageUrl ?? NoImage}
+                          alt={event.title}
+                        />
+                        <div className={styles.TopRight}>
+                          <IconButton name="close" onClick={handleStartClose} />
+                        </div>
+                        <div className={styles.BottomLeft}>
+                          {event.categoryName && (
+                            <Badge className={styles.Uppercase}>
+                              {event.categoryName}
+                            </Badge>
+                          )}
+                        </div>
+                      </Modal.Header>
 
-                {/* --- Body --- */}
-                <Modal.Body className={styles.Body}>
-                  <div className={styles.Content}>
-                    <h2>{event.title}</h2>
-                    <p>{event.description}</p>
-                  </div>
-                  <EventRow icon="calendar" label="Date & Time">
-                    <p>
-                      {format(
-                        new Date(event.startUtc ?? ''),
-                        'iiii, MMMM d, yyyy',
+                      {/* --- Body --- */}
+                      <Modal.Body className={styles.Body}>
+                        <div className={styles.Content}>
+                          <h2>{event.title}</h2>
+                          <p>{event.description}</p>
+                        </div>
+                        <EventRow icon="calendar" label="Date & Time">
+                          <p>
+                            {format(
+                              new Date(event.startUtc ?? ''),
+                              'iiii, MMMM d, yyyy',
+                            )}
+                          </p>
+                          <p>
+                            {format(new Date(event.startUtc ?? ''), 'h:mm a')}
+                          </p>
+                        </EventRow>
+                        <EventRow icon="location" label="Venue">
+                          <p>{event.location ?? event.venueName}</p>
+                        </EventRow>
+                        {!!event.minPrice && (
+                          <EventRow icon="ticket" label="Tickets">
+                            <p>
+                              ${event.minPrice}
+                              {!!event.maxPrice &&
+                              event.maxPrice !== event.minPrice
+                                ? ` - $${event.maxPrice}`
+                                : ''}
+                            </p>
+                          </EventRow>
+                        )}
+                      </Modal.Body>
+
+                      {/* --- Footer --- */}
+                      {(!!event.ticketUrl || !!event.detailsUrl) && (
+                        <Modal.Footer className={styles.Footer}>
+                          {event.detailsUrl && (
+                            <SquareButton
+                              variant="outline-primary"
+                              href={event.detailsUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              Event Details <Icon name="external" />
+                            </SquareButton>
+                          )}
+                          {event.ticketUrl && (
+                            <SquareButton
+                              variant="primary"
+                              href={event.ticketUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              Get Tickets <Icon name="external" />
+                            </SquareButton>
+                          )}
+                        </Modal.Footer>
                       )}
-                    </p>
-                    <p>{format(new Date(event.startUtc ?? ''), 'h:mm a')}</p>
-                  </EventRow>
-                  <EventRow icon="location" label="Venue">
-                    <p>{event.location ?? event.venueName}</p>
-                  </EventRow>
-                  {!!event.minPrice && (
-                    <EventRow icon="ticket" label="Tickets">
-                      <p>
-                        ${event.minPrice}
-                        {!!event.maxPrice && event.maxPrice !== event.minPrice
-                          ? ` - $${event.maxPrice}`
-                          : ''}
-                      </p>
-                    </EventRow>
+                    </motion.div>
                   )}
-                </Modal.Body>
-
-                {/* --- Footer --- */}
-                {(!!event.ticketUrl || !!event.detailsUrl) && (
-                  <Modal.Footer className={styles.Footer}>
-                    {event.detailsUrl && (
-                      <SquareButton
-                        variant="outline-primary"
-                        href={event.detailsUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Event Page <Icon name="external" />
-                      </SquareButton>
-                    )}
-                    {event.ticketUrl && (
-                      <SquareButton
-                        variant="primary"
-                        href={event.ticketUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Get Tickets <Icon name="external" />
-                      </SquareButton>
-                    )}
-                  </Modal.Footer>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </Modal>
     </>
   );

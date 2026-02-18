@@ -28,8 +28,8 @@ const categories = [
   'Other',
 ];
 
-const numCategories = 4;
-const numVenues = 4;
+const categoryShowCount = 4;
+const venueShowCount = 4;
 
 export const FiltersCard: React.FC<Props> = ({
   className,
@@ -92,7 +92,10 @@ export const FiltersCard: React.FC<Props> = ({
           </Button>
 
           {categories
-            .slice(0, showMoreCategories ? categories.length : numCategories)
+            .slice(
+              0,
+              showMoreCategories ? categories.length : categoryShowCount,
+            )
             .map((c, i) => {
               const active = filter.categories?.includes(c);
 
@@ -113,15 +116,17 @@ export const FiltersCard: React.FC<Props> = ({
               );
             })}
 
-          <Button
-            variant="default"
-            onClick={() => setMoreCategories(!showMoreCategories)}
-          >
-            {showMoreCategories
-              ? 'Show less'
-              : `+ ${categories.length - numCategories} More`}{' '}
-            <Icon name={showMoreCategories ? 'up' : 'down'} />
-          </Button>
+          {categories.length > categoryShowCount && (
+            <Button
+              variant="default"
+              onClick={() => setMoreCategories(!showMoreCategories)}
+            >
+              {showMoreCategories
+                ? 'Show less'
+                : `+ ${categories.length - categoryShowCount} More`}{' '}
+              <Icon name={showMoreCategories ? 'up' : 'down'} />
+            </Button>
+          )}
         </div>
 
         <label>Location</label>
@@ -134,7 +139,7 @@ export const FiltersCard: React.FC<Props> = ({
           </Button>
 
           {venues
-            .slice(0, showMoreVenues ? venues.length : numVenues)
+            .slice(0, showMoreVenues ? venues.length : venueShowCount)
             .map((v, i) => {
               const active = filter.venueIds?.includes(v.id);
               return (
@@ -154,15 +159,17 @@ export const FiltersCard: React.FC<Props> = ({
               );
             })}
 
-          <Button
-            variant="default"
-            onClick={() => setShowMoreVenues(!showMoreVenues)}
-          >
-            {showMoreVenues
-              ? 'Show less'
-              : `+ ${venues.length - numVenues} More`}{' '}
-            <Icon name={showMoreVenues ? 'up' : 'down'} />
-          </Button>
+          {venues.length > venueShowCount && (
+            <Button
+              variant="default"
+              onClick={() => setShowMoreVenues(!showMoreVenues)}
+            >
+              {showMoreVenues
+                ? 'Show less'
+                : `+ ${venues.length - venueShowCount} More`}{' '}
+              <Icon name={showMoreVenues ? 'up' : 'down'} />
+            </Button>
+          )}
         </div>
       </Card.Body>
     </Card>
