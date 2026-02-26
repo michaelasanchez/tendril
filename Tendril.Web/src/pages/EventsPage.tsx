@@ -7,16 +7,18 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Col, Row } from 'react-bootstrap';
+import { Col, Row, Spinner } from 'react-bootstrap';
 import { useMatch, useNavigate } from 'react-router-dom';
+import { CategoriesApi } from '../api/categories';
 import { EventsApi, type EventFilter } from '../api/events';
 import { VenuesApi } from '../api/venues';
 import { SquareButton } from '../components/button';
 import { Icon } from '../components/Icon';
 import { EventModal } from '../components/modal';
 import { EventList, FiltersCard } from '../events';
+import { useLocalStorage } from '../hooks';
 import { pageStyles } from '../styles';
-import type { Event, Guid, Venue } from '../types/api';
+import type { Category, Event, Guid, Venue } from '../types/api';
 import styles from './EventsPage.module.css';
 
 type View = 'list' | 'map' | 'calendar';
@@ -28,8 +30,9 @@ interface Loading {
 
 export const EventsPage: React.FC = () => {
   const [view] = useState<View>('list');
-  const [showFilters, setShowFilters] = useState<boolean>();
+  const [showFilters, setShowFilters] = useState<boolean>(false);
   const [events, setEvents] = useState<Event[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [venues, setVenues] = useState<Venue[]>([]);
   const [loading, setLoading] = useState<Loading>({
     events: false,
@@ -37,13 +40,16 @@ export const EventsPage: React.FC = () => {
   });
   const [nextCursor, setNextCursor] = useState<Guid | null>(null);
   const [totalCount, setTotalCount] = useState<number>(0);
-  // const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
-  const [favorites, setFavorites] = useState<Set<Guid>>(new Set());
+  const favoritesStorage = useLocalStorage('favorites');
+  const [favorites, setFavorites] = useState<Set<Guid>>(
+    () => new Set(JSON.parse(favoritesStorage.fetch() || '[]')),
+  );
 
   const [showFavoritesOnly, setShowFavoritesOnly] = useState<boolean>(false);
   const [filter, setFilter] = useState<EventFilter>({
     startDate: format(new Date(), 'yyyy-MM-dd'),
+    endDate: ''
   });
 
   const navigate = useNavigate();
@@ -93,23 +99,6 @@ export const EventsPage: React.FC = () => {
     });
   };
 
-  useEffect(() => {
-    const controller = new AbortController();
-    const signal = controller.signal;
-
-    if (
-      activeIndex !== null &&
-      activeIndex + 1 == filteredEvents.length &&
-      nextCursor
-    ) {
-      loadEvents(filter, nextCursor, signal, true);
-    }
-
-    return () => {
-      controller.abort();
-    };
-  }, [activeIndex]); // Only re-runs when activeIndex changes
-
   const loadEvents = useCallback(
     async (
       filter: EventFilter | null,
@@ -133,6 +122,20 @@ export const EventsPage: React.FC = () => {
     [],
   );
 
+  const loadCategories = useCallback(async (signal?: AbortSignal) => {
+    setLoading((prev) => ({ ...prev, categories: true }));
+
+    try {
+      const result = await CategoriesApi.getAll(signal);
+
+      setCategories(result);
+    } catch (err) {
+      console.error('Failed to fetch categories', err);
+    } finally {
+      setLoading((prev) => ({ ...prev, categories: false }));
+    }
+  }, []);
+
   const loadVenues = useCallback(async (signal?: AbortSignal) => {
     setLoading((prev) => ({ ...prev, venues: true }));
 
@@ -153,14 +156,40 @@ export const EventsPage: React.FC = () => {
     }
   }, []);
 
+  // Initial load (categories, venues)
   useEffect(() => {
     const controller = new AbortController();
 
+    loadCategories(controller.signal);
     loadVenues(controller.signal);
 
     return () => controller.abort();
-  }, [loadVenues]);
+  }, []);
 
+  // This preloads events in details mode (when the modal is open)
+  useEffect(() => {
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    if (
+      activeIndex !== null &&
+      activeIndex + 1 == filteredEvents.length &&
+      nextCursor
+    ) {
+      loadEvents(filter, nextCursor, signal, true);
+    }
+
+    return () => {
+      controller.abort();
+    };
+  }, [activeIndex]);
+
+  // Keep favorites in sync
+  useEffect(() => {
+    favoritesStorage.commit(JSON.stringify([...favorites]));
+  }, [favorites]);
+
+  //
   useEffect(() => {
     const controller = new AbortController();
 
@@ -169,7 +198,7 @@ export const EventsPage: React.FC = () => {
     return () => {
       controller.abort();
     };
-  }, [filter, loadEvents]);
+  }, [filter]);
 
   const observer = useRef<IntersectionObserver>(null);
 
@@ -240,6 +269,7 @@ export const EventsPage: React.FC = () => {
                   className={styles.FiltersCard}
                   filter={filter}
                   favoritesOnly={showFavoritesOnly}
+                  categories={categories}
                   venues={venues}
                   onChange={(update) =>
                     setFilter((prev) => ({ ...prev, ...update }))
@@ -248,7 +278,7 @@ export const EventsPage: React.FC = () => {
                 />
               </div>
             </Col>
-            <Col lg={8}>
+            <Col lg={8} className={cn(styles.EventsColumn)}>
               <EventList
                 className={styles.EventList}
                 events={filteredEvents}
@@ -257,7 +287,12 @@ export const EventsPage: React.FC = () => {
                 onEventClick={(clicked) => navigate(`/event/${clicked.id}`)}
                 onFavorite={handleFavorite}
               />
-              {loading.events && <p>Loading more...</p>}
+              {loading.events && (
+                <div className={styles.Loading}>
+                  <Spinner animation="border" className={styles.Spinner} />
+                  Loading more...
+                </div>
+              )}
             </Col>
           </Row>
         )}

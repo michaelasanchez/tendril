@@ -5,7 +5,7 @@ export interface FormInputProps {
   label?: string;
   value: string;
   onChange: (value: string) => void;
-  type?: "text" | "number" | "password" | "email" | "date";
+  type?: "text" | "number" | "password" | "email";
   placeholder?: string;
   disabled?: boolean;
   autoFocus?: boolean;
@@ -30,6 +30,16 @@ export interface FormCheckProps {
   type?: FormCheckType;
   disabled?: boolean;
   inline?: boolean;
+}
+
+export interface FormDateProps {
+  className?: string;
+  label?: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  autoFocus?: boolean;
 }
 
 export interface SelectOption {

@@ -3,30 +3,22 @@ import { useState } from 'react';
 import { Card } from 'react-bootstrap';
 import type { EventFilter } from '../api/events';
 import { Button } from '../components/button';
-import { FormInput } from '../components/form';
+import { FormDate, FormInput } from '../components/form';
+// import { DateForensics } from '../components/form/DateForensics';
 import { Icon } from '../components/Icon';
 import cardStyles from '../styles/Card.module.css';
-import type { Venue } from '../types/api';
+import type { Category, Venue } from '../types/api';
 import styles from './FiltersCard.module.css';
 
 interface Props {
   className?: string;
   favoritesOnly?: boolean;
   filter: EventFilter;
+  categories: Category[];
   venues: Venue[];
   onChange: (update: Partial<EventFilter>) => void;
   onToggleFavoritesOnly: () => void;
 }
-
-const categories = [
-  'Concert',
-  'Comedy',
-  'Sports',
-  'Art',
-  'Theater',
-  'Food & Drink',
-  'Other',
-];
 
 const categoryShowCount = 4;
 const venueShowCount = 4;
@@ -35,6 +27,7 @@ export const FiltersCard: React.FC<Props> = ({
   className,
   favoritesOnly,
   filter,
+  categories,
   venues,
   onChange,
   onToggleFavoritesOnly,
@@ -55,21 +48,16 @@ export const FiltersCard: React.FC<Props> = ({
           placeholder="Search by event name..."
           onChange={(title) => onChange({ title })}
         />
-        <FormInput
+        <FormDate
           label="DATE RANGE"
-          type="date"
           value={filter.startDate ?? ''}
-          placeholder="mm/dd/yyyy"
           onChange={(startDate) => onChange({ startDate })}
         />
-        <FormInput
+        <FormDate
           className={styles.NoLabel}
-          type="date"
           value={filter.endDate ?? ''}
-          placeholder="mm/dd/yyyy"
           onChange={(endDate) => onChange({ endDate })}
         />
-
         <div className={styles.Checkbox} onClick={onToggleFavoritesOnly}>
           <input
             className="form-check-input"
@@ -81,12 +69,11 @@ export const FiltersCard: React.FC<Props> = ({
           />
           <label>Show Favorites Only</label>
         </div>
-
         <label>Category</label>
         <div className={styles.ButtonGroup}>
           <Button
-            variant={!filter.categories?.length ? 'active' : 'default'}
-            onClick={() => onChange({ categories: [] })}
+            variant={!filter.categoryIds?.length ? 'active' : 'default'}
+            onClick={() => onChange({ categoryIds: [] })}
           >
             All
           </Button>
@@ -97,7 +84,7 @@ export const FiltersCard: React.FC<Props> = ({
               showMoreCategories ? categories.length : categoryShowCount,
             )
             .map((c, i) => {
-              const active = filter.categories?.includes(c);
+              const active = filter.categoryIds?.includes(c.id);
 
               return (
                 <Button
@@ -105,13 +92,14 @@ export const FiltersCard: React.FC<Props> = ({
                   variant={active ? 'active' : 'default'}
                   onClick={() =>
                     onChange({
-                      categories: active
-                        ? filter.categories?.filter((cat) => cat !== c)
-                        : [...(filter.categories ?? []), c],
+                      categoryIds: active
+                        ? (filter.categoryIds?.filter((id) => id !== c.id) ??
+                          [])
+                        : [...(filter.categoryIds ?? []), c.id],
                     })
                   }
                 >
-                  {c}
+                  {c.name}
                 </Button>
               );
             })}
@@ -128,7 +116,6 @@ export const FiltersCard: React.FC<Props> = ({
             </Button>
           )}
         </div>
-
         <label>Location</label>
         <div className={styles.ButtonGroup}>
           <Button

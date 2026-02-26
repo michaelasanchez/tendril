@@ -1,4 +1,5 @@
 import cn from 'classnames';
+import { startOfDay } from 'date-fns';
 import { useEffect, useMemo, useState } from 'react';
 import { Card } from 'react-bootstrap';
 import { EventsApi } from '../api/events';
@@ -45,7 +46,7 @@ const defaultStats = (): Stats => ({
   category: {},
 });
 
-const today = new Date().toISOString();
+const today = startOfDay(new Date());
 
 export const OutputTab: React.FC<Props> = ({
   scraperId,
@@ -86,7 +87,9 @@ export const OutputTab: React.FC<Props> = ({
         return a;
       }, defaultStats());
 
-      stats.status.past = events.filter((e) => e.startUtc < today).length;
+      stats.status.past = events.filter(
+        (e) => startOfDay(new Date(e.startUtc)) <= today,
+      ).length;
 
       setStats(stats);
     }
@@ -100,7 +103,9 @@ export const OutputTab: React.FC<Props> = ({
     let filtered: Event[] = [...events];
 
     if (!show.past) {
-      filtered = filtered.filter((e) => e.startUtc > today);
+      filtered = filtered.filter(
+        (e) => startOfDay(new Date(e.startUtc)) >= today,
+      );
     }
 
     if (!show.pending) {

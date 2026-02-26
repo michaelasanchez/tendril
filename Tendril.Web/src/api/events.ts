@@ -10,8 +10,8 @@ export interface EventFilter {
   title?: string;
   startDate?: string;
   endDate?: string;
-  categories?: string[];
-  venueIds?: string[];
+  categoryIds?: Guid[];
+  venueIds?: Guid[];
 }
 
 export const EventsApi = {
@@ -34,7 +34,7 @@ export const EventsApi = {
       params.append('endDate', filter.endDate);
     }
 
-    filter?.categories?.forEach((c) => params.append('category', c));
+    filter?.categoryIds?.forEach((c) => params.append('category', c));
     filter?.venueIds?.forEach((v) => params.append('venue', v));
 
     if (!!cursor) {

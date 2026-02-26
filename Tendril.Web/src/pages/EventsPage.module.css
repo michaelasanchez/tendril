@@ -1,3 +1,20 @@
+.EventsColumn {
+  &:has(.Loading:only-child) {
+    padding-top: 100px;
+  }
+
+  .Loading {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: center;
+
+    .Spinner {
+      color: var(--accent);
+    }
+  }
+}
 .EventList {
   margin-bottom: calc(var(--spacing) * 20);
 }

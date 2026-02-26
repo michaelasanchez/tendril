@@ -1,17 +1,17 @@
 import type { Guid, ScraperSummary } from '../types/api';
 
 import cn from 'classnames';
-import { Card } from 'react-bootstrap';
-import { cardStyles, pageStyles } from '../styles';
 import { useCallback, useEffect, useState } from 'react';
+import { Card } from 'react-bootstrap';
 import { ScrapersApi } from '../api/scrapers';
+import { cardStyles, pageStyles } from '../styles';
 
 interface Props {
   scraperId: Guid;
 }
 
 export const SummaryTab: React.FC<Props> = ({ scraperId }) => {
-  const [summary, setSummary] = useState<ScraperSummary>()
+  const [summary, setSummary] = useState<ScraperSummary>();
 
   const loadTags = useCallback(async (signal?: AbortSignal) => {
     try {
@@ -27,9 +27,7 @@ export const SummaryTab: React.FC<Props> = ({ scraperId }) => {
     const abortController = new AbortController();
 
     try {
-      await Promise.all([
-        loadTags(abortController.signal),
-      ]);
+      await Promise.all([loadTags(abortController.signal)]);
     } catch (err) {
       console.error('Failed to load classification rules data', err);
     }
@@ -47,6 +45,11 @@ export const SummaryTab: React.FC<Props> = ({ scraperId }) => {
       <Card className={cn(cardStyles.BgCard, cardStyles.MarginBottom)}>
         <Card.Body>
           <h6>Mapping</h6>
+          {summary?.mapping ? (
+            <pre>{JSON.stringify(summary.mapping, null, 2)}</pre>
+          ) : (
+            <p>No mapping data available.</p>
+          )}
         </Card.Body>
       </Card>
     </>

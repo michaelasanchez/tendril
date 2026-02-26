@@ -8,7 +8,7 @@ import {
   ScraperEditorPage,
   ScrapersPage,
   TagsPage,
-  VenuesPage,
+  VenuesPage
 } from './pages';
 
 export default function App() {
@@ -24,6 +24,8 @@ export default function App() {
           <Route path="/categories" element={<CategoriesPage />} />
           <Route path="/tags" element={<TagsPage />} />
           <Route path="/venues" element={<VenuesPage />} />
+
+          {/* <Route path="/test" element={<TestPage />} /> */}
 
           <Route path="*" element={<EventsPage />} />
         </Routes>

@@ -23,14 +23,19 @@ public class EventRepository(TendrilDbContext _context) : IEventRepository
             .Where(x => x.Status != EventStatus.Suppressed)
             .AsNoTracking();
 
+        if (filter.Title is not null)
+        {
+            query = query.Where(x => x.Title.Contains(filter.Title));
+        }
+
         if (filter.StartDate.HasValue)
         {
-            query = query.Where(x => x.StartUtc >= filter.StartDate);
+            query = query.Where(x => x.StartUtc.Date >= filter.StartDate.Value.Date);
         }
 
         if (filter.EndDate.HasValue)
         {
-            query = query.Where(x => x.StartUtc <= filter.EndDate);
+            query = query.Where(x => x.StartUtc.Date <= filter.EndDate.Value.Date);
         }
 
         if (filter.CategoryIds is { Count: > 0 })
