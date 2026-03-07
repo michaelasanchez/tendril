@@ -189,6 +189,7 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
           executionMode: scraper.executionMode,
           extractionStrategy: scraper.extractionStrategy,
           paginationType: scraper.paginationType,
+          useReferenceYear: scraper.useReferenceYear,
           venueId: scraper.venueId ?? undefined,
         });
         navigate(`/scrapers/${created.id}`);
@@ -201,6 +202,7 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
           executionMode: scraper.executionMode,
           extractionStrategy: scraper.extractionStrategy,
           paginationType: scraper.paginationType,
+          useReferenceYear: scraper.useReferenceYear,
           venueId: scraper.venueId ?? undefined,
         });
       }

@@ -28,7 +28,7 @@ public class IngestionService(
         var start = DateTimeOffset.UtcNow;
         int created = 0, updated = 0, extracted = 0, errored = 0, skipped = 0;
 
-        var yearTracker = new YearTracker();
+        var yearTracker = new YearTracker(DateTimeOffset.UtcNow);
 
         // 1. Create Attempt Record IMMEDIATELY (Mark as Running)
         var attempt = new ScraperAttemptHistory
@@ -78,7 +78,7 @@ public class IngestionService(
                         rawEntity,
                         yearTracker.CurrentYear);
 
-                    if (mappedEvent?.StartUtc is not null)
+                    if (mappedEvent?.StartUtc is not null && mappedEvent.StartUtc != default)
                     {
                         int assignedYear = yearTracker.ProcessMonth(mappedEvent.StartUtc.Month);
 
@@ -88,7 +88,7 @@ public class IngestionService(
                             int diff = assignedYear - mappedEvent.StartUtc.Year;
                             mappedEvent.StartUtc = mappedEvent.StartUtc.AddYears(diff);
 
-                            if (mappedEvent.EndUtc is not null)
+                            if (mappedEvent.EndUtc is not null && mappedEvent.EndUtc != default)
                                 mappedEvent.EndUtc = mappedEvent.EndUtc.Value.AddYears(diff);
                         }
                     }
@@ -220,10 +220,10 @@ public class IngestionService(
     {
         var changes = new List<RevisionResult>();
 
+        current.Category = Update("Category", current.Category, incoming.Category, changes);
         current.Title = Update("Title", current.Title, incoming.Title, changes);
         current.Location = Update("Location", current.Location, incoming.Location, changes);
         current.Description = Update("Description", current.Description, incoming.Description, changes);
-        current.Category = Update("Category", current.Category, incoming.Category, changes);
 
         current.StartUtc = Update("StartUtc", current.StartUtc, incoming.StartUtc, changes);
         current.EndUtc = Update("EndUtc", current.EndUtc, incoming.EndUtc, changes);
@@ -231,8 +231,8 @@ public class IngestionService(
         current.MinPrice = Update("MinPrice", current.MinPrice, incoming.MinPrice, changes);
         current.MaxPrice = Update("MaxPrice", current.MaxPrice, incoming.MaxPrice, changes);
 
-        current.ImageUrl = Update("ImageUrl", current.ImageUrl, incoming.ImageUrl, changes);
         current.DetailsUrl = Update("DetailsUrl", current.DetailsUrl, incoming.DetailsUrl, changes);
+        current.ImageUrl = Update("ImageUrl", current.ImageUrl, incoming.ImageUrl, changes);
         current.TicketUrl = Update("TicketUrl", current.TicketUrl, incoming.TicketUrl, changes);
 
         return changes;

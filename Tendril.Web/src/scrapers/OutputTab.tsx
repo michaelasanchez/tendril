@@ -162,7 +162,7 @@ export const OutputTab: React.FC<Props> = ({
             </div>
             <div>
               <FormCheck
-                label={`Suppressed (${stats.total.suppressed})`}
+                label={`Archived (${stats.total.suppressed})`}
                 checked={show.suppressed}
                 onChange={() =>
                   setShow({ ...show, suppressed: !show.suppressed })
@@ -254,16 +254,15 @@ export const OutputTab: React.FC<Props> = ({
                 <Icon name={e.status === 'Pending' ? 'publish' : 'unpublish'} />
               </Button>
               <Button
-                disabled={e.status === 'Pending'}
                 onClick={() =>
                   EventsApi.patch(e.id, {
                     status:
-                      e.status === 'Published' ? 'Suppressed' : 'Published',
+                      e.status !== 'Suppressed' ? 'Suppressed' : 'Pending',
                   }).then(() => loadEvents())
                 }
               >
                 <Icon
-                  name={e.status === 'Published' ? 'archive' : 'unarchive'}
+                  name={e.status !== 'Suppressed' ? 'archive' : 'unarchive'}
                 />
               </Button>
             </div>

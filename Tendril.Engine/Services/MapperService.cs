@@ -38,9 +38,7 @@ public class MapperService : IMapperService
             return mappedEvent;
         }
 
-        var scratchpad = new Dictionary<string, object?> {
-            {  "ReferenceYear", referenceYear }
-        };
+        var scratchpad = new Dictionary<string, object?>();
 
         foreach (var rule in scraper.MappingRules.OrderBy(x => x.Order))
         {

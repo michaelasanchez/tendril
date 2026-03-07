@@ -1,4 +1,11 @@
-import { differenceInDays, differenceInHours, differenceInMinutes, differenceInSeconds } from 'date-fns';
+import {
+  differenceInDays,
+  differenceInHours,
+  differenceInMinutes,
+  differenceInSeconds,
+  intervalToDuration,
+  parseISO,
+} from 'date-fns';
 import { useState } from 'react';
 import { Card, Table } from 'react-bootstrap';
 
@@ -86,7 +93,6 @@ export const RunsTab: React.FC<Props> = ({
 
           {loading && (
             <ElapsedClock runStart={runStart} formatElapsed={formatElapsed} />
-            
           )}
 
           {result && (
@@ -118,6 +124,7 @@ export const RunsTab: React.FC<Props> = ({
               <tr>
                 <th>Start</th>
                 <th>End</th>
+                <th>Duration</th>
                 <th>Success</th>
                 <th>Extracted</th>
                 <th>Mapped</th>
@@ -134,6 +141,13 @@ export const RunsTab: React.FC<Props> = ({
                   <td>{new Date(a.startTimeUtc).toLocaleString()}</td>
                   <td>
                     {!!a.endTimeUtc && new Date(a.endTimeUtc).toLocaleString()}
+                  </td>
+                  <td>
+                    {!!a.endTimeUtc &&
+                      intervalToDuration({
+                        start: parseISO(a.startTimeUtc),
+                        end: parseISO(a.endTimeUtc),
+                      }).seconds}s
                   </td>
                   <td>{a.success ? 'Yes' : 'No'}</td>
                   <td>{a.extracted}</td>
