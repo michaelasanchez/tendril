@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Tendril.Api.Dtos;
 using Tendril.Core.Domain.Entities;
@@ -29,6 +30,7 @@ public class TagsController(ITagRepository tags, IMapper mapper) : ControllerBas
     }
 
     [HttpPost]
+    [Authorize]
     public async Task<ActionResult<TagDto>> Create(TagDto request, CancellationToken cancellationToken)
     {
         var tag = new Tag
@@ -43,6 +45,7 @@ public class TagsController(ITagRepository tags, IMapper mapper) : ControllerBas
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize]
     public async Task<IActionResult> Update(Guid id, TagDto request, CancellationToken cancellationToken)
     {
         var tag = await tags.GetByIdAsync(id, cancellationToken);
@@ -57,6 +60,7 @@ public class TagsController(ITagRepository tags, IMapper mapper) : ControllerBas
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         var tag = await tags.GetByIdAsync(id, cancellationToken);

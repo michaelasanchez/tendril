@@ -18,6 +18,7 @@ public class TendrilDbContext(DbContextOptions<TendrilDbContext> options) : DbCo
     public DbSet<ScraperMappingRule> MappingRules => Set<ScraperMappingRule>();
     public DbSet<ScraperSelector> Selectors => Set<ScraperSelector>();
     public DbSet<Tag> Tags => Set<Tag>();
+    public DbSet<User> Users => Set<User>();
     public DbSet<Venue> Venues => Set<Venue>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -34,6 +35,7 @@ public class TendrilDbContext(DbContextOptions<TendrilDbContext> options) : DbCo
         modelBuilder.ApplyConfiguration(new ScraperMappingRuleConfig());
         modelBuilder.ApplyConfiguration(new ScraperSelectorConfig());
         modelBuilder.ApplyConfiguration(new TagConfig());
+        modelBuilder.ApplyConfiguration(new UserConfig());
         modelBuilder.ApplyConfiguration(new VenueConfig());
     }
 }

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Tendril.Api.Dtos;
 using Tendril.Core.Domain.Entities;
@@ -29,6 +30,7 @@ public class CategoriesController(ICategoryRepository categories, IMapper mapper
     }
 
     [HttpPost]
+    [Authorize]
     public async Task<ActionResult<CategoryDto>> Create(CategoryDto request, CancellationToken cancellationToken)
     {
         var category = new Category
@@ -44,6 +46,7 @@ public class CategoriesController(ICategoryRepository categories, IMapper mapper
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize]
     public async Task<IActionResult> Update(Guid id, CategoryDto request, CancellationToken cancellationToken)
     {
         var category = await categories.GetByIdAsync(id, cancellationToken);
@@ -59,6 +62,7 @@ public class CategoriesController(ICategoryRepository categories, IMapper mapper
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         var category = await categories.GetByIdAsync(id, cancellationToken);

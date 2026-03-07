@@ -58,7 +58,15 @@ const paginationTypeOptions = toOptions([
   'NextButton',
 ]);
 
-export const ScraperEditorPage: React.FC = () => {
+interface ScraperEditorPage {
+  authorized: boolean;
+  authLoading: boolean;
+}
+
+export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
+  authorized,
+  authLoading,
+}) => {
   const { scraperId } = useParams();
   const navigate = useNavigate();
   const [events, setEvents] = useState<Event[]>([]);
@@ -116,8 +124,9 @@ export const ScraperEditorPage: React.FC = () => {
   }, []);
   /* Categories */
 
+  // Initial load
   useEffect(() => {
-    if (scraperId !== 'new') {
+    if (authorized && scraperId !== 'new') {
       var abortController = new AbortController();
 
       void loadEvents();
@@ -131,15 +140,16 @@ export const ScraperEditorPage: React.FC = () => {
     const load = async () => {
       setError(null);
       try {
-        const [vs, sc] = await Promise.all([
+        const [vs, scraper] = await Promise.all([
           VenuesApi.getAll(),
           isNew || !scraperId
             ? Promise.resolve<ScraperDefinition | null>(null)
             : ScrapersApi.getById(scraperId as Guid),
         ]);
+
         setVenues(vs);
         setScraper(
-          sc ?? {
+          scraper ?? {
             id: '' as Guid,
             name: '',
             baseUrl: '',
@@ -159,7 +169,10 @@ export const ScraperEditorPage: React.FC = () => {
         setError(e.message ?? 'Error loading scraper.');
       }
     };
-    void load();
+
+    if (authorized) {
+      void load();
+    }
   }, [scraperId, isNew]);
 
   const handleSaveGeneral = async () => {
@@ -196,6 +209,8 @@ export const ScraperEditorPage: React.FC = () => {
   };
 
   const [eventKey, setEventKey] = useState<TabKey>('general');
+
+  if (authLoading) return <div>Checking session...</div>;
 
   if (!scraper) return <p>Loading…</p>;
   if (error) return <p className="error">{error}</p>;
@@ -385,9 +400,7 @@ export const ScraperEditorPage: React.FC = () => {
           </Tab.Pane>
 
           <Tab.Pane eventKey="summary">
-            <SummaryTab
-              scraperId={scraperId as Guid}
-            />
+            <SummaryTab scraperId={scraperId as Guid} />
           </Tab.Pane>
 
           <Tab.Pane eventKey="runs">

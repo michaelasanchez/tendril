@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Tendril.Api.Dtos;
 using Tendril.Core.Domain.Entities;
 using Tendril.Core.Interfaces.Repositories;
@@ -9,6 +10,7 @@ namespace Tendril.Api.Controllers;
 
 [ApiController]
 [Route("scrapers/{scraperId:guid}/runs")]
+[Authorize]
 public class ScraperRunsController(
     IScraperRepository scrapers,
     IRawEventRepository rawEvents,

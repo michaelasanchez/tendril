@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Tendril.Api.Dtos;
 using Tendril.Core.Domain.Entities;
@@ -28,6 +29,7 @@ public class VenuesController(IVenueRepository venues, IMapper mapper) : Control
     }
 
     [HttpPost]
+    [Authorize]
     public async Task<ActionResult<VenueDto>> Create(VenueDto request, CancellationToken cancellationToken)
     {
         var venue = new Venue
@@ -44,6 +46,7 @@ public class VenuesController(IVenueRepository venues, IMapper mapper) : Control
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize]
     public async Task<IActionResult> Update(Guid id, VenueDto request, CancellationToken cancellationToken)
     {
         var venue = await venues.GetByIdAsync(id, cancellationToken);
@@ -58,6 +61,7 @@ public class VenuesController(IVenueRepository venues, IMapper mapper) : Control
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         var venue = await venues.GetByIdAsync(id, cancellationToken);

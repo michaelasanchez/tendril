@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Tendril.Api.Dtos;
 using Tendril.Core.Domain.Entities;
 using Tendril.Core.Interfaces.Repositories;
@@ -7,6 +8,7 @@ namespace Tendril.Api.Controllers;
 
 [ApiController]
 [Route("scrapers/{scraperId:guid}/mapping-rules")]
+[Authorize]
 public class MappingRulesController(IMappingRuleRepository rules) : ControllerBase
 {
     [HttpGet]

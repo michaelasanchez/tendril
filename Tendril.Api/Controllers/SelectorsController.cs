@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Tendril.Api.Dtos;
 using Tendril.Core.Domain.Entities;
 
@@ -6,6 +7,7 @@ namespace Tendril.Api.Controllers;
 
 [ApiController]
 [Route("scrapers/{scraperId:guid}/selectors")]
+[Authorize]
 public class SelectorsController : ControllerBase
 {
     private readonly ISelectorRepository _selectors;

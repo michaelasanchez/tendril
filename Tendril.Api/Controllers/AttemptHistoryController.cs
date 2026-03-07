@@ -1,11 +1,13 @@
 ﻿namespace Tendril.Api.Controllers;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Tendril.Api.Dtos;
 using Tendril.Core.Interfaces.Repositories;
 
 [ApiController]
 [Route("scrapers/{scraperId:guid}/attempt-histories")]
+[Authorize]
 public sealed class AttemptHistoryController(IAttemptHistoryRepository query) : ControllerBase
 {
     [HttpGet]

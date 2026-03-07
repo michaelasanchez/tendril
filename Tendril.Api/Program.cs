@@ -1,3 +1,4 @@
+using Auth;
 using System.Text.Json.Serialization;
 using Tendril.Api.Mapping;
 using Tendril.Data;
@@ -38,14 +39,16 @@ builder.Services.AddAutoMapper(
     typeof(ApiMappingProfile).Assembly       // scan this assembly for profiles
 );
 
+builder.Services.AddAuthServices(builder.Configuration, builder.Environment);
+
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("http://localhost:5173")
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials();
+        policy.WithOrigins(builder.Configuration["Cors:Origin"]!)
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 

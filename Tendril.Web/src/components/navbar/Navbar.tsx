@@ -6,11 +6,20 @@ import { SquareButton } from '../button';
 import { Icon } from '../Icon';
 import styles from './Navbar.module.css';
 interface Props {
+  authorized: boolean;
   theme: AppTheme;
+  onLogin: () => void;
+  onLogout: () => void;
   onThemeToggle: () => void;
 }
 
-export const Navbar: React.FC<Props> = ({ theme, onThemeToggle }) => {
+export const Navbar: React.FC<Props> = ({
+  authorized,
+  theme,
+  onLogin,
+  onLogout,
+  onThemeToggle,
+}) => {
   return (
     <BootstrapNavbar className={styles.Navbar}>
       <Container>
@@ -32,6 +41,15 @@ export const Navbar: React.FC<Props> = ({ theme, onThemeToggle }) => {
               <Icon name={theme} />
             </SquareButton>
           </div>
+          {!authorized ? (
+            <SquareButton onClick={onLogin}>
+              <Icon name="login" />
+            </SquareButton>
+          ) : (
+            <SquareButton onClick={onLogout}>
+              <Icon name="logout" />
+            </SquareButton>
+          )}
         </div>
       </Container>
     </BootstrapNavbar>

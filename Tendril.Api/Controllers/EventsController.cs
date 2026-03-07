@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Tendril.Api.Dtos;
 using Tendril.Core.Domain;
@@ -56,6 +57,7 @@ public class EventsController(IEventRepository events, IMapper mapper) : Control
     }
 
     [HttpPatch("{eventId:guid}")]
+    [Authorize]
     public async Task<ActionResult> UpdateEvent(
         [FromRoute] Guid eventId,
         [FromBody] PatchEventRequest request,

@@ -1,5 +1,5 @@
 import cn from 'classnames';
-import { startOfDay } from 'date-fns';
+import { format, startOfDay } from 'date-fns';
 import { useEffect, useMemo, useState } from 'react';
 import { Card } from 'react-bootstrap';
 import { EventsApi } from '../api/events';
@@ -211,7 +211,11 @@ export const OutputTab: React.FC<Props> = ({
               <Card.Body>
                 <h3>{e.title}</h3>
                 <p className={styles.Clamp}>{e.description}</p>
-                <label>{e.startUtc}</label>
+                <label>
+                  {/* {e.startUtc} */}
+                  <h4>{format(new Date(e.startUtc), 'MMM dd yyy')}</h4> 
+                  {format(new Date(e.startUtc), 'hh:mm:ss')}
+                </label>
               </Card.Body>
             </Card>
             <div style={{ minWidth: '120px', width: '120px' }}>

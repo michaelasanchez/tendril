@@ -16,10 +16,20 @@ type SortKey =
 
 type SortDirection = 'asc' | 'desc';
 
-export const ScrapersPage: React.FC = () => {
+interface ScrapersPageProps {
+  authorized: boolean;
+  authLoading: boolean;
+}
+
+export const ScrapersPage: React.FC<ScrapersPageProps> = ({
+  authorized,
+  authLoading,
+}) => {
   const [scrapers, setScrapers] = useState<ScraperDefinition[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const hasLoaded = useRef(false);
 
   const [sort, setSort] = useState<{
     key: SortKey;
@@ -57,15 +67,17 @@ export const ScrapersPage: React.FC = () => {
     }
   };
 
-  const hasLoaded = useRef(false);
-
+  // Initial load
   useEffect(() => {
     if (hasLoaded.current) return;
 
-    hasLoaded.current = true;
-    void load();
-  }, []);
+    if (!authLoading && authorized) {
+      hasLoaded.current = true;
+      void load();
+    }
+  }, [authLoading, authorized]);
 
+  // Re-sort table
   useEffect(() => {
     if (!sort) return;
     setScrapers((prev) => {
@@ -179,78 +191,86 @@ export const ScrapersPage: React.FC = () => {
     return result;
   }, [scrapers]);
 
+  if (authLoading) return <div>Checking session...</div>;
+
   return (
     <section>
-      <div className={pageStyles.pageHeader}>
-        <h2>Scrapers</h2>
-        <SquareButton onClick={() => navigate('/scrapers/new')}>
-          New Scraper
-        </SquareButton>
-      </div>
-
-      {loading && <p>Loading…</p>}
-      {error && <p className="error">{error}</p>}
-
-      <Table className="data-table" hover responsive>
-        <thead>
-          <tr>
-            <th onClick={() => onSort('name')}>Name{sortIndicator('name')}</th>
-            <th onClick={() => onSort('baseUrl')}>
-              Base URL{sortIndicator('baseUrl')}
-            </th>
-            <th onClick={() => onSort('state')}>
-              State{sortIndicator('state')}
-            </th>
-            <th onClick={() => onSort('lastSuccessUtc')}>
-              Last Success{sortIndicator('lastSuccessUtc')}
-            </th>
-            <th onClick={() => onSort('lastFailureUtc')}>
-              Last Failure{sortIndicator('lastFailureUtc')}
-            </th>
-            <th />
-          </tr>
-        </thead>
-
-        {scraperGroups.map(({ key, scrapers }) => (
-          <tbody key={key}>
-            <tr className={tableStyles.GroupHeader}>
-              <td colSpan={6}>{key}</td>
+      <>
+        <div className={pageStyles.pageHeader}>
+          <h2>Scrapers</h2>
+          <SquareButton onClick={() => navigate('/scrapers/new')}>
+            New Scraper
+          </SquareButton>
+        </div>
+        {loading && <p>Loading…</p>}
+        {error && <p className="error">{error}</p>}
+        <Table className="data-table" hover responsive>
+          <thead>
+            <tr>
+              <th onClick={() => onSort('name')}>
+                Name{sortIndicator('name')}
+              </th>
+              <th onClick={() => onSort('baseUrl')}>
+                Base URL{sortIndicator('baseUrl')}
+              </th>
+              <th onClick={() => onSort('state')}>
+                State{sortIndicator('state')}
+              </th>
+              <th onClick={() => onSort('lastSuccessUtc')}>
+                Last Success{sortIndicator('lastSuccessUtc')}
+              </th>
+              <th onClick={() => onSort('lastFailureUtc')}>
+                Last Failure{sortIndicator('lastFailureUtc')}
+              </th>
+              <th />
             </tr>
+          </thead>
 
-            {scrapers.map((s) => (
-              <tr key={s.id}>
-                <td>{s.name}</td>
-                <td>
-                  <a href={s.baseUrl} target="_blank">
-                    {s.baseUrl}
-                  </a>
-                </td>
-                <td>{s.state}</td>
-                <td>{s.lastSuccessUtc ? formatDate(s.lastSuccessUtc) : '-'}</td>
-                <td>{s.lastFailureUtc ? formatDate(s.lastFailureUtc) : '-'}</td>
-                <td className={tableStyles.TableActions}>
-                  <div>
-                    <Button onClick={() => navigate(`/scrapers/${s.id}`)}>
-                      <Icon name="edit" />
-                    </Button>
-                    <Button
-                      variant="outline-primary"
-                      onClick={() => handleRunNow(s.id)}
-                    >
-                      <Icon name="run" />
-                    </Button>
-                  </div>
-                </td>
+          {scraperGroups.map(({ key, scrapers }) => (
+            <tbody key={key}>
+              <tr className={tableStyles.GroupHeader}>
+                <td colSpan={6}>{key}</td>
               </tr>
-            ))}
-            {scrapers.length === 0 && !loading && (
-              <tr>
-                <td colSpan={6}>No scrapers defined yet.</td>
-              </tr>
-            )}
-          </tbody>
-        ))}
-      </Table>
+
+              {scrapers.map((s) => (
+                <tr key={s.id}>
+                  <td>{s.name}</td>
+                  <td>
+                    <a href={s.baseUrl} target="_blank">
+                      {s.baseUrl}
+                    </a>
+                  </td>
+                  <td>{s.state}</td>
+                  <td>
+                    {s.lastSuccessUtc ? formatDate(s.lastSuccessUtc) : '-'}
+                  </td>
+                  <td>
+                    {s.lastFailureUtc ? formatDate(s.lastFailureUtc) : '-'}
+                  </td>
+                  <td className={tableStyles.TableActions}>
+                    <div>
+                      <Button onClick={() => navigate(`/scrapers/${s.id}`)}>
+                        <Icon name="edit" />
+                      </Button>
+                      <Button
+                        variant="outline-primary"
+                        onClick={() => handleRunNow(s.id)}
+                      >
+                        <Icon name="run" />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {scrapers.length === 0 && !loading && (
+                <tr>
+                  <td colSpan={6}>No scrapers defined yet.</td>
+                </tr>
+              )}
+            </tbody>
+          ))}
+        </Table>
+      </>
     </section>
   );
 

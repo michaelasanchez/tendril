@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Tendril.Api.Dtos;
 using Tendril.Core.Domain.Entities;
@@ -8,6 +9,7 @@ namespace Tendril.Api.Controllers;
 
 [ApiController]
 [Route("scrapers")]
+[Authorize]
 public class ScrapersController(
     IScraperRepository scrapers,
     IMapper mapper) : ControllerBase
