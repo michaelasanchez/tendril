@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Table } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { ScrapersApi } from '../api/scrapers';
 import { SquareButton as Button, SquareButton } from '../components/button';
 import { Icon } from '../components/Icon';
@@ -34,7 +34,7 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({
   const [sort, setSort] = useState<{
     key: SortKey;
     direction: SortDirection;
-  } | null>(null);
+  } | null>({ key: 'lastSuccessUtc', direction: 'asc' });
 
   const onSort = (key: SortKey) => {
     setSort((prev) => {
@@ -192,6 +192,7 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({
   }, [scrapers]);
 
   if (authLoading) return <div>Checking session...</div>;
+  if (!authorized) return <></>;
 
   return (
     <section>

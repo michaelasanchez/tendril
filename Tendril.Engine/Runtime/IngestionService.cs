@@ -6,6 +6,7 @@ using Tendril.Core.Interfaces.Repositories;
 using Tendril.Engine.Abstractions;
 using Tendril.Engine.Interfaces;
 using Tendril.Engine.Models;
+using Tendril.Engine.Utils;
 
 namespace Tendril.Engine.Runtime;
 
@@ -26,6 +27,8 @@ public class IngestionService(
 
         var start = DateTimeOffset.UtcNow;
         int created = 0, updated = 0, extracted = 0, errored = 0, skipped = 0;
+
+        var yearTracker = new YearTracker();
 
         // 1. Create Attempt Record IMMEDIATELY (Mark as Running)
         var attempt = new ScraperAttemptHistory
@@ -69,7 +72,26 @@ public class IngestionService(
                 // B. Map & Upsert Event
                 try
                 {
-                    var (mappedEvent, status, summary) = await ProcessSingleEventAsync(scraper, attempt.Id, rawEntity);
+                    var (mappedEvent, status, summary) = await ProcessSingleEventAsync(
+                        scraper,
+                        attempt.Id,
+                        rawEntity,
+                        yearTracker.CurrentYear);
+
+                    if (mappedEvent?.StartUtc is not null)
+                    {
+                        int assignedYear = yearTracker.ProcessMonth(mappedEvent.StartUtc.Month);
+
+                        if (scraper.UseReferenceYear && assignedYear != mappedEvent.StartUtc.Year)
+                        {
+                            // If the tracker bumped the year, update the event objects
+                            int diff = assignedYear - mappedEvent.StartUtc.Year;
+                            mappedEvent.StartUtc = mappedEvent.StartUtc.AddYears(diff);
+
+                            if (mappedEvent.EndUtc is not null)
+                                mappedEvent.EndUtc = mappedEvent.EndUtc.Value.AddYears(diff);
+                        }
+                    }
 
                     if (mappedEvent is not null)
                     {
@@ -142,9 +164,13 @@ public class IngestionService(
         };
     }
 
-    private async Task<(Event? mappedEvent, string result, string message)> ProcessSingleEventAsync(ScraperDefinition scraper, Guid attemptId, ScrapedEventRaw rawEvent)
+    private async Task<(Event? mappedEvent, string result, string message)> ProcessSingleEventAsync(
+        ScraperDefinition scraper,
+        Guid attemptId,
+        ScrapedEventRaw rawEvent,
+        int trackedYear)
     {
-        var mappedEvent = mapper.MapEvent(scraper, rawEvent);
+        var mappedEvent = mapper.MapEvent(scraper, rawEvent, scraper.UseReferenceYear ? trackedYear : null);
 
         if (mappedEvent.StartUtc == default) return (mappedEvent, "skipped", "Skipped - Missing start date");
 

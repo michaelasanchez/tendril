@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Card, Form, Tab } from 'react-bootstrap';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router';
 import { CategoriesApi } from '../api/categories';
 import { EventsApi } from '../api/events';
 import { ScrapersApi } from '../api/scrapers';
@@ -134,11 +134,12 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
       void loadAttemptHistories();
       void loadCategories(abortController.signal);
     }
-  }, [scraperId]);
+  }, [scraperId, authorized]);
 
   useEffect(() => {
     const load = async () => {
       setError(null);
+
       try {
         const [vs, scraper] = await Promise.all([
           VenuesApi.getAll(),
@@ -158,6 +159,7 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
             executionMode: 'Static',
             extractionStrategy: 'Css',
             paginationType: 'None',
+            useReferenceYear: false,
             state: 'Unknown',
             lastSuccessUtc: null,
             lastFailureUtc: null,
@@ -173,7 +175,7 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
     if (authorized) {
       void load();
     }
-  }, [scraperId, isNew]);
+  }, [scraperId, isNew, authorized]);
 
   const handleSaveGeneral = async () => {
     if (!scraper) return;
@@ -211,6 +213,7 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
   const [eventKey, setEventKey] = useState<TabKey>('general');
 
   if (authLoading) return <div>Checking session...</div>;
+  if (!authorized) return <></>;
 
   if (!scraper) return <p>Loading…</p>;
   if (error) return <p className="error">{error}</p>;
@@ -366,6 +369,13 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
                       })
                     }
                     options={paginationTypeOptions}
+                  />
+                  <FormCheck
+                    label="Use Reference Year"
+                    checked={scraper.useReferenceYear}
+                    onChange={(useReferenceYear) =>
+                      setScraper({ ...scraper, useReferenceYear })
+                    }
                   />
                   <div className={formStyles.buttonRow}>
                     <SquareButton onClick={handleSaveGeneral}>

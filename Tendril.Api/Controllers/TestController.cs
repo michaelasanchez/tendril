@@ -5,6 +5,7 @@ using Tendril.Core.Domain.Entities;
 using Tendril.Core.Interfaces.Repositories;
 using Tendril.Engine.Abstractions;
 using Tendril.Engine.Models;
+using Tendril.Engine.Utils;
 
 namespace Tendril.Api.Controllers;
 
@@ -61,6 +62,8 @@ public class ScraperRunsController(
     [HttpPost("test-mapping")]
     public async Task<ActionResult> TestMapping(Guid scraperId, CancellationToken ct)
     {
+        var yearTracker = new YearTracker();
+
         var scraper = await scrapers.GetByIdWithDetailsAsync(scraperId, ct);
 
         if (scraper == null)
@@ -71,7 +74,22 @@ public class ScraperRunsController(
         if (raw == null)
             return BadRequest("No raw events available to test mapping.");
 
-        var mapped = mapper.MapEvent(scraper, raw);
+        var mapped = mapper.MapEvent(scraper, raw, yearTracker.CurrentYear);
+
+        if (mapped?.StartUtc is not null)
+        {
+            int assignedYear = yearTracker.ProcessMonth(mapped.StartUtc.Month);
+
+            if (scraper.UseReferenceYear && assignedYear != mapped.StartUtc.Year)
+            {
+                // If the tracker bumped the year, update the event objects
+                int diff = assignedYear - mapped.StartUtc.Year;
+                mapped.StartUtc = mapped.StartUtc.AddYears(diff);
+
+                if (mapped.EndUtc is not null)
+                    mapped.EndUtc = mapped.EndUtc.Value.AddYears(diff);
+            }
+        }
 
         return Ok(new
         {
@@ -84,6 +102,8 @@ public class ScraperRunsController(
     [HttpPost("test-run")]
     public async Task<ActionResult> TestRun(Guid scraperId, CancellationToken ct)
     {
+        var yearTracker = new YearTracker();
+
         var scraper = await scrapers.GetByIdWithDetailsAsync(scraperId, ct);
         if (scraper == null)
             return NotFound();
@@ -107,8 +127,27 @@ public class ScraperRunsController(
                     RawDataJson = System.Text.Json.JsonSerializer.Serialize(raw)
                 };
 
-                var mappedEvent = mapper.MapEvent(scraper, rawEntity);
-                mappedEvents.Add(mappedEvent);
+                var mapped = mapper.MapEvent(scraper, rawEntity, yearTracker.CurrentYear);
+
+                if (mapped?.StartUtc is not null)
+                {
+                    int assignedYear = yearTracker.ProcessMonth(mapped.StartUtc.Month);
+
+                    if (scraper.UseReferenceYear && assignedYear != mapped.StartUtc.Year)
+                    {
+                        // If the tracker bumped the year, update the event objects
+                        int diff = assignedYear - mapped.StartUtc.Year;
+                        mapped.StartUtc = mapped.StartUtc.AddYears(diff);
+
+                        if (mapped.EndUtc is not null)
+                            mapped.EndUtc = mapped.EndUtc.Value.AddYears(diff);
+                    }
+                }
+
+                if (mapped is not null)
+                {
+                    mappedEvents.Add(mapped);
+                }
             }
 
             return Ok(new

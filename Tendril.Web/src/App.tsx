@@ -1,7 +1,7 @@
 const CLIENT_ID = import.meta.env.VITE_AUTH_CLIENT_ID;
 
 import { Container } from 'react-bootstrap';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router';
 import { Navbar } from './components/navbar';
 import { useBootstrapTheme } from './hooks';
 import { useAuth } from './hooks/useAuth';

@@ -1,4 +1,6 @@
 import {
+  Archive,
+  ArchiveRestore,
   ArrowLeft,
   ArrowRight,
   Calendar,
@@ -27,6 +29,7 @@ import {
 } from 'lucide-react';
 
 const Icons = {
+  archive: Archive,
   calendar: Calendar,
   close: X,
   dark: Moon,
@@ -49,6 +52,7 @@ const Icons = {
   run: Play,
   sliders: SlidersHorizontal,
   ticket: Ticket,
+  unarchive: ArchiveRestore,
   unpublish: CloudDownload,
   up: ChevronUp,
   visible: Eye,

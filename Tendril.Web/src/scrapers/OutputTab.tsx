@@ -32,12 +32,12 @@ interface CategoryStats {
 type StatusStats = { [key in keyof Show]: number };
 
 interface Stats {
-  status: StatusStats;
+  total: StatusStats;
   category: CategoryStats;
 }
 
 const defaultStats = (): Stats => ({
-  status: {
+  total: {
     past: 0,
     pending: 0,
     published: 0,
@@ -67,13 +67,13 @@ export const OutputTab: React.FC<Props> = ({
       const stats = events.reduce((a, e) => {
         switch (e.status) {
           case 'Pending':
-            a.status.pending++;
+            a.total.pending++;
             break;
           case 'Published':
-            a.status.published++;
+            a.total.published++;
             break;
           case 'Suppressed':
-            a.status.suppressed++;
+            a.total.suppressed++;
             break;
         }
 
@@ -87,7 +87,7 @@ export const OutputTab: React.FC<Props> = ({
         return a;
       }, defaultStats());
 
-      stats.status.past = events.filter(
+      stats.total.past = events.filter(
         (e) => startOfDay(new Date(e.startUtc)) <= today,
       ).length;
 
@@ -137,10 +137,38 @@ export const OutputTab: React.FC<Props> = ({
           }}
         >
           <div>
-            <div>Past: {stats.status.past}</div>
-            <div>Pending: {stats.status.pending}</div>
-            <div>Published: {stats.status.published}</div>
-            <div>Suppressed: {stats.status.suppressed}</div>
+            <div>
+              <FormCheck
+                label={`Past (${stats.total.past})`}
+                checked={show.past}
+                onChange={() => setShow({ ...show, past: !show.past })}
+              />
+            </div>
+            <div>
+              <FormCheck
+                label={`Pending (${stats.total.pending})`}
+                checked={show.pending}
+                onChange={() => setShow({ ...show, pending: !show.pending })}
+              />
+            </div>
+            <div>
+              <FormCheck
+                label={`Published (${stats.total.published})`}
+                checked={show.published}
+                onChange={() =>
+                  setShow({ ...show, published: !show.published })
+                }
+              />
+            </div>
+            <div>
+              <FormCheck
+                label={`Suppressed (${stats.total.suppressed})`}
+                checked={show.suppressed}
+                onChange={() =>
+                  setShow({ ...show, suppressed: !show.suppressed })
+                }
+              />
+            </div>
           </div>
           <div>
             {Object.entries(stats?.category).map(([category, count]) => (
@@ -149,30 +177,7 @@ export const OutputTab: React.FC<Props> = ({
               </div>
             ))}
           </div>
-          <div>
-            <FormCheck
-              label="Show Past Events"
-              checked={show.past}
-              onChange={() => setShow({ ...show, past: !show.past })}
-            />
-            <FormCheck
-              label="Show Pending"
-              checked={show.pending}
-              onChange={() => setShow({ ...show, pending: !show.pending })}
-            />
-            <FormCheck
-              label="Show Published"
-              checked={show.published}
-              onChange={() => setShow({ ...show, published: !show.published })}
-            />
-            <FormCheck
-              label="Show Suppressed"
-              checked={show.suppressed}
-              onChange={() =>
-                setShow({ ...show, suppressed: !show.suppressed })
-              }
-            />
-          </div>
+          <div></div>
         </Card.Body>
       </Card>
       <div
@@ -258,7 +263,7 @@ export const OutputTab: React.FC<Props> = ({
                 }
               >
                 <Icon
-                  name={e.status === 'Published' ? 'invisible' : 'visible'}
+                  name={e.status === 'Published' ? 'archive' : 'unarchive'}
                 />
               </Button>
             </div>

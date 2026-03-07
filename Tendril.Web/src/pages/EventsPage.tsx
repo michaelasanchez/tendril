@@ -8,7 +8,7 @@ import React, {
   useState,
 } from 'react';
 import { Col, Row, Spinner } from 'react-bootstrap';
-import { useMatch, useNavigate } from 'react-router-dom';
+import { useMatch, useNavigate } from 'react-router';
 import { CategoriesApi } from '../api/categories';
 import { EventsApi, type EventFilter } from '../api/events';
 import { VenuesApi } from '../api/venues';

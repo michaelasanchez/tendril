@@ -16,7 +16,7 @@ public class MapperService : IMapperService
         .Where(p => p.CanWrite)
         .ToDictionary(p => p.Name, p => p, StringComparer.OrdinalIgnoreCase);
 
-    public Event MapEvent(ScraperDefinition scraper, ScrapedEventRaw raw)
+    public Event MapEvent(ScraperDefinition scraper, ScrapedEventRaw raw, int? referenceYear)
     {
         if (scraper.VenueId is null)
             throw new InvalidOperationException("Scraper must be associated with a Venue before mapping events.");
@@ -38,11 +38,13 @@ public class MapperService : IMapperService
             return mappedEvent;
         }
 
-        var scratchpad = new Dictionary<string, object?>();
+        var scratchpad = new Dictionary<string, object?> {
+            {  "ReferenceYear", referenceYear }
+        };
 
         foreach (var rule in scraper.MappingRules.OrderBy(x => x.Order))
         {
-            ApplyRule(fields, rule, scratchpad);
+            ApplyRule(fields, rule, scratchpad, referenceYear);
         }
 
         foreach (var (targetField, value) in scratchpad)
@@ -53,7 +55,7 @@ public class MapperService : IMapperService
         return mappedEvent;
     }
 
-    private static void ApplyRule(JsonElement raw, ScraperMappingRule rule, Dictionary<string, object?> scratch)
+    private static void ApplyRule(JsonElement raw, ScraperMappingRule rule, Dictionary<string, object?> scratch, int? referenceYear)
     {
         object? primary = null;
 
@@ -92,7 +94,8 @@ public class MapperService : IMapperService
         var value = ApplyTransform(
             rule,
             primary,
-            secondary);
+            secondary,
+            referenceYear);
 
         scratch[rule.TargetField] = value;
     }
@@ -146,7 +149,8 @@ public class MapperService : IMapperService
     private static object? ApplyTransform(
         ScraperMappingRule rule,
         object? primary,
-        object? secondary)
+        object? secondary,
+        int? referenceYear)
     {
         // FIX: If no transform is needed, return the raw object to preserve its type
         // (This keeps DateTimeOffset as DateTimeOffset, etc.)
@@ -249,14 +253,16 @@ public class MapperService : IMapperService
 
             case TransformType.ParseDate:
             {
-                if (DateTimeOffset.TryParse(primaryInput, out var dateOnly))
+                if (DateTimeOffset.TryParse(primaryInput, out var parsed))
                 {
-                    if (dateOnly < DateTimeOffset.UtcNow.AddMonths(-3))
-                    {
-                        dateOnly = dateOnly.AddYears(1);
-                    }
-
-                    return dateOnly;
+                    return new DateTimeOffset(
+                        referenceYear ?? parsed.Year,
+                        parsed.Month,
+                        parsed.Day,
+                        parsed.Hour,
+                        parsed.Minute,
+                        parsed.Second,
+                        parsed.Offset);
                 }
 
                 return null;
