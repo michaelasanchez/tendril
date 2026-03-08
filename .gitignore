@@ -426,3 +426,10 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Web Secrets
+*.env.development
+*.env.production
+
+# API Secrets
+appsettings.*.json
