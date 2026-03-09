@@ -296,17 +296,12 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
 
     private static async Task<bool> PerformScroll(IPage page, IElementHandle? element = null, int? delay = null)
     {
-        long previousHeight = 0;
-        long currentHeight = 0;
-        int attempts = 0;
-        int maxAttempts = 5; // Don't scroll forever if nothing happens
-
-        // 1. Get initial height
-        currentHeight = element != null
+        // 1. Capture the height BEFORE we scroll
+        long initialHeight = element != null
             ? await element.EvaluateAsync<long>("el => el.scrollHeight")
             : await page.EvaluateAsync<long>("() => document.body.scrollHeight");
 
-        // 2. Scroll to bottom
+        // 2. Trigger the scroll action
         if (element != null)
         {
             await element.EvaluateAsync("el => el.scrollTo(0, el.scrollHeight)");
@@ -316,17 +311,34 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
             await page.EvaluateAsync("() => window.scrollTo(0, document.body.scrollHeight)");
         }
 
-        // 3. Wait for load
-        await page.WaitForTimeoutAsync(delay ?? 1000);
+        // 3. The "Verification Loop"
+        // We check up to 3 times to see if the height increases.
+        int attempts = 0;
+        while (attempts < 3)
+        {
+            // Use your passed-in delay, or default to 1.5s for "hot" runs
+            await page.WaitForTimeoutAsync(delay ?? 1500);
 
-        // 4. Check new height
-        previousHeight = currentHeight;
-        currentHeight = element != null
-            ? await element.EvaluateAsync<long>("el => el.scrollHeight")
-            : await page.EvaluateAsync<long>("() => document.body.scrollHeight");
+            long currentHeight = element != null
+                ? await element.EvaluateAsync<long>("el => el.scrollHeight")
+                : await page.EvaluateAsync<long>("() => document.body.scrollHeight");
 
-        // Returns true if content grew (meaning we successfully scrolled and found new stuff)
-        return currentHeight > previousHeight;
+            if (currentHeight > initialHeight)
+            {
+                return true; // The page grew! More items should be visible now.
+            }
+
+            // If it didn't grow, try one more nudge. 
+            // Sometimes the first scroll doesn't trigger the "onScroll" listener if it was too fast.
+            if (element != null)
+                await element.EvaluateAsync("el => el.scrollTo(0, el.scrollHeight)");
+            else
+                await page.EvaluateAsync("() => window.scrollTo(0, document.body.scrollHeight)");
+
+            attempts++;
+        }
+
+        return false; // We gave it 3 tries and ~4.5 seconds; nothing happened.
     }
 
     private static async Task PerformWait(IPage page, int? delay)

@@ -11,6 +11,6 @@ public class CreateScraperRequest
     public ExecutionMode? ExecutionMode { get; set; }
     public ExtractionStrategy? ExtractionStrategy { get; set; }
     public PaginationType? PaginationType { get; set; }
-    public bool UseReferenceYear { get; set; } = false;
+    public bool UseYearTracking { get; set; } = true;
     public Guid? VenueId { get; set; }
 }

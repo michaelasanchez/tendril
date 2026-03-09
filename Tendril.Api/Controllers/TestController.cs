@@ -80,7 +80,7 @@ public class ScraperRunsController(
         {
             int assignedYear = yearTracker.ProcessMonth(mapped.StartUtc.Month);
 
-            if (scraper.UseReferenceYear && assignedYear != mapped.StartUtc.Year)
+            if (scraper.UseYearTracking && assignedYear != mapped.StartUtc.Year)
             {
                 // If the tracker bumped the year, update the event objects
                 int diff = assignedYear - mapped.StartUtc.Year;
@@ -133,7 +133,7 @@ public class ScraperRunsController(
                 {
                     int assignedYear = yearTracker.ProcessMonth(mapped.StartUtc.Month);
 
-                    if (scraper.UseReferenceYear && assignedYear != mapped.StartUtc.Year)
+                    if (scraper.UseYearTracking && assignedYear != mapped.StartUtc.Year)
                     {
                         // If the tracker bumped the year, update the event objects
                         int diff = assignedYear - mapped.StartUtc.Year;

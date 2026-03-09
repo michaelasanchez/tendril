@@ -45,7 +45,7 @@ public class ScrapersController(
             ExecutionMode = request.ExecutionMode ?? Core.Domain.Enums.ExecutionMode.Dynamic,
             ExtractionStrategy = request.ExtractionStrategy ?? Core.Domain.Enums.ExtractionStrategy.Css,
             PaginationType = request.PaginationType ?? Core.Domain.Enums.PaginationType.None,
-            UseReferenceYear = request.UseReferenceYear,
+            UseYearTracking = request.UseYearTracking,
             VenueId = request.VenueId
         };
 
@@ -68,7 +68,7 @@ public class ScrapersController(
         if (request.ExecutionMode is not null) scraper.ExecutionMode = request.ExecutionMode.Value;
         if (request.ExtractionStrategy is not null) scraper.ExtractionStrategy = request.ExtractionStrategy.Value;
         if (request.PaginationType is not null) scraper.PaginationType = request.PaginationType.Value;
-        if (request.UseReferenceYear is not null) scraper.UseReferenceYear = request.UseReferenceYear.Value;
+        if (request.UseYearTracking is not null) scraper.UseYearTracking = request.UseYearTracking.Value;
         if (request.VenueId is not null) scraper.VenueId = request.VenueId;
 
         await scrapers.UpdateAsync(scraper, cancellationToken);

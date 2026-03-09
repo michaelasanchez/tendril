@@ -16,7 +16,7 @@ public class ScraperDefinition
     public ExecutionMode ExecutionMode { get; set; } = ExecutionMode.Dynamic;
     public ExtractionStrategy ExtractionStrategy { get; set; } = ExtractionStrategy.Css;
     public PaginationType PaginationType { get; set; } = PaginationType.None;
-    public bool UseReferenceYear { get; set; } = false;
+    public bool UseYearTracking { get; set; } = true;
 
     // Health monitoring
     public ScraperState State { get; set; } = ScraperState.Unknown;

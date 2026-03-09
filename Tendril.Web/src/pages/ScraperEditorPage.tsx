@@ -159,7 +159,7 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
             executionMode: 'Static',
             extractionStrategy: 'Css',
             paginationType: 'None',
-            useReferenceYear: false,
+            useYearTracking: false,
             state: 'Unknown',
             lastSuccessUtc: null,
             lastFailureUtc: null,
@@ -189,7 +189,7 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
           executionMode: scraper.executionMode,
           extractionStrategy: scraper.extractionStrategy,
           paginationType: scraper.paginationType,
-          useReferenceYear: scraper.useReferenceYear,
+          useYearTracking: scraper.useYearTracking,
           venueId: scraper.venueId ?? undefined,
         });
         navigate(`/scrapers/${created.id}`);
@@ -202,7 +202,7 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
           executionMode: scraper.executionMode,
           extractionStrategy: scraper.extractionStrategy,
           paginationType: scraper.paginationType,
-          useReferenceYear: scraper.useReferenceYear,
+          useYearTracking: scraper.useYearTracking,
           venueId: scraper.venueId ?? undefined,
         });
       }
@@ -373,10 +373,10 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
                     options={paginationTypeOptions}
                   />
                   <FormCheck
-                    label="Use Reference Year"
-                    checked={scraper.useReferenceYear}
-                    onChange={(useReferenceYear) =>
-                      setScraper({ ...scraper, useReferenceYear })
+                    label="Use Year Tracking"
+                    checked={scraper.useYearTracking}
+                    onChange={(useYearTracking) =>
+                      setScraper({ ...scraper, useYearTracking: useYearTracking })
                     }
                   />
                   <div className={formStyles.buttonRow}>

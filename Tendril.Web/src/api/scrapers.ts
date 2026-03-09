@@ -22,7 +22,7 @@ export interface CreateScraperRequest {
   executionMode: ExecutionMode;
   extractionStrategy: ExtractionStrategy;
   paginationType: PaginationType;
-  useReferenceYear: boolean;
+  useYearTracking: boolean;
   venueId?: Guid | null;
   schedule?: string;
 }

@@ -36,7 +36,7 @@ export interface ScraperDefinition {
   executionMode: ExecutionMode;
   extractionStrategy: ExtractionStrategy;
   paginationType: PaginationType;
-  useReferenceYear: boolean;
+  useYearTracking: boolean;
   state: ScraperState;
   lastSuccessUtc?: string | null;
   lastFailureUtc?: string | null;

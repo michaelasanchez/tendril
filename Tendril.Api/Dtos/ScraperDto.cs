@@ -11,7 +11,7 @@ public record ScraperDto(
     ExecutionMode ExecutionMode,
     ExtractionStrategy ExtractionStrategy,
     PaginationType PaginationType,
-    bool UseReferenceYear,
+    bool UseYearTracking,
     string State,
     string? LastSuccessUtc,
     string? LastFailureUtc,

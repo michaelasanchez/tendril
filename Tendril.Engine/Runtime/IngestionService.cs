@@ -82,7 +82,7 @@ public class IngestionService(
                     {
                         int assignedYear = yearTracker.ProcessMonth(mappedEvent.StartUtc.Month);
 
-                        if (scraper.UseReferenceYear && assignedYear != mappedEvent.StartUtc.Year)
+                        if (scraper.UseYearTracking && assignedYear != mappedEvent.StartUtc.Year)
                         {
                             // If the tracker bumped the year, update the event objects
                             int diff = assignedYear - mappedEvent.StartUtc.Year;
@@ -170,7 +170,7 @@ public class IngestionService(
         ScrapedEventRaw rawEvent,
         int trackedYear)
     {
-        var mappedEvent = mapper.MapEvent(scraper, rawEvent, scraper.UseReferenceYear ? trackedYear : null);
+        var mappedEvent = mapper.MapEvent(scraper, rawEvent, scraper.UseYearTracking ? trackedYear : null);
 
         if (mappedEvent.StartUtc == default) return (mappedEvent, "skipped", "Skipped - Missing start date");
 
