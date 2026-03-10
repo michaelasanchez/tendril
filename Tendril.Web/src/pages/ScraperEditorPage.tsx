@@ -67,13 +67,19 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
   authorized,
   authLoading,
 }) => {
-  const { scraperId } = useParams();
+  const { scraperId, tabId } = useParams();
   const navigate = useNavigate();
   const [events, setEvents] = useState<Event[]>([]);
   const [scraper, setScraper] = useState<ScraperDefinition | null>(null);
   const [venues, setVenues] = useState<Venue[]>([]);
   const [error, setError] = useState<string | null>(null);
   const isNew = scraperId === 'new';
+
+  const activeTab = tabId as TabKey || 'general';
+
+  const handleTabChange = (key: TabKey) => {
+    navigate(`/scrapers/${scraperId}/${key}`);
+  };
 
   /* Events */
   const loadEvents = async () => {
@@ -212,8 +218,6 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
     }
   };
 
-  const [eventKey, setEventKey] = useState<TabKey>('general');
-
   if (authLoading) return <div>Checking session...</div>;
   if (!authorized) return <></>;
 
@@ -228,53 +232,53 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
         <SquareButton onClick={() => navigate('/scrapers')}>Back</SquareButton>
       </div>
 
-      <Tab.Container activeKey={eventKey}>
+      <Tab.Container activeKey={activeTab}>
         <div className={styles.tabs}>
           <Button
-            variant={eventKey == 'general' ? 'active' : 'default'}
-            onClick={() => setEventKey('general')}
+            variant={activeTab == 'general' ? 'active' : 'default'}
+            onClick={() => handleTabChange('general')}
           >
             General
           </Button>
           <Button
-            variant={eventKey == 'selectors' ? 'active' : 'default'}
+            variant={activeTab == 'selectors' ? 'active' : 'default'}
             disabled={isNew}
-            onClick={() => setEventKey('selectors')}
+            onClick={() => handleTabChange('selectors')}
           >
             Selectors
           </Button>
           <Button
-            variant={eventKey == 'mapping' ? 'active' : 'default'}
+            variant={activeTab == 'mapping' ? 'active' : 'default'}
             disabled={isNew}
-            onClick={() => setEventKey('mapping')}
+            onClick={() => handleTabChange('mapping')}
           >
             Mapping
           </Button>
           <Button
-            variant={eventKey == 'classification' ? 'active' : 'default'}
+            variant={activeTab == 'classification' ? 'active' : 'default'}
             disabled={isNew}
-            onClick={() => setEventKey('classification')}
+            onClick={() => handleTabChange('classification')}
           >
             Classification
           </Button>
           <Button
-            variant={eventKey == 'summary' ? 'active' : 'default'}
+            variant={activeTab == 'summary' ? 'active' : 'default'}
             disabled={isNew}
-            onClick={() => setEventKey('summary')}
+            onClick={() => handleTabChange('summary')}
           >
             Summary
           </Button>
           <Button
-            variant={eventKey == 'runs' ? 'active' : 'default'}
+            variant={activeTab == 'runs' ? 'active' : 'default'}
             disabled={isNew}
-            onClick={() => setEventKey('runs')}
+            onClick={() => handleTabChange('runs')}
           >
             Runs
           </Button>
           <Button
-            variant={eventKey == 'output' ? 'active' : 'default'}
+            variant={activeTab == 'output' ? 'active' : 'default'}
             disabled={isNew}
-            onClick={() => setEventKey('output')}
+            onClick={() => handleTabChange('output')}
           >
             Output
           </Button>
@@ -376,7 +380,10 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
                     label="Use Year Tracking"
                     checked={scraper.useYearTracking}
                     onChange={(useYearTracking) =>
-                      setScraper({ ...scraper, useYearTracking: useYearTracking })
+                      setScraper({
+                        ...scraper,
+                        useYearTracking: useYearTracking,
+                      })
                     }
                   />
                   <div className={formStyles.buttonRow}>

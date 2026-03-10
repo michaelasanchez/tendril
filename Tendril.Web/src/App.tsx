@@ -35,7 +35,7 @@ export default function App() {
             element={<ScrapersPage authLoading={loading} authorized={!!user} />}
           />
           <Route
-            path="/scrapers/:scraperId"
+            path="/scrapers/:scraperId/:tabId?"
             element={
               <ScraperEditorPage authLoading={loading} authorized={!!user} />
             }
