@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Card } from 'react-bootstrap';
 import { EventsApi } from '../api/events';
 import NoImage from '../assets/no-image.svg';
-import { SquareButton as Button } from '../components/button';
+import { SquareButton as Button, SquareButton } from '../components/button';
 import { FormCheck, FormSelect } from '../components/form';
 import { Icon } from '../components/Icon';
 import { cardStyles, pageStyles } from '../styles';
@@ -215,12 +215,22 @@ export const OutputTab: React.FC<Props> = ({
               }
               <Card.Body>
                 <h3>{e.title}</h3>
-                <p className={styles.Clamp}>{e.description}</p>
+                <p
+                  className={cn(
+                    styles.Clamp,
+                    !e.description && styles.Muted,
+                  )}
+                >
+                  {e.description ?? 'No description available'}
+                </p>
                 <label>
-                  {/* {e.startUtc} */}
-                  <h4>{format(new Date(e.startUtc), 'MMM dd yyy')}</h4> 
-                  {format(new Date(e.startUtc), 'hh:mm:ss')}
+                  <h4>{format(new Date(e.startUtc), 'MMM dd yyy')}</h4>
+                  {format(new Date(e.startUtc), 'hh:mm aa')}
                 </label>
+                <div>
+                  {e.detailsUrl && <SquareButton href={e.detailsUrl} target="_blank">Details</SquareButton>}
+                  {e.ticketUrl && <SquareButton href={e.ticketUrl} target="_blank">Tickets</SquareButton>}
+                </div>
               </Card.Body>
             </Card>
             <div style={{ minWidth: '120px', width: '120px' }}>

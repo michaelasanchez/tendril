@@ -1,8 +1,9 @@
 import cn from 'classnames';
 import React, { useEffect, useState } from 'react';
 import { Card, Form, Table } from 'react-bootstrap';
+import { useNavigate } from 'react-router';
 import { ScrapersApi } from '../api/scrapers';
-import { SquareButton as Button } from '../components/button';
+import { SquareButton as Button, SquareButton } from '../components/button';
 import { FormCheck, FormInput, FormSelect } from '../components/form';
 import { Icon } from '../components/Icon';
 import { cardStyles, formStyles, pageStyles, tableStyles } from '../styles';
@@ -43,6 +44,8 @@ export const SelectorsTab: React.FC<Props> = ({
   const [isNew, setIsNew] = useState(false);
 
   const [scraperOptions, setScraperOptions] = useState<Option[]>([]);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (
@@ -175,9 +178,22 @@ export const SelectorsTab: React.FC<Props> = ({
                     <td>{s.delay}</td>
                     <td>{s.interactionValue}</td>
                     <td>
-                      {s.childScraperId &&
-                        scraperOptions.find((o) => o.value === s.childScraperId)
-                          ?.label}
+                      {s.childScraperId && (
+                        <>
+                          {
+                            scraperOptions.find(
+                              (o) => o.value === s.childScraperId,
+                            )?.label
+                          }{' '}
+                          <SquareButton
+                            onClick={() =>
+                              navigate(`/scrapers/${s.childScraperId}`)
+                            }
+                          >
+                            <Icon name="external" />
+                          </SquareButton>
+                        </>
+                      )}
                     </td>
                     <td>{s.isPaginationTrigger ? 'Yes' : ''}</td>
                     <td className={tableStyles.TableActions}>

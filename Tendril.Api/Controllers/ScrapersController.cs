@@ -29,7 +29,9 @@ public class ScrapersController(
 
         if (scraper is null) return NotFound();
 
-        return Ok(mapper.Map<ScraperDto>(scraper));
+        var mapped = mapper.Map<ScraperDto>(scraper);
+
+        return Ok(mapped);
     }
 
     [HttpPost]

@@ -136,6 +136,8 @@ public class ScrapeExecutor(
 
         if (childDef == null) yield break;
 
+        var previousBaseUrl = childDef.BaseUrl; // Store previous base URL to restore later
+
         childDef.BaseUrl = parentItem.ChildUrl!;
 
         IAsyncEnumerable<RawScrapedData> pipeline;
@@ -153,5 +155,7 @@ public class ScrapeExecutor(
         {
             yield return res;
         }
+
+        childDef.BaseUrl = previousBaseUrl;
     }
 }

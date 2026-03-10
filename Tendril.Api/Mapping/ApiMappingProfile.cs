@@ -17,7 +17,8 @@ public class ApiMappingProfile : Profile
         CreateMap<ScraperDefinition, ScraperDto>()
             .ForMember(d => d.State, opt => opt.MapFrom(s => s.State.ToString()))
             .ForMember(d => d.LastSuccessUtc, opt => opt.MapFrom(s => s.LastSuccessUtc.HasValue ? s.LastSuccessUtc.Value.ToString("o") : null))
-            .ForMember(d => d.LastFailureUtc, opt => opt.MapFrom(s => s.LastFailureUtc.HasValue ? s.LastFailureUtc.Value.ToString("o") : null));
+            .ForMember(d => d.LastFailureUtc, opt => opt.MapFrom(s => s.LastFailureUtc.HasValue ? s.LastFailureUtc.Value.ToString("o") : null))
+            .ForMember(d => d.ParentIds, opt => opt.MapFrom(s => s.ParentSelectors.Select(x => x.ScraperDefinitionId)));
 
         CreateMap<Event, EventDto>()
             .ForMember(d => d.CategoryId, opt => opt.MapFrom(s => s.Category!.Id))

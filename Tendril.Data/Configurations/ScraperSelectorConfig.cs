@@ -23,5 +23,10 @@ public class ScraperSelectorConfig : IEntityTypeConfiguration<ScraperSelector>
         builder.Property(x => x.Type)
             .HasConversion<string>()
             .IsRequired();
+
+        builder.HasOne<ScraperDefinition>()
+            .WithMany(x => x.ParentSelectors)
+            .HasForeignKey(x => x.ChildScraperDefinitionId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

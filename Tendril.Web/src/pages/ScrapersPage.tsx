@@ -34,7 +34,7 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({
   const [sort, setSort] = useState<{
     key: SortKey;
     direction: SortDirection;
-  } | null>({ key: 'lastSuccessUtc', direction: 'asc' });
+  } | null>({ key: 'name', direction: 'asc' });
 
   const onSort = (key: SortKey) => {
     setSort((prev) => {
