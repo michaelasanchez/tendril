@@ -11,6 +11,7 @@ public record ScraperSelectorDto(
     int? Delay,
     string? InteractionValue,
     Guid? ChildScraperId,
+    bool IgnoreDuplicateUrls,
     bool IsPaginationTrigger,
     bool Disabled
 );

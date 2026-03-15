@@ -11,20 +11,21 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
 {
     public async IAsyncEnumerable<ScrapeYieldItem> ExecuteAsync(
         IPage page,
-        ScraperDefinition def)
+        ScraperDefinition definition,
+        ScrapeContext context)
     {
         // 1. NAVIGATION
         try
         {
-            await page.GotoAsync(def.BaseUrl, new PageGotoOptions { Timeout = 30000 });
+            await page.GotoAsync(definition.BaseUrl, new PageGotoOptions { Timeout = 30000 });
         }
         catch (Exception ex)
         {
-            throw new Exception($"Failed to navigate to {def.BaseUrl}: {ex.Message}", ex);
+            throw new Exception($"Failed to navigate to {definition.BaseUrl}: {ex.Message}", ex);
         }
 
         // 2. CHECK STRATEGY
-        if (def.ExtractionStrategy is ExtractionStrategy.JsonLd)
+        if (definition.ExtractionStrategy is ExtractionStrategy.JsonLd)
         {
             var maxRetries = 3;
             var retry = 0;
@@ -53,7 +54,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
                 }
 
                 // Use the same helper used in StaticScraper (you'd inject this)
-                var result = jsonLd.Extract(content, def.Selectors.FirstOrDefault()?.Selector ?? "Event");
+                var result = jsonLd.Extract(content, definition.Selectors.FirstOrDefault()?.Selector ?? "Event");
 
                 if (result != null)
                 {
@@ -70,9 +71,9 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
 
         // 3. PRE-SCRAPE PHASE
         // Run any interactions (like typing zip code) required BEFORE the list appears.
-        var container = def.Selectors.Single(x => x.Type == SelectorType.Container);
+        var container = definition.Selectors.Single(x => x.Type == SelectorType.Container);
 
-        var preSelectors = def.Selectors
+        var preSelectors = definition.Selectors
             .Where(x => x.Order < container.Order && x.Type != SelectorType.Container)
             .OrderBy(x => x.Order);
 
@@ -107,7 +108,9 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
             {
                 var result = new ScrapeYieldItem();
 
-                var fieldSelectors = def.Selectors
+                var partial = false;
+
+                var fieldSelectors = definition.Selectors
                     .Where(x => x.Type != SelectorType.Container && !x.IsPaginationTrigger)
                     .OrderBy(x => x.Order);
 
@@ -124,13 +127,20 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
                         {
                             var url = await linkEl.GetAttributeAsync("href");
 
-                            if (!string.IsNullOrWhiteSpace(url))
+                            if (!string.IsNullOrWhiteSpace(url) && (!step.IgnoreDuplicateUrls || !context.HasVisited(url)))
                             {
+                                context.MarkVisited(url); // Claim it now so subsequent items skip it
+
                                 result = result with
                                 {
                                     ChildUrl = url,
                                     ChildScraperId = step.ChildScraperDefinitionId
                                 };
+                            }
+                            else
+                            {
+                                partial = true;
+                                break; // Stop processing this specific list item
                             }
                         }
                     }
@@ -144,7 +154,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
                 // Dedup check (simple hash of fields)
                 var signature = result.Data.GetSignature();
 
-                if (processedSignatures.Add(signature))
+                if (processedSignatures.Add(signature) && !partial)
                 {
                     yield return preResult.Merge(result);
                 }
@@ -157,7 +167,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
             }
             else
             {
-                hasMore = await PerformPagination(page, def);
+                hasMore = await PerformPagination(page, definition);
             }
 
         } while (hasMore);

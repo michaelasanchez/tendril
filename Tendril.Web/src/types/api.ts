@@ -67,6 +67,7 @@ export interface ScraperSelector {
   delay: number | null;
   interactionValue: string | null;
   childScraperId: Guid | null;
+  ignoreDuplicateUrls: boolean;
   isPaginationTrigger: boolean;
   disabled: boolean;
 }

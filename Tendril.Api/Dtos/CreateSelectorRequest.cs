@@ -13,6 +13,7 @@ public class CreateSelectorRequest
     public int? Delay { get; set; }
     public string? InteractionValue { get; set; }
     public Guid? ChildScraperId { get; set; }
+    public bool IgnoreDuplicateUrls { get; set; } = true;
     public bool IsPaginationTrigger { get; set; }
     public bool Disabled { get; set; }
 }

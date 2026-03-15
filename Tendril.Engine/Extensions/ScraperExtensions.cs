@@ -9,7 +9,13 @@ public static class ScraperExtensions
         var merged = new RawScrapedData();
 
         foreach (var kvp in parent.Fields) merged.Fields[kvp.Key] = kvp.Value;
-        foreach (var kvp in child.Fields) merged.Fields[kvp.Key] = kvp.Value; // Child wins collision
+        foreach (var kvp in child.Fields)
+        {
+            if (!string.IsNullOrWhiteSpace(kvp.Value))
+            {
+                merged.Fields[kvp.Key] = kvp.Value;
+            }
+        }
 
         return merged;
     }

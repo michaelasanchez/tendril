@@ -11,12 +11,9 @@ public class ScrapeResourceManager(IHttpClientFactory httpClientFactory)
     // because HttpClients from the factory are generally long-lived/managed by the system.
     public HttpClient EnsureClient(ScrapeContext context)
     {
-        if (context.Client is null)
-        {
-            context.Client = httpClientFactory.CreateClient("ScraperClient");
-        }
+        context.StaticClient ??= httpClientFactory.CreateClient("ScraperClient");
 
-        return context.Client;
+        return context.StaticClient;
     }
 
     // --- BROWSER MANAGEMENT ---
@@ -27,9 +24,9 @@ public class ScrapeResourceManager(IHttpClientFactory httpClientFactory)
     {
         bool isOwner = false;
 
-        if (context.Browser == null)
+        if (context.DynamicBrowser == null)
         {
-            context.Browser = await PlaywrightContextFactory.CreateContextAsync();
+            context.DynamicBrowser = await PlaywrightContextFactory.CreateContextAsync();
             isOwner = true;
         }
 
@@ -41,15 +38,15 @@ public class ScrapeResourceManager(IHttpClientFactory httpClientFactory)
     public readonly struct BrowserScope(ScrapeContext context, bool isOwner) : IAsyncDisposable
     {
         // The non-nullable reference you wanted!
-        public IBrowserContext Browser => context.Browser!;
+        public IBrowserContext Browser => context.DynamicBrowser!;
 
         public async ValueTask DisposeAsync()
         {
             // Only dispose if we are the ones who created it
-            if (isOwner && context.Browser != null)
+            if (isOwner && context.DynamicBrowser != null)
             {
-                await context.Browser.DisposeAsync();
-                context.Browser = null;
+                await context.DynamicBrowser.DisposeAsync();
+                context.DynamicBrowser = null;
             }
         }
     }
@@ -63,10 +60,10 @@ public class ScrapeResourceManager(IHttpClientFactory httpClientFactory)
     {
         public async ValueTask DisposeAsync()
         {
-            if (context.Browser != null)
+            if (context.DynamicBrowser != null)
             {
-                await context.Browser.DisposeAsync();
-                context.Browser = null; // Null it out so upstream logic knows it's gone
+                await context.DynamicBrowser.DisposeAsync();
+                context.DynamicBrowser = null; // Null it out so upstream logic knows it's gone
             }
         }
     }

@@ -16,6 +16,7 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
     public async IAsyncEnumerable<ScrapeYieldItem> ExecuteAsync(
         HttpClient client,
         ScraperDefinition def,
+        ScrapeContext context,
         [EnumeratorCancellation] CancellationToken ct)
     {
         var currentUrl = def.BaseUrl;
@@ -67,7 +68,7 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
                 page.LoadHtml(html);
 
                 // A. Extract Items (Logic extracted to helper for cleanliness)
-                foreach (var item in ExtractDomItems(page, def, currentUrl))
+                foreach (var item in ExtractDomItems(page, def, context, currentUrl))
                 {
                     yield return item;
                 }
@@ -87,7 +88,7 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
         }
     }
 
-    private IEnumerable<ScrapeYieldItem> ExtractDomItems(HtmlDocument page, ScraperDefinition def, string currentUrl)
+    private IEnumerable<ScrapeYieldItem> ExtractDomItems(HtmlDocument page, ScraperDefinition def, ScrapeContext context, string currentUrl)
     {
         // 1. Pre-Scrape (Header data, etc)
         var container = def.Selectors.SingleOrDefault(x => x.Type == SelectorType.Container);
@@ -118,6 +119,8 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
         {
             var result = new ScrapeYieldItem();
 
+            var partial = false;
+
             var fieldSelectors = def.Selectors
                 .Where(x =>
                     x.Type != SelectorType.Container &&
@@ -133,9 +136,20 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
 
                     var url = targetNode?.GetAttributeValue("href", "");
 
-                    if (!string.IsNullOrWhiteSpace(url))
+                    if (!string.IsNullOrWhiteSpace(url) && (!step.IgnoreDuplicateUrls || !context.HasVisited(url)))
                     {
-                        result = result with { ChildUrl = url, ChildScraperId = step.ChildScraperDefinitionId };
+                        context.MarkVisited(url); // Claim it now so subsequent items skip it
+
+                        result = result with
+                        {
+                            ChildUrl = url,
+                            ChildScraperId = step.ChildScraperDefinitionId
+                        };
+                    }
+                    else
+                    {
+                        partial = true;
+                        break; // Stop processing this specific list item
                     }
                 }
                 else
@@ -144,7 +158,11 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
                 }
             }
 
-            yield return preResult.Merge(result);
+            if (!partial)
+            {
+                yield return preResult.Merge(result);
+            }
+
         }
     }
 

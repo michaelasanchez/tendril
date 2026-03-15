@@ -102,6 +102,7 @@ export const SelectorsTab: React.FC<Props> = ({
         delay: editing.delay ?? null,
         interactionValue: editing.interactionValue ?? null,
         childScraperId: editing.childScraperId ?? null,
+        ignoreDuplicateUrls: editing.ignoreDuplicateUrls ?? true,
         isPaginationTrigger: editing.isPaginationTrigger ?? false,
         disabled: editing.disabled ?? false,
       });
@@ -119,6 +120,7 @@ export const SelectorsTab: React.FC<Props> = ({
         delay: editing.delay ?? null,
         interactionValue: editing.interactionValue ?? null,
         childScraperId: editing.childScraperId ?? null,
+        ignoreDuplicateUrls: editing.ignoreDuplicateUrls ?? true,
         isPaginationTrigger: editing.isPaginationTrigger ?? false,
         disabled: editing.disabled ?? false,
       });
@@ -299,14 +301,23 @@ export const SelectorsTab: React.FC<Props> = ({
                   />
                 )}
                 {editing.type == 'FollowLink' && (
-                  <FormSelect
-                    label="Child Scraper"
-                    value={editing.childScraperId ?? ''}
-                    options={scraperOptions}
-                    onChange={(childScraperId) =>
-                      setEditing({ ...editing, childScraperId })
-                    }
-                  />
+                  <>
+                    <FormSelect
+                      label="Child Scraper"
+                      value={editing.childScraperId ?? ''}
+                      options={scraperOptions}
+                      onChange={(childScraperId) =>
+                        setEditing({ ...editing, childScraperId })
+                      }
+                    />
+                    <FormCheck
+                      label="Ignore Duplicate URLs"
+                      checked={editing.ignoreDuplicateUrls ?? false}
+                      onChange={(ignoreDuplicateUrls) =>
+                        setEditing({ ...editing, ignoreDuplicateUrls })
+                      }
+                    />
+                  </>
                 )}
                 <FormCheck
                   label="Disabled"

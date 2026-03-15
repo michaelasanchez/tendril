@@ -44,7 +44,7 @@ public class ScrapeExecutor(
         var client = resources.EnsureClient(context);
 
         // 2. Execute (Now passing the client, not the HTML string)
-        await foreach (var item in staticLogic.ExecuteAsync(client, def, ct))
+        await foreach (var item in staticLogic.ExecuteAsync(client, def, context, ct))
         {
             if (item.ChildUrl is not null)
             {
@@ -65,7 +65,7 @@ public class ScrapeExecutor(
 
                 foreach (var res in childResults)
                 {
-                    yield return item.Data.MergeData(res); // Don't forget to merge!
+                    yield return item.Data.MergeData(res);
                 }
             }
             else
@@ -73,9 +73,6 @@ public class ScrapeExecutor(
                 yield return item.Data;
             }
         }
-
-        // Note: We do NOT dispose the HttpClient here because it might be owned 
-        // by the Factory or the Parent. HttpClient is designed to be long-lived.
     }
 
     // --- PIPELINE 2: DYNAMIC ---
@@ -90,7 +87,7 @@ public class ScrapeExecutor(
 
         try
         {
-            await foreach (var item in dynamicLogic.ExecuteAsync(page, def).WithCancellation(ct))
+            await foreach (var item in dynamicLogic.ExecuteAsync(page, def, context).WithCancellation(ct))
             {
                 if (item.ChildUrl is not null)
                 {

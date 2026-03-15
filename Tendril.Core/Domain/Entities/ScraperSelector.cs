@@ -22,6 +22,7 @@ public class ScraperSelector
     public string? InteractionValue { get; set; }
 
     public Guid? ChildScraperDefinitionId { get; set; }
+    public bool IgnoreDuplicateUrls { get; set; } = true;
 
     public bool IsPaginationTrigger { get; set; }
 

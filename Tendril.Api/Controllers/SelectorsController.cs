@@ -33,6 +33,7 @@ public class SelectorsController : ControllerBase
             s.Delay,
             s.InteractionValue,
             s.ChildScraperDefinitionId,
+            s.IgnoreDuplicateUrls,
             s.IsPaginationTrigger,
             s.Disabled
         )));
@@ -54,6 +55,7 @@ public class SelectorsController : ControllerBase
             Delay = request.Delay,
             InteractionValue = request.InteractionValue,
             ChildScraperDefinitionId = request.ChildScraperId,
+            IgnoreDuplicateUrls = request.IgnoreDuplicateUrls,
             IsPaginationTrigger = request.IsPaginationTrigger,
             Disabled = request.Disabled
         };
@@ -79,6 +81,7 @@ public class SelectorsController : ControllerBase
         selector.Delay = request.Delay;
         selector.InteractionValue = request.InteractionValue;
         selector.ChildScraperDefinitionId = request.ChildScraperId;
+        selector.IgnoreDuplicateUrls = request.IgnoreDuplicateUrls ?? selector.IgnoreDuplicateUrls;
         selector.IsPaginationTrigger = request.IsPaginationTrigger ?? selector.IsPaginationTrigger;
         selector.Disabled = request.Disabled ?? selector.Disabled;
 

@@ -31,6 +31,10 @@ public class ScraperDefinitionConfig : IEntityTypeConfiguration<ScraperDefinitio
             .HasConversion<string>()
             .IsRequired();
 
+        builder.Property(x => x.UseYearTracking)
+            .HasDefaultValue(true)
+            .IsRequired();
+
         builder.Property(x => x.State)
             .HasConversion<string>()
             .IsRequired();
