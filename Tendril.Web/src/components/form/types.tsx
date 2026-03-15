@@ -30,6 +30,7 @@ export interface FormCheckProps {
   type?: FormCheckType;
   disabled?: boolean;
   inline?: boolean;
+  readonly?: boolean;
 }
 
 export interface FormDateProps {

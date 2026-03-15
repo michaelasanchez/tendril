@@ -9,7 +9,7 @@ namespace Tendril.Data.Repositories;
 
 public class EventRepository(TendrilDbContext _context) : IEventRepository
 {
-    private const int defaultLimit = 5;
+    private const int defaultLimit = 50;
 
     public async Task<PagedResponse<Event>> GetAllAsync(
         EventFilter filter,

@@ -17,5 +17,5 @@ public record ScraperDto
     public string? LastSuccessUtc { get; set; }
     public string? LastFailureUtc { get; set; }
     public Guid? VenueId { get; set; }
-    public List<Guid>? ParentIds { get; set; }
+    public List<ParentScraperDto>? Parents { get; set; }
 }

@@ -398,7 +398,7 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
 
           <Tab.Pane eventKey="selectors">
             <SelectorsTab
-              scraperId={scraperId as Guid}
+              scraper={scraper}
               selectors={selectors}
               refresh={loadSelectors}
             />

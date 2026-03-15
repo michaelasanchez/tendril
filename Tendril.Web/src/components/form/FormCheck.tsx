@@ -8,6 +8,7 @@ export const FormCheck: React.FC<FormCheckProps> = ({
   onChange,
   inline = false,
   disabled = false,
+  readonly = false,
 }) => (
   <Form.Check
     className={className}
@@ -17,5 +18,6 @@ export const FormCheck: React.FC<FormCheckProps> = ({
     onChange={(e) => onChange?.(e.target.checked)}
     inline={inline}
     disabled={disabled}
+    readOnly={readonly}
   />
 );

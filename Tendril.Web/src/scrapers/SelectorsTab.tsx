@@ -1,16 +1,27 @@
-import cn from 'classnames';
 import React, { useEffect, useState } from 'react';
-import { Card, Form, Table } from 'react-bootstrap';
+import {
+  ButtonGroup,
+  Card,
+  Dropdown,
+  DropdownButton,
+  Form,
+} from 'react-bootstrap';
 import { useNavigate } from 'react-router';
+import { SelectorsCard, type ScraperOption } from '.';
 import { ScrapersApi } from '../api/scrapers';
-import { SquareButton as Button, SquareButton } from '../components/button';
+import { SquareButton as Button } from '../components/button';
 import { FormCheck, FormInput, FormSelect } from '../components/form';
 import { Icon } from '../components/Icon';
-import { cardStyles, formStyles, pageStyles, tableStyles } from '../styles';
-import type { Guid, ScraperSelector, SelectorType } from '../types/api';
+import { cardStyles, formStyles, pageStyles } from '../styles';
+import type {
+  Guid,
+  ScraperDefinition,
+  ScraperSelector,
+  SelectorType,
+} from '../types/api';
 
 interface Props {
-  scraperId: Guid;
+  scraper: ScraperDefinition;
   selectors: ScraperSelector[];
   refresh: () => Promise<void>;
 }
@@ -30,25 +41,26 @@ const selectorTypeOptions = toOptions([
   'FollowLink',
 ]);
 
-interface Option {
-  label: string;
-  value: string;
-}
-
 export const SelectorsTab: React.FC<Props> = ({
-  scraperId,
+  scraper,
   selectors,
   refresh: load,
 }) => {
   const [editing, setEditing] = useState<Partial<ScraperSelector>>({});
   const [isNew, setIsNew] = useState(false);
 
-  const [scraperOptions, setScraperOptions] = useState<Option[]>([]);
+  const [scraperOptions, setScraperOptions] = useState<ScraperOption[]>([]);
+
+  const [parentId, setParentId] = useState<Guid | null>(null);
+  const [parentSelectors, setParentSelectors] = useState<
+    ScraperSelector[] | null
+  >();
 
   const navigate = useNavigate();
 
   useEffect(() => {
     if (
+      !!parentId ||
       selectors.some((s) => s.type === 'FollowLink') ||
       editing.type === 'FollowLink'
     ) {
@@ -60,7 +72,28 @@ export const SelectorsTab: React.FC<Props> = ({
 
       void loadScrapers();
     }
-  }, [selectors, editing]);
+  }, [selectors, editing, parentId]);
+
+  // Keep parent selectors up-to-date
+  useEffect(() => {
+    const loadParent = async () => {
+      const parentSelectors = await ScrapersApi.getSelectors(
+        parentId as string,
+      );
+
+      setParentSelectors(parentSelectors);
+    };
+
+    if (
+      !!parentId &&
+      (!parentSelectors?.length ||
+        parentSelectors?.some((s) => s.scraperDefinitionId != parentId))
+    ) {
+      void loadParent();
+    } else {
+      setParentSelectors(null);
+    }
+  }, [parentId]);
 
   const startNew = () => {
     setIsNew(true);
@@ -89,7 +122,7 @@ export const SelectorsTab: React.FC<Props> = ({
     if (!editing.fieldName || !editing.type) return;
 
     if (isNew) {
-      await ScrapersApi.createSelector(scraperId, {
+      await ScrapersApi.createSelector(scraper.id, {
         fieldName: editing.fieldName,
         selector: editing.selector ?? '',
         order: editing.order ?? selectors.length,
@@ -107,7 +140,7 @@ export const SelectorsTab: React.FC<Props> = ({
         disabled: editing.disabled ?? false,
       });
     } else if (editing.id) {
-      await ScrapersApi.updateSelector(scraperId, editing.id, {
+      await ScrapersApi.updateSelector(scraper.id, editing.id, {
         fieldName: editing.fieldName,
         selector: editing.selector,
         order: editing.order,
@@ -131,7 +164,7 @@ export const SelectorsTab: React.FC<Props> = ({
 
   const remove = async (sel: ScraperSelector) => {
     if (!window.confirm(`Delete selector "${sel.fieldName}"?`)) return;
-    await ScrapersApi.deleteSelector(scraperId, sel.id);
+    await ScrapersApi.deleteSelector(scraper.id, sel.id);
     await load();
   };
 
@@ -139,10 +172,59 @@ export const SelectorsTab: React.FC<Props> = ({
     <>
       <div className={pageStyles.pageHeader}>
         <h3>Selectors</h3>
-        <Button variant="primary" onClick={startNew}>
-          Add Selector
-        </Button>
+        <div style={{ display: 'flex', gap: '1em' }}>
+          {!!scraper.parents && scraper.parents.length > 0 && (
+            <>
+              <DropdownButton
+                title={
+                  scraper.parents.find((s) => s.id == parentId)?.name ??
+                  `(${scraper.parents.length}) reference${scraper.parents.length > 1 ? 's' : ''}`
+                }
+                as={ButtonGroup}
+                variant="outline-secondary"
+              >
+                <Dropdown.Item onClick={() => setParentId(null)}>
+                  {'\<None\>'}
+                </Dropdown.Item>
+                {scraper.parents.map((s) => (
+                  <Dropdown.Item onClick={() => setParentId(s.id)}>
+                    {s.name}
+                  </Dropdown.Item>
+                ))}
+              </DropdownButton>
+              <Button
+                disabled={!parentId}
+                onClick={() => {
+                  setParentSelectors(null);
+                  navigate(`/scrapers/${parentId}/selectors`);
+                  setParentId(null);
+                }}
+              >
+                <Icon name="external" />
+              </Button>
+            </>
+          )}
+          <Button variant="primary" onClick={startNew}>
+            Add Selector
+          </Button>
+        </div>
       </div>
+
+      {!!parentSelectors && parentSelectors.length > 0 && (
+        <SelectorsCard
+          disabled
+          scraperOptions={scraperOptions}
+          selectors={parentSelectors}
+        />
+      )}
+
+      <SelectorsCard
+        scraperOptions={scraperOptions}
+        selectors={selectors}
+        onEdit={startEdit}
+        onRemove={remove}
+      />
+      {/* 
       <Card className={cn(cardStyles.BgCard, cardStyles.MarginBottom)}>
         <Card.Body>
           <Table className={tableStyles.Table} hover responsive>
@@ -182,18 +264,27 @@ export const SelectorsTab: React.FC<Props> = ({
                     <td>
                       {s.childScraperId && (
                         <>
-                          {
-                            scraperOptions.find(
-                              (o) => o.value === s.childScraperId,
-                            )?.label
-                          }{' '}
-                          <SquareButton
-                            onClick={() =>
-                              navigate(`/scrapers/${s.childScraperId}`)
-                            }
-                          >
-                            <Icon name="external" />
-                          </SquareButton>
+                          <div>
+                            {
+                              scraperOptions.find(
+                                (o) => o.value === s.childScraperId,
+                              )?.label
+                            }{' '}
+                            <Button
+                              onClick={() =>
+                                navigate(`/scrapers/${s.childScraperId}`)
+                              }
+                            >
+                              <Icon name="external" />
+                            </Button>
+                          </div>
+                          <div>
+                            <FormCheck
+                              label="Ignore Duplicate Urls"
+                              checked={s.ignoreDuplicateUrls}
+                              readonly
+                            />
+                          </div>
                         </>
                       )}
                     </td>
@@ -221,7 +312,7 @@ export const SelectorsTab: React.FC<Props> = ({
             </tbody>
           </Table>
         </Card.Body>
-      </Card>
+      </Card> */}
 
       {editing.fieldName !== undefined && (
         <>

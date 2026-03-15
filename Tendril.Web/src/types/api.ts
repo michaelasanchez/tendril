@@ -27,6 +27,10 @@ export type PaginationType = 'None' | 'InfiniteScroll' | 'NextButton';
 
 export type ScraperState = 'Unknown' | 'Healthy' | 'Unhealthy';
 
+export interface ParentScraper {
+  id: Guid;
+  name: string;
+}
 export interface ScraperDefinition {
   id: Guid;
   name: string;
@@ -42,6 +46,7 @@ export interface ScraperDefinition {
   lastFailureUtc?: string | null;
   lastErrorMessage?: string | null;
   venueId?: Guid | null;
+  parents?: ParentScraper[] | null;
 }
 
 export type SelectorType =

@@ -11,6 +11,10 @@
     margin-bottom: 1em;
   }
 
+  &.Muted {
+    opacity: 0.5;
+  }
+
   .CardImage {
     aspect-ratio: 16 / 12;
     object-fit: cover;

@@ -37,6 +37,7 @@ public class ScraperRepository(TendrilDbContext db) : IScraperRepository
             .Include(s => s.ClassificationRules)
             .Include(s => s.MappingRules)
             .Include(s => s.ParentSelectors)
+            .ThenInclude(p => p.ScraperDefinition)
             .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
     }
 
