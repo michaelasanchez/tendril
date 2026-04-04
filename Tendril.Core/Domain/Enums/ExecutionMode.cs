@@ -3,5 +3,6 @@
 public enum ExecutionMode
 {
     Static,
-    Dynamic
+    Dynamic,
+    Api
 }

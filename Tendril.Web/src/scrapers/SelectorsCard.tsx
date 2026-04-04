@@ -16,6 +16,7 @@ interface Props {
   disabled?: boolean;
   scraperOptions?: ScraperOption[];
   selectors: ScraperSelector[];
+  onDisable?: (scraper: ScraperSelector) => void;
   onEdit?: (scraper: ScraperSelector) => void;
   onRemove?: (scraper: ScraperSelector) => void;
 }
@@ -24,6 +25,7 @@ export const SelectorsCard: React.FC<Props> = ({
   disabled,
   scraperOptions,
   selectors,
+  onDisable,
   onEdit,
   onRemove,
 }) => {
@@ -48,6 +50,7 @@ export const SelectorsCard: React.FC<Props> = ({
               <th>Type</th>
               <th>Attribute</th>
               <th>Delay</th>
+              <th>Value</th>
               <th>Interaction</th>
               <th>Child Scraper</th>
               <th>Pagination Trigger</th>
@@ -71,6 +74,7 @@ export const SelectorsCard: React.FC<Props> = ({
                   <td>{s.type}</td>
                   <td>{s.attribute}</td>
                   <td>{s.delay}</td>
+                  <td>{s.constantValue}</td>
                   <td>{s.interactionValue}</td>
                   <td>
                     {s.childScraperId && (
@@ -81,10 +85,14 @@ export const SelectorsCard: React.FC<Props> = ({
                               (o) => o.value === s.childScraperId,
                             )?.label
                           }{' '}
-                          {disabled ? '' : (
+                          {disabled ? (
+                            ''
+                          ) : (
                             <Button
                               onClick={() =>
-                                navigate(`/scrapers/${s.childScraperId}/selectors`)
+                                navigate(
+                                  `/scrapers/${s.childScraperId}/selectors`,
+                                )
                               }
                             >
                               <Icon name="external" />
@@ -106,15 +114,24 @@ export const SelectorsCard: React.FC<Props> = ({
                   {!disabled && (
                     <td className={tableStyles.TableActions}>
                       <div>
-                        <Button onClick={() => onEdit && onEdit(s)}>
-                          <Icon name="edit" />
-                        </Button>
-                        <Button
-                          variant="outline-danger"
-                          onClick={() => onRemove && onRemove(s)}
-                        >
-                          <Icon name="remove" />
-                        </Button>
+                        {onEdit && (
+                          <Button onClick={() => onEdit(s)}>
+                            <Icon name="edit" />
+                          </Button>
+                        )}
+                        {onDisable && (
+                          <Button onClick={() => onDisable(s)}>
+                            <Icon name={s.disabled ? 'disabled' : 'enable'} />
+                          </Button>
+                        )}
+                        {onRemove && (
+                          <Button
+                            variant="outline-danger"
+                            onClick={() => onRemove(s)}
+                          >
+                            <Icon name="remove" />
+                          </Button>
+                        )}
                       </div>
                     </td>
                   )}

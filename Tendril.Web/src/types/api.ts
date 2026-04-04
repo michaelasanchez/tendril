@@ -19,9 +19,30 @@ export interface Venue {
   website?: string;
 }
 
-export type ExecutionMode = 'Static' | 'Dynamic';
+export type HttpMethod = 'Get' | 'Post';
 
-export type ExtractionStrategy = 'Css' | 'JsonLd' | 'XPath' | 'Regex';
+export type ApiParameterSource = 'Static' | 'Parent';
+
+export type ApiParameterTarget = 'Query' | 'Header' | 'Body';
+
+export interface ApiParameter {
+  
+    id: Guid
+    key: string;
+    template: string;
+    source: ApiParameterSource;
+    target: ApiParameterTarget;
+    isRequired: boolean
+}
+
+export type ExecutionMode = 'Static' | 'Dynamic' | 'Api';
+
+export type ExtractionStrategy =
+  | 'Css'
+  | 'JsonLd'
+  | 'JsonPath'
+  | 'Regex'
+  | 'XPath';
 
 export type PaginationType = 'None' | 'InfiniteScroll' | 'NextButton';
 
@@ -31,6 +52,7 @@ export interface ParentScraper {
   id: Guid;
   name: string;
 }
+
 export interface ScraperDefinition {
   id: Guid;
   name: string;
@@ -47,6 +69,9 @@ export interface ScraperDefinition {
   lastErrorMessage?: string | null;
   venueId?: Guid | null;
   parents?: ParentScraper[] | null;
+
+  method?: HttpMethod | null;
+  parameters?: ApiParameter[] | null;
 }
 
 export type SelectorType =
@@ -58,7 +83,9 @@ export type SelectorType =
   | 'Scroll'
   | 'Input'
   | 'CaptureLink'
-  | 'FollowLink';
+  | 'FollowLink'
+  | 'ConstantValue'
+  | 'CallApi';
 
 export interface ScraperSelector {
   id: Guid;
@@ -70,6 +97,7 @@ export interface ScraperSelector {
   type: SelectorType;
   attribute: string | null;
   delay: number | null;
+  constantValue: string | null;
   interactionValue: string | null;
   childScraperId: Guid | null;
   ignoreDuplicateUrls: boolean;

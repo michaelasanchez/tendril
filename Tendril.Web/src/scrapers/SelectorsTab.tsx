@@ -1,17 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import {
-  ButtonGroup,
-  Card,
-  Dropdown,
-  DropdownButton,
-  Form,
-} from 'react-bootstrap';
-import { useNavigate } from 'react-router';
+import { Card, Form } from 'react-bootstrap';
 import { SelectorsCard, type ScraperOption } from '.';
 import { ScrapersApi } from '../api/scrapers';
 import { SquareButton as Button } from '../components/button';
 import { FormCheck, FormInput, FormSelect } from '../components/form';
-import { Icon } from '../components/Icon';
 import { cardStyles, formStyles, pageStyles } from '../styles';
 import type {
   Guid,
@@ -22,7 +14,9 @@ import type {
 
 interface Props {
   scraper: ScraperDefinition;
+  parentId: Guid | null;
   selectors: ScraperSelector[];
+  parentSelectors: ScraperSelector[] | null;
   refresh: () => Promise<void>;
 }
 
@@ -30,6 +24,7 @@ const toOptions = (arr: string[]) =>
   arr.map((item) => ({ value: item, label: item }));
 
 const selectorTypeOptions = toOptions([
+  'Constant',
   'Container',
   'Text',
   'Attribute',
@@ -37,26 +32,22 @@ const selectorTypeOptions = toOptions([
   'Hover',
   'Scroll',
   'Input',
-  'CaptureLink',
-  'FollowLink',
+  'Capture Link',
+  'Follow Link',
+  'CallApi',
 ]);
 
 export const SelectorsTab: React.FC<Props> = ({
   scraper,
+  parentId,
   selectors,
+  parentSelectors,
   refresh: load,
 }) => {
   const [editing, setEditing] = useState<Partial<ScraperSelector>>({});
   const [isNew, setIsNew] = useState(false);
 
   const [scraperOptions, setScraperOptions] = useState<ScraperOption[]>([]);
-
-  const [parentId, setParentId] = useState<Guid | null>(null);
-  const [parentSelectors, setParentSelectors] = useState<
-    ScraperSelector[] | null
-  >();
-
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (
@@ -73,27 +64,6 @@ export const SelectorsTab: React.FC<Props> = ({
       void loadScrapers();
     }
   }, [selectors, editing, parentId]);
-
-  // Keep parent selectors up-to-date
-  useEffect(() => {
-    const loadParent = async () => {
-      const parentSelectors = await ScrapersApi.getSelectors(
-        parentId as string,
-      );
-
-      setParentSelectors(parentSelectors);
-    };
-
-    if (
-      !!parentId &&
-      (!parentSelectors?.length ||
-        parentSelectors?.some((s) => s.scraperDefinitionId != parentId))
-    ) {
-      void loadParent();
-    } else {
-      setParentSelectors(null);
-    }
-  }, [parentId]);
 
   const startNew = () => {
     setIsNew(true);
@@ -133,6 +103,7 @@ export const SelectorsTab: React.FC<Props> = ({
             ? editing.attribute
             : null,
         delay: editing.delay ?? null,
+        constantValue: editing.constantValue ?? null,
         interactionValue: editing.interactionValue ?? null,
         childScraperId: editing.childScraperId ?? null,
         ignoreDuplicateUrls: editing.ignoreDuplicateUrls ?? true,
@@ -151,6 +122,7 @@ export const SelectorsTab: React.FC<Props> = ({
             ? editing.attribute
             : null,
         delay: editing.delay ?? null,
+        constantValue: editing.constantValue ?? null,
         interactionValue: editing.interactionValue ?? null,
         childScraperId: editing.childScraperId ?? null,
         ignoreDuplicateUrls: editing.ignoreDuplicateUrls ?? true,
@@ -160,6 +132,14 @@ export const SelectorsTab: React.FC<Props> = ({
     }
     await load();
     cancelEdit();
+  };
+
+  const toggleDisable = async (sel: ScraperSelector) => {
+    await ScrapersApi.updateSelector(scraper.id, sel.id, {
+      ...sel,
+      disabled: !sel.disabled,
+    });
+    await load();
   };
 
   const remove = async (sel: ScraperSelector) => {
@@ -173,37 +153,6 @@ export const SelectorsTab: React.FC<Props> = ({
       <div className={pageStyles.pageHeader}>
         <h3>Selectors</h3>
         <div style={{ display: 'flex', gap: '1em' }}>
-          {!!scraper.parents && scraper.parents.length > 0 && (
-            <>
-              <DropdownButton
-                title={
-                  scraper.parents.find((s) => s.id == parentId)?.name ??
-                  `(${scraper.parents.length}) reference${scraper.parents.length > 1 ? 's' : ''}`
-                }
-                as={ButtonGroup}
-                variant="outline-secondary"
-              >
-                <Dropdown.Item onClick={() => setParentId(null)}>
-                  {'\<None\>'}
-                </Dropdown.Item>
-                {scraper.parents.map((s) => (
-                  <Dropdown.Item onClick={() => setParentId(s.id)}>
-                    {s.name}
-                  </Dropdown.Item>
-                ))}
-              </DropdownButton>
-              <Button
-                disabled={!parentId}
-                onClick={() => {
-                  setParentSelectors(null);
-                  navigate(`/scrapers/${parentId}/selectors`);
-                  setParentId(null);
-                }}
-              >
-                <Icon name="external" />
-              </Button>
-            </>
-          )}
           <Button variant="primary" onClick={startNew}>
             Add Selector
           </Button>
@@ -221,98 +170,10 @@ export const SelectorsTab: React.FC<Props> = ({
       <SelectorsCard
         scraperOptions={scraperOptions}
         selectors={selectors}
+        onDisable={toggleDisable}
         onEdit={startEdit}
-        onRemove={remove}
+        // onRemove={remove}
       />
-      {/* 
-      <Card className={cn(cardStyles.BgCard, cardStyles.MarginBottom)}>
-        <Card.Body>
-          <Table className={tableStyles.Table} hover responsive>
-            <thead>
-              <tr>
-                <th>Field</th>
-                <th>Selector</th>
-                <th>Order</th>
-                <th>Root</th>
-                <th>Type</th>
-                <th>Attribute</th>
-                <th>Delay</th>
-                <th>Interaction</th>
-                <th>Child Scraper</th>
-                <th>Pagination Trigger</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {selectors
-                .sort((a, b) => a.order - b.order)
-                .map((s) => (
-                  <tr
-                    key={s.id}
-                    className={s.disabled ? tableStyles.Disabled : ''}
-                  >
-                    <td>{s.fieldName}</td>
-                    <td>
-                      <code>{s.selector}</code>
-                    </td>
-                    <td>{s.order}</td>
-                    <td>{s.root ? 'Yes' : ''}</td>
-                    <td>{s.type}</td>
-                    <td>{s.attribute}</td>
-                    <td>{s.delay}</td>
-                    <td>{s.interactionValue}</td>
-                    <td>
-                      {s.childScraperId && (
-                        <>
-                          <div>
-                            {
-                              scraperOptions.find(
-                                (o) => o.value === s.childScraperId,
-                              )?.label
-                            }{' '}
-                            <Button
-                              onClick={() =>
-                                navigate(`/scrapers/${s.childScraperId}`)
-                              }
-                            >
-                              <Icon name="external" />
-                            </Button>
-                          </div>
-                          <div>
-                            <FormCheck
-                              label="Ignore Duplicate Urls"
-                              checked={s.ignoreDuplicateUrls}
-                              readonly
-                            />
-                          </div>
-                        </>
-                      )}
-                    </td>
-                    <td>{s.isPaginationTrigger ? 'Yes' : ''}</td>
-                    <td className={tableStyles.TableActions}>
-                      <div>
-                        <Button onClick={() => startEdit(s)}>
-                          <Icon name="edit" />
-                        </Button>
-                        <Button
-                          variant="outline-danger"
-                          onClick={() => remove(s)}
-                        >
-                          <Icon name="remove" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              {selectors.length === 0 && (
-                <tr>
-                  <td colSpan={5}>No selectors defined.</td>
-                </tr>
-              )}
-            </tbody>
-          </Table>
-        </Card.Body>
-      </Card> */}
 
       {editing.fieldName !== undefined && (
         <>
@@ -328,32 +189,12 @@ export const SelectorsTab: React.FC<Props> = ({
                     setEditing({ ...editing, fieldName })
                   }
                 />
-                <FormInput
-                  label="Selector"
-                  value={editing.selector ?? ''}
-                  onChange={(selector) => setEditing({ ...editing, selector })}
-                />
-                <FormInput
-                  type="number"
-                  label="Order"
-                  value={editing.order?.toString() ?? '0'}
-                  onChange={(order) =>
-                    setEditing({ ...editing, order: parseInt(order) })
-                  }
-                />
                 <div className={formStyles.formGroup}>
                   <FormCheck
-                    label="Root"
-                    checked={editing.root ?? false}
-                    onChange={(checked) =>
-                      setEditing({ ...editing, root: checked })
-                    }
-                  />
-                  <FormCheck
-                    label="Pagination Trigger"
-                    checked={editing.isPaginationTrigger ?? false}
-                    onChange={(isPaginationTrigger) =>
-                      setEditing({ ...editing, isPaginationTrigger })
+                    label="Disabled"
+                    checked={editing.disabled ?? false}
+                    onChange={(disabled) =>
+                      setEditing({ ...editing, disabled })
                     }
                   />
                 </div>
@@ -365,6 +206,45 @@ export const SelectorsTab: React.FC<Props> = ({
                   }
                   options={selectorTypeOptions}
                 />
+                {editing.type != 'CallApi' &&
+                  editing.type != 'ConstantValue' && (
+                    <>
+                      <FormInput
+                        label="Selector"
+                        value={editing.selector ?? ''}
+                        onChange={(selector) =>
+                          setEditing({ ...editing, selector })
+                        }
+                      />
+                      <div className={formStyles.formGroup}>
+                        <FormCheck
+                          label="Root"
+                          checked={editing.root ?? false}
+                          onChange={(checked) =>
+                            setEditing({ ...editing, root: checked })
+                          }
+                        />
+                        {editing.type == 'Click' && (
+                          <FormCheck
+                            label="Pagination Trigger"
+                            checked={editing.isPaginationTrigger ?? false}
+                            onChange={(isPaginationTrigger) =>
+                              setEditing({ ...editing, isPaginationTrigger })
+                            }
+                          />
+                        )}
+                        {editing.type == 'FollowLink' && (
+                          <FormCheck
+                            label="Ignore Duplicate URLs"
+                            checked={editing.ignoreDuplicateUrls ?? false}
+                            onChange={(ignoreDuplicateUrls) =>
+                              setEditing({ ...editing, ignoreDuplicateUrls })
+                            }
+                          />
+                        )}
+                      </div>
+                    </>
+                  )}
                 {editing.type === 'Attribute' && (
                   <FormInput
                     label="Attribute"
@@ -374,14 +254,15 @@ export const SelectorsTab: React.FC<Props> = ({
                     }
                   />
                 )}
-                <FormInput
-                  type="number"
-                  label="Delay"
-                  value={editing.delay?.toString() ?? ''}
-                  onChange={(delay) =>
-                    setEditing({ ...editing, delay: parseInt(delay) })
-                  }
-                />
+                {editing.type === 'ConstantValue' && (
+                  <FormInput
+                    label="Constant Value"
+                    value={editing.constantValue ?? ''}
+                    onChange={(constantValue) =>
+                      setEditing({ ...editing, constantValue })
+                    }
+                  />
+                )}
                 {editing.type === 'Input' && (
                   <FormInput
                     label="Interaction Value"
@@ -391,8 +272,8 @@ export const SelectorsTab: React.FC<Props> = ({
                     }
                   />
                 )}
-                {editing.type == 'FollowLink' && (
-                  <>
+                {editing.type == 'FollowLink' ||
+                  (editing.type == 'CallApi' && (
                     <FormSelect
                       label="Child Scraper"
                       value={editing.childScraperId ?? ''}
@@ -401,19 +282,22 @@ export const SelectorsTab: React.FC<Props> = ({
                         setEditing({ ...editing, childScraperId })
                       }
                     />
-                    <FormCheck
-                      label="Ignore Duplicate URLs"
-                      checked={editing.ignoreDuplicateUrls ?? false}
-                      onChange={(ignoreDuplicateUrls) =>
-                        setEditing({ ...editing, ignoreDuplicateUrls })
-                      }
-                    />
-                  </>
-                )}
-                <FormCheck
-                  label="Disabled"
-                  checked={editing.disabled ?? false}
-                  onChange={(disabled) => setEditing({ ...editing, disabled })}
+                  ))}
+                <FormInput
+                  type="number"
+                  label="Order"
+                  value={editing.order?.toString() ?? '0'}
+                  onChange={(order) =>
+                    setEditing({ ...editing, order: parseInt(order) })
+                  }
+                />
+                <FormInput
+                  type="number"
+                  label="Delay"
+                  value={editing.delay?.toString() ?? ''}
+                  onChange={(delay) =>
+                    setEditing({ ...editing, delay: parseInt(delay) })
+                  }
                 />
                 <div className={formStyles.buttonRow}>
                   <Button variant="primary" onClick={save}>

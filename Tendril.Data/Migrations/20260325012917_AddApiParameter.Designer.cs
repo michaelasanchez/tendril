@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tendril.Data;
 
@@ -11,9 +12,11 @@ using Tendril.Data;
 namespace Tendril.Data.Migrations
 {
     [DbContext(typeof(TendrilDbContext))]
-    partial class TendrilDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260325012917_AddApiParameter")]
+    partial class AddApiParameter
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -38,13 +41,11 @@ namespace Tendril.Data.Migrations
                     b.Property<Guid>("ScraperDefinitionId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("Source")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Source")
+                        .HasColumnType("int");
 
-                    b.Property<string>("Target")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Target")
+                        .HasColumnType("int");
 
                     b.Property<string>("Template")
                         .IsRequired()
@@ -54,7 +55,7 @@ namespace Tendril.Data.Migrations
 
                     b.HasIndex("ScraperDefinitionId");
 
-                    b.ToTable("ApiParameter", (string)null);
+                    b.ToTable("ApiParameter");
                 });
 
             modelBuilder.Entity("Tendril.Core.Domain.Entities.Category", b =>
@@ -382,6 +383,7 @@ namespace Tendril.Data.Migrations
                         .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Method")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
@@ -484,9 +486,6 @@ namespace Tendril.Data.Migrations
 
                     b.Property<Guid?>("ChildScraperDefinitionId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ConstantValue")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("Delay")
                         .HasColumnType("int");

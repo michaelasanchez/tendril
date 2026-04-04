@@ -8,6 +8,8 @@ public class ApiMappingProfile : Profile
 {
     public ApiMappingProfile()
     {
+        CreateMap<ApiParameter, ApiParameterDto>();
+
         CreateMap<ScraperAttemptHistory, AttemptHistoryDto>();
 
         CreateMap<ScrapedEventRaw, ScrapedEventRawDto>();

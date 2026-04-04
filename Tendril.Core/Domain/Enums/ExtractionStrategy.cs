@@ -3,7 +3,8 @@
 public enum ExtractionStrategy
 {
     Css,
-    XPath,
     JsonLd,
-    Regex
+    JsonPath,
+    Regex,
+    XPath
 }

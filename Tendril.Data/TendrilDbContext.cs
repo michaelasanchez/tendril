@@ -12,10 +12,11 @@ public class TendrilDbContext(DbContextOptions<TendrilDbContext> options) : DbCo
     public DbSet<EventTag> EventTags => Set<EventTag>();
     public DbSet<RuleAssignment> RuleAssignments => Set<RuleAssignment>();
     public DbSet<ScrapedEventRaw> RawEvents => Set<ScrapedEventRaw>();
+    public DbSet<ApiParameter> ApiParameters => Set<ApiParameter>();
     public DbSet<ScraperAttemptHistory> AttemptHistory => Set<ScraperAttemptHistory>();
     public DbSet<ScraperClassificationRule> ClassificationRules => Set<ScraperClassificationRule>();
-    public DbSet<ScraperDefinition> Scrapers => Set<ScraperDefinition>();
     public DbSet<ScraperMappingRule> MappingRules => Set<ScraperMappingRule>();
+    public DbSet<ScraperDefinition> Scrapers => Set<ScraperDefinition>();
     public DbSet<ScraperSelector> Selectors => Set<ScraperSelector>();
     public DbSet<Tag> Tags => Set<Tag>();
     public DbSet<User> Users => Set<User>();
@@ -23,6 +24,7 @@ public class TendrilDbContext(DbContextOptions<TendrilDbContext> options) : DbCo
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.ApplyConfiguration(new ApiParameterConfig());
         modelBuilder.ApplyConfiguration(new CategoryConfig());
         modelBuilder.ApplyConfiguration(new EventConfig());
         modelBuilder.ApplyConfiguration(new EventRevisionConfig());

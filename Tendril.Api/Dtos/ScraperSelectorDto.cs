@@ -9,6 +9,7 @@ public record ScraperSelectorDto(
     string Type,
     string? Attribute,
     int? Delay,
+    string? ConstantValue,
     string? InteractionValue,
     Guid? ChildScraperId,
     bool IgnoreDuplicateUrls,

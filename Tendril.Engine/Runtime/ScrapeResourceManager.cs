@@ -9,7 +9,7 @@ public class ScrapeResourceManager(IHttpClientFactory httpClientFactory)
     // --- CLIENT MANAGEMENT ---
     // Ensure a client exists. We don't need a disposable return here 
     // because HttpClients from the factory are generally long-lived/managed by the system.
-    public HttpClient EnsureClient(ScrapeContext context)
+    public HttpClient ResolveClient(ScrapeContext context)
     {
         context.StaticClient ??= httpClientFactory.CreateClient("ScraperClient");
 
@@ -20,7 +20,7 @@ public class ScrapeResourceManager(IHttpClientFactory httpClientFactory)
     // Returns a disposable "Lease". 
     // If we create the browser, the Lease will dispose it when done.
     // If the browser already existed, the Lease does nothing.
-    public async Task<BrowserScope> AcquireBrowserScopeAsync(ScrapeContext context)
+    public async Task<BrowserScope> ResolveBrowserScope(ScrapeContext context)
     {
         bool isOwner = false;
 

@@ -21,31 +21,28 @@ public class ScraperRunsController(
 {
     // 1️⃣ Test selectors only (Stream -> List in memory)
     [HttpPost("test-selectors")]
-    public async Task<ActionResult> TestSelectors(Guid scraperId, CancellationToken ct)
+    public async Task<ActionResult> TestSelectors(Guid scraperId, [FromQuery] int? limit, CancellationToken ct)
     {
         var scraper = await scrapers.GetByIdWithDetailsAsync(scraperId, ct);
+        if (scraper == null) return NotFound();
 
-        if (scraper == null)
-            return NotFound();
-
+        limit ??= 10;
         var events = new List<RawScrapedData>();
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
 
         try
         {
-            // Consume the stream
-            await foreach (var item in executor.RunScraperAsync(scraper, ct))
+            await foreach (var item in executor.RunScraperAsync(scraper, cts.Token))
             {
                 events.Add(item);
+                if (events.Count >= limit)
+                {
+                    cts.Cancel(); // Signal the scraper to stop immediately
+                    break;
+                }
             }
-
-            return Ok(new
-            {
-                success = true,
-                error = (string?)null,
-                count = events.Count,
-                raw = events
-            });
         }
+        catch (OperationCanceledException) when (!ct.IsCancellationRequested) { }
         catch (Exception ex)
         {
             return Ok(new
@@ -53,9 +50,18 @@ public class ScraperRunsController(
                 success = false,
                 error = ex.Message,
                 count = events.Count,
-                raw = events // Return what we found before it crashed
+                raw = events
             });
         }
+
+        // This handles BOTH the normal completion AND the limit-reached completion
+        return Ok(new
+        {
+            success = true,
+            error = (string?)null,
+            count = events.Count,
+            raw = events
+        });
     }
 
     // 2️⃣ Test mapping only (No changes needed, uses DB)

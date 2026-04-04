@@ -6,7 +6,7 @@
 
   tr.Disabled {
     td {
-      color: rgba(38, 38, 38, 0.4);
+      color: var(--muted-foreground);
     }
 
     /* td:not(.TableActions) {

@@ -17,6 +17,7 @@ public class ScraperRepository(TendrilDbContext db) : IScraperRepository
     public async Task<List<ScraperDefinition>> GetAllWithDetailsAsync(CancellationToken cancellationToken = default)
     {
         return await db.Scrapers
+            .Include(s => s.Parameters)
             .Include(s => s.Selectors.Where(z => !z.Disabled))
             .Include(s => s.ClassificationRules.Where(z => !z.Disabled))
             .Include(s => s.MappingRules.Where(z => !z.Disabled))
@@ -26,13 +27,14 @@ public class ScraperRepository(TendrilDbContext db) : IScraperRepository
     public async Task<ScraperDefinition?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await db.Scrapers
-            .AsNoTracking()
+            .Include(s => s.Parameters)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
 
     public async Task<ScraperDefinition?> GetByIdWithDisabledDetailsAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await db.Scrapers
+            .Include(s => s.Parameters)
             .Include(s => s.Selectors)
             .Include(s => s.ClassificationRules)
             .Include(s => s.MappingRules)
@@ -44,6 +46,7 @@ public class ScraperRepository(TendrilDbContext db) : IScraperRepository
     public async Task<ScraperDefinition?> GetByIdWithDetailsAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await db.Scrapers
+            .Include(s => s.Parameters)
             .Include(s => s.Selectors.Where(z => !z.Disabled))
             .Include(s => s.ClassificationRules.Where(z => !z.Disabled))
             .Include(s => s.MappingRules.Where(z => !z.Disabled))

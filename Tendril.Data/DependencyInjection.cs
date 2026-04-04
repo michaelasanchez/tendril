@@ -18,6 +18,7 @@ public static class DependencyInjection
         });
 
         // Repository DI
+        services.AddScoped<IApiParameterRepository, ApiParameterRepository>();
         services.AddScoped<IAttemptHistoryRepository, AttemptHistoryRepository>();
         services.AddScoped<IEventRepository, EventRepository>();
         services.AddScoped<IEventRevisionRepository, EventRevisionRepository>();

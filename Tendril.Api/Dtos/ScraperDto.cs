@@ -17,5 +17,7 @@ public record ScraperDto
     public string? LastSuccessUtc { get; set; }
     public string? LastFailureUtc { get; set; }
     public Guid? VenueId { get; set; }
+    public Core.Domain.Enums.HttpMethod? Method { get; set; }
+    public List<ApiParameterDto>? Parameters { get; set; }
     public List<ParentScraperDto>? Parents { get; set; }
 }

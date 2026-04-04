@@ -11,6 +11,15 @@
   overflow: hidden;
 }
 
+.InputGrow {
+  flex-grow: 1;
+}
+
 .Muted {
   color: var(--muted-foreground);
+}
+
+.ParameterRow {
+  display: flex;
+  gap: 1em;
 }

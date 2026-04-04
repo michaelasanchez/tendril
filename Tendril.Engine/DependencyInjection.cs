@@ -16,10 +16,12 @@ public static class DependencyInjection
         services.AddScoped<IClassificationService, ClassificationService>();
         services.AddScoped<IMapperService, MapperService>();
         services.AddScoped<IJsonLdProcessor, JsonLdProcessor>();
+        services.AddScoped<ITemplateService, TemplateService>();
 
         services.AddScoped<IIngestionService, IngestionService>();
         services.AddScoped<IScrapeExecutor, ScrapeExecutor>();
 
+        services.AddScoped<ApiScraper>();
         services.AddScoped<DynamicScraper>();
         services.AddScoped<StaticScraper>();
 

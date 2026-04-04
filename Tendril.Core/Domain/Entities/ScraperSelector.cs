@@ -19,6 +19,7 @@ public class ScraperSelector
     public string? AttributeName { get; set; }
     public int? Delay { get; set; }
 
+    public string? ConstantValue { get; set; }
     public string? InteractionValue { get; set; }
 
     public Guid? ChildScraperDefinitionId { get; set; }

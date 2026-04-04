@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tendril.Data;
 
@@ -11,9 +12,11 @@ using Tendril.Data;
 namespace Tendril.Data.Migrations
 {
     [DbContext(typeof(TendrilDbContext))]
-    partial class TendrilDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260326010313_UpdateScraperDefinitionMethodNullable")]
+    partial class UpdateScraperDefinitionMethodNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -484,9 +487,6 @@ namespace Tendril.Data.Migrations
 
                     b.Property<Guid?>("ChildScraperDefinitionId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ConstantValue")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("Delay")
                         .HasColumnType("int");

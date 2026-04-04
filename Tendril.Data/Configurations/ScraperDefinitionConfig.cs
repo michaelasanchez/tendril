@@ -42,6 +42,14 @@ public class ScraperDefinitionConfig : IEntityTypeConfiguration<ScraperDefinitio
         builder.Property(x => x.LastErrorMessage)
             .HasMaxLength(1000);
 
+        builder.Property(x => x.Method)
+            .HasConversion<string>();
+
+        builder.HasMany(x => x.Parameters)
+            .WithOne(x => x.ScraperDefinition)
+            .HasForeignKey(x => x.ScraperDefinitionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         builder.HasMany(x => x.Selectors)
             .WithOne(x => x.ScraperDefinition)
             .HasForeignKey(x => x.ScraperDefinitionId)

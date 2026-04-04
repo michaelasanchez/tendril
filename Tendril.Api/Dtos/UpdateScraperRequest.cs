@@ -13,4 +13,6 @@ public class UpdateScraperRequest
     public PaginationType? PaginationType { get; set; }
     public bool? UseYearTracking { get; set; }
     public Guid? VenueId { get; set; }
+    public Core.Domain.Enums.HttpMethod? Method { get; set; }
+    public List<UpdateApiParameterRequest>? Parameters { get; set; }
 }

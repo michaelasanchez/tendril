@@ -1,11 +1,7 @@
-.tabs {
+.Header {
   display: flex;
-  gap: 1em;
+  justify-content: space-between;
   margin-bottom: 1em;
-}
-
-.InputGrow {
-  flex-grow: 1;
 }
 
 .ButtonContainer {

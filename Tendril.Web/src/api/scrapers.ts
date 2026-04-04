@@ -1,8 +1,10 @@
 // src/scrapers.ts
 import type {
+  ApiParameter,
   ExecutionMode,
   ExtractionStrategy,
   Guid,
+  HttpMethod,
   PaginationType,
   ScraperAttemptHistory,
   ScraperClassificationRule,
@@ -10,9 +12,9 @@ import type {
   ScraperMappingRule,
   ScraperSelector,
   ScraperSummary,
-  ScrapeRunResponse
-} from "../types/api";
-import { apiDelete, apiGet, apiPost, apiPut } from "./client";
+  ScrapeRunResponse,
+} from '../types/api';
+import { apiDelete, apiGet, apiPost, apiPut } from './client';
 
 export interface CreateScraperRequest {
   name: string;
@@ -24,14 +26,15 @@ export interface CreateScraperRequest {
   paginationType: PaginationType;
   useYearTracking: boolean;
   venueId?: Guid | null;
-  schedule?: string;
+  method?: HttpMethod | null;
+  parameters?: ApiParameter[] | null;
 }
 
 export interface UpdateScraperRequest extends Partial<CreateScraperRequest> {}
 
 export const ScrapersApi = {
   getAll(): Promise<ScraperDefinition[]> {
-    return apiGet("/scrapers");
+    return apiGet('/scrapers');
   },
 
   getById(id: Guid): Promise<ScraperDefinition> {
@@ -39,7 +42,7 @@ export const ScrapersApi = {
   },
 
   create(req: CreateScraperRequest): Promise<ScraperDefinition> {
-    return apiPost("/scrapers", req);
+    return apiPost('/scrapers', req);
   },
 
   update(id: Guid, req: UpdateScraperRequest): Promise<void> {
@@ -50,16 +53,47 @@ export const ScrapersApi = {
     return apiDelete(`/scrapers/${id}`);
   },
 
+  // Api Parameter
+  getMApiParameter(scraperId: Guid): Promise<ApiParameter[]> {
+    return apiGet(`/scrapers/${scraperId}/api-parameters`);
+  },
+
+  createApiParameter(
+    scraperId: Guid,
+    req: Omit<ApiParameter, 'id' | 'scraperDefinitionId'>,
+  ): Promise<ApiParameter> {
+    return apiPost(`/scrapers/${scraperId}/api-parameters`, req);
+  },
+
+  updateApiParameter(
+    scraperId: Guid,
+    ruleId: Guid,
+    req: Partial<ApiParameter>,
+  ): Promise<void> {
+    return apiPut(`/scrapers/${scraperId}/api-parameters/${ruleId}`, req);
+  },
+
+  deleteApiParameter(scraperId: Guid, ruleId: Guid): Promise<void> {
+    return apiDelete(`/scrapers/${scraperId}/api-parameters/${ruleId}`);
+  },
+
   // Selectors
   getSelectors(scraperId: Guid): Promise<ScraperSelector[]> {
     return apiGet(`/scrapers/${scraperId}/selectors`);
   },
 
-  createSelector(scraperId: Guid, req: Omit<ScraperSelector, "id" | "scraperDefinitionId">): Promise<ScraperSelector> {
+  createSelector(
+    scraperId: Guid,
+    req: Omit<ScraperSelector, 'id' | 'scraperDefinitionId'>,
+  ): Promise<ScraperSelector> {
     return apiPost(`/scrapers/${scraperId}/selectors`, req);
   },
 
-  updateSelector(scraperId: Guid, selectorId: Guid, req: Partial<ScraperSelector>): Promise<void> {
+  updateSelector(
+    scraperId: Guid,
+    selectorId: Guid,
+    req: Partial<ScraperSelector>,
+  ): Promise<void> {
     return apiPut(`/scrapers/${scraperId}/selectors/${selectorId}`, req);
   },
 
@@ -68,15 +102,25 @@ export const ScrapersApi = {
   },
 
   // Classification rules
-  getClassificationRules(scraperId: Guid, signal?: AbortSignal): Promise<ScraperClassificationRule[]> {
+  getClassificationRules(
+    scraperId: Guid,
+    signal?: AbortSignal,
+  ): Promise<ScraperClassificationRule[]> {
     return apiGet(`/scrapers/${scraperId}/classification-rules`, signal);
   },
 
-  createClassificationRule(scraperId: Guid, req: Omit<ScraperClassificationRule, "id" | "scraperDefinitionId">): Promise<ScraperClassificationRule> {
+  createClassificationRule(
+    scraperId: Guid,
+    req: Omit<ScraperClassificationRule, 'id' | 'scraperDefinitionId'>,
+  ): Promise<ScraperClassificationRule> {
     return apiPost(`/scrapers/${scraperId}/classification-rules`, req);
   },
 
-  updateClassificationRule(scraperId: Guid, ruleId: Guid, req: Partial<ScraperClassificationRule>): Promise<void> {
+  updateClassificationRule(
+    scraperId: Guid,
+    ruleId: Guid,
+    req: Partial<ScraperClassificationRule>,
+  ): Promise<void> {
     return apiPut(`/scrapers/${scraperId}/classification-rules/${ruleId}`, req);
   },
 
@@ -89,11 +133,18 @@ export const ScrapersApi = {
     return apiGet(`/scrapers/${scraperId}/mapping-rules`);
   },
 
-  createMappingRule(scraperId: Guid, req: Omit<ScraperMappingRule, "id" | "scraperDefinitionId">): Promise<ScraperMappingRule> {
+  createMappingRule(
+    scraperId: Guid,
+    req: Omit<ScraperMappingRule, 'id' | 'scraperDefinitionId'>,
+  ): Promise<ScraperMappingRule> {
     return apiPost(`/scrapers/${scraperId}/mapping-rules`, req);
   },
 
-  updateMappingRule(scraperId: Guid, ruleId: Guid, req: Partial<ScraperMappingRule>): Promise<void> {
+  updateMappingRule(
+    scraperId: Guid,
+    ruleId: Guid,
+    req: Partial<ScraperMappingRule>,
+  ): Promise<void> {
     return apiPut(`/scrapers/${scraperId}/mapping-rules/${ruleId}`, req);
   },
 
@@ -107,7 +158,10 @@ export const ScrapersApi = {
   },
 
   // Summaries
-  getScraperSummary(scraperId: Guid, signal?: AbortSignal): Promise<ScraperSummary> {
+  getScraperSummary(
+    scraperId: Guid,
+    signal?: AbortSignal,
+  ): Promise<ScraperSummary> {
     return apiGet(`/scrapers/${scraperId}/summaries`, signal);
   },
 
@@ -126,5 +180,5 @@ export const ScrapersApi = {
 
   runNow(scraperId: Guid): Promise<ScrapeRunResponse> {
     return apiPost(`/scrapers/${scraperId}/runs/run-now`);
-  }
+  },
 };

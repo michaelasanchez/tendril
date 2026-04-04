@@ -31,6 +31,7 @@ public class SelectorsController : ControllerBase
             s.Type.ToString(),
             s.AttributeName,
             s.Delay,
+            s.ConstantValue,
             s.InteractionValue,
             s.ChildScraperDefinitionId,
             s.IgnoreDuplicateUrls,
@@ -53,6 +54,7 @@ public class SelectorsController : ControllerBase
             Type = request.Type,
             AttributeName = request.Attribute,
             Delay = request.Delay,
+            ConstantValue = request.ConstantValue,
             InteractionValue = request.InteractionValue,
             ChildScraperDefinitionId = request.ChildScraperId,
             IgnoreDuplicateUrls = request.IgnoreDuplicateUrls,
@@ -79,6 +81,7 @@ public class SelectorsController : ControllerBase
         selector.Type = request.Type ?? selector.Type;
         selector.AttributeName = request.Attribute;
         selector.Delay = request.Delay;
+        selector.ConstantValue = request.ConstantValue;
         selector.InteractionValue = request.InteractionValue;
         selector.ChildScraperDefinitionId = request.ChildScraperId;
         selector.IgnoreDuplicateUrls = request.IgnoreDuplicateUrls ?? selector.IgnoreDuplicateUrls;

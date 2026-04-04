@@ -130,7 +130,7 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
 
             foreach (var step in fieldSelectors)
             {
-                if (step.ChildScraperDefinitionId.HasValue)
+                if (step.Type == SelectorType.FollowLink && step.ChildScraperDefinitionId.HasValue)
                 {
                     var targetNode = FindNode(item, step, def.ExtractionStrategy);
 
@@ -152,6 +152,13 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
                         break; // Stop processing this specific list item
                     }
                 }
+                else if (step.Type == SelectorType.CallApi)
+                {
+                    result = result with
+                    {
+                        ChildScraperId = step.ChildScraperDefinitionId
+                    };
+                }
                 else
                 {
                     ExtractField(page, item, step, result.Data, def.ExtractionStrategy, currentUrl);
@@ -166,7 +173,7 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
         }
     }
 
-    private string? GetNextPageUrl(HtmlDocument page, ScraperDefinition def, string currentUrl)
+    private static string? GetNextPageUrl(HtmlDocument page, ScraperDefinition def, string currentUrl)
     {
         if (def.PaginationType != PaginationType.NextButton) return null;
 
@@ -238,6 +245,7 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
             {
                 SelectorType.Text => targetNode.InnerText.Trim(),
                 SelectorType.Attribute => targetNode.GetAttributeValue(step.AttributeName ?? "", ""),
+                SelectorType.ConstantValue => step.ConstantValue,
                 _ => null
             };
 

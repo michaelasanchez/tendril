@@ -29,6 +29,11 @@ public class ScraperDefinition
     public Guid? VenueId { get; set; }
     public Venue? Venue { get; set; }
 
+    public Enums.HttpMethod? Method { get; set; }
+    public List<ApiParameter> Parameters { get; set; } = [];
+    //public Dictionary<string, string> Headers { get; set; } = [];
+    //public string? RequestBodyTemplate { get; set; }
+
     public List<ScraperSelector> Selectors { get; set; } = [];
     public List<ScraperMappingRule> MappingRules { get; set; } = [];
     public List<ScraperClassificationRule> ClassificationRules { get; set; } = [];

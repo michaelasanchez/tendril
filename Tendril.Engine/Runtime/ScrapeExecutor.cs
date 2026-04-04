@@ -12,6 +12,7 @@ namespace Tendril.Engine.Runtime;
 public class ScrapeExecutor(
     DynamicScraper dynamicLogic,
     StaticScraper staticLogic,
+    ApiScraper apiLogic,
     IScraperRepository repo,
     ScrapeResourceManager resources) : IScrapeExecutor
 {
@@ -21,32 +22,83 @@ public class ScrapeExecutor(
     {
         var context = new ScrapeContext();
 
-        // Start the root scraper
-        if (def.ExecutionMode == ExecutionMode.Static)
+        switch (def.ExecutionMode)
         {
-            await foreach (var item in RunStaticPipelineAsync(def, context, ct)) // Context is null for root static
-                yield return item;
-        }
-        else
-        {
-            await foreach (var item in RunDynamicPipelineAsync(def, context, ct)) // Context is null, will create new
-                yield return item;
+            case ExecutionMode.Static:
+            {
+
+                await foreach (var item in RunStaticPipelineAsync(def, context, ct))
+                    yield return item;
+
+                break;
+            }
+
+
+            case ExecutionMode.Dynamic:
+            {
+                await foreach (var item in RunDynamicPipelineAsync(def, context, ct))
+                    yield return item;
+
+                break;
+            }
+
+            case ExecutionMode.Api:
+            {
+                await foreach (var item in RunApiPipelineAsync(def, context, ct))
+                    yield return item;
+
+                break;
+            }
         }
     }
 
-    // --- PIPELINE 1: STATIC ---
+    // --- CHILD DISPATCHER ---
+    private async IAsyncEnumerable<RawScrapedData> RunChildDispatchAsync(
+        ScrapeYieldItem parentItem,
+        ScrapeContext context,
+        [EnumeratorCancellation] CancellationToken ct)
+    {
+        var childDef = await repo.GetByIdWithDetailsAsync(parentItem.ChildScraperId!.Value, ct);
+
+        if (childDef == null) yield break;
+
+        var previousBaseUrl = childDef.BaseUrl; // Store previous base URL to restore later
+
+        if (parentItem.ChildUrl is not null)
+        {
+            childDef.BaseUrl = parentItem.ChildUrl;
+        }
+
+        context.ParentData = parentItem.Data;
+
+        IAsyncEnumerable<RawScrapedData> pipeline = childDef.ExecutionMode switch
+        {
+            ExecutionMode.Static => RunStaticPipelineAsync(childDef, context, ct),
+            ExecutionMode.Dynamic => RunDynamicPipelineAsync(childDef, context, ct),
+            ExecutionMode.Api => RunApiPipelineAsync(childDef, context, ct),
+            _ => throw new ArgumentOutOfRangeException(nameof(childDef.ExecutionMode))
+        };
+
+        await foreach (var res in pipeline)
+        {
+            yield return res;
+        }
+
+        childDef.BaseUrl = previousBaseUrl;
+        context.ParentData = null;
+    }
+
+    // --- PIPELINE 1: STATIC --- //
     private async IAsyncEnumerable<RawScrapedData> RunStaticPipelineAsync(
         ScraperDefinition def,
         ScrapeContext context,
         [EnumeratorCancellation] CancellationToken ct)
     {
-        // 1. Resolve Client
-        var client = resources.EnsureClient(context);
+        var client = resources.ResolveClient(context);
 
-        // 2. Execute (Now passing the client, not the HTML string)
         await foreach (var item in staticLogic.ExecuteAsync(client, def, context, ct))
         {
-            if (item.ChildUrl is not null)
+            if (item.ChildScraperId is not null)
             {
                 var childResults = new List<RawScrapedData>();
 
@@ -75,13 +127,13 @@ public class ScrapeExecutor(
         }
     }
 
-    // --- PIPELINE 2: DYNAMIC ---
+    // --- PIPELINE 2: DYNAMIC --- //
     private async IAsyncEnumerable<RawScrapedData> RunDynamicPipelineAsync(
         ScraperDefinition def,
         ScrapeContext context,
         [EnumeratorCancellation] CancellationToken ct)
     {
-        await using var scope = await resources.AcquireBrowserScopeAsync(context);
+        await using var scope = await resources.ResolveBrowserScope(context);
 
         var page = await scope.Browser.NewPageAsync();
 
@@ -89,7 +141,7 @@ public class ScrapeExecutor(
         {
             await foreach (var item in dynamicLogic.ExecuteAsync(page, def, context).WithCancellation(ct))
             {
-                if (item.ChildUrl is not null)
+                if (item.ChildScraperId is not null)
                 {
                     var childResults = new List<RawScrapedData>();
 
@@ -123,36 +175,41 @@ public class ScrapeExecutor(
         }
     }
 
-    // --- THE UNIFIED DISPATCHER ---
-    private async IAsyncEnumerable<RawScrapedData> RunChildDispatchAsync(
-        ScrapeYieldItem parentItem,
+    // --- PIPELINE 3: API --- //
+    private async IAsyncEnumerable<RawScrapedData> RunApiPipelineAsync(
+        ScraperDefinition def,
         ScrapeContext context,
         [EnumeratorCancellation] CancellationToken ct)
     {
-        var childDef = await repo.GetByIdWithDetailsAsync(parentItem.ChildScraperId!.Value, ct);
+        var client = resources.ResolveClient(context);
 
-        if (childDef == null) yield break;
-
-        var previousBaseUrl = childDef.BaseUrl; // Store previous base URL to restore later
-
-        childDef.BaseUrl = parentItem.ChildUrl!;
-
-        IAsyncEnumerable<RawScrapedData> pipeline;
-
-        if (childDef.ExecutionMode == ExecutionMode.Static)
+        await foreach (var item in apiLogic.ExecuteAsync(client, def, context, ct))
         {
-            pipeline = RunStaticPipelineAsync(childDef, context, ct);
-        }
-        else
-        {
-            pipeline = RunDynamicPipelineAsync(childDef, context, ct);
-        }
+            if (item.ChildScraperId is not null)
+            {
+                var childResults = new List<RawScrapedData>();
 
-        await foreach (var res in pipeline)
-        {
-            yield return res;
-        }
+                try
+                {
+                    await foreach (var childEvent in RunChildDispatchAsync(item, context, ct))
+                    {
+                        childResults.Add(childEvent);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Log error
+                }
 
-        childDef.BaseUrl = previousBaseUrl;
+                foreach (var res in childResults)
+                {
+                    yield return item.Data.MergeData(res);
+                }
+            }
+            else
+            {
+                yield return item.Data;
+            }
+        }
     }
 }

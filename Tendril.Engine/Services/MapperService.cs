@@ -11,8 +11,8 @@ namespace Tendril.Engine.Services;
 
 public class MapperService : IMapperService
 {
-    private static readonly Dictionary<string, System.Reflection.PropertyInfo> _eventProperties =
-        typeof(Event).GetProperties()
+    private static readonly Dictionary<string, System.Reflection.PropertyInfo> _eventProperties = typeof(Event)
+        .GetProperties()
         .Where(p => p.CanWrite)
         .ToDictionary(p => p.Name, p => p, StringComparer.OrdinalIgnoreCase);
 

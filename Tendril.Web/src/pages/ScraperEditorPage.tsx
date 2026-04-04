@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Card, Form, Tab } from 'react-bootstrap';
+import { ButtonGroup, Dropdown, DropdownButton, Tab } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router';
 import { CategoriesApi } from '../api/categories';
 import { EventsApi } from '../api/events';
 import { ScrapersApi } from '../api/scrapers';
 import { VenuesApi } from '../api/venues';
-import { SquareButton as Button, SquareButton } from '../components/button';
-import { FormCheck, FormInput, FormSelect, FormText } from '../components/form';
+import { SquareButton as Button } from '../components/button';
 import { Icon } from '../components/Icon';
 import {
+  GeneralTab,
   MappingRulesTab,
   RunsTab,
   SelectorsTab,
@@ -16,14 +16,12 @@ import {
 } from '../scrapers';
 import { ClassificationRulesTab } from '../scrapers/ClassificationRulesTab';
 import { OutputTab } from '../scrapers/OutputTab';
-import { cardStyles, formStyles, pageStyles } from '../styles';
+import { pageStyles } from '../styles';
 import type {
+  ApiParameter,
   Category,
   Event,
-  ExecutionMode,
-  ExtractionStrategy,
   Guid,
-  PaginationType,
   ScraperAttemptHistory,
   ScraperDefinition,
   ScraperSelector,
@@ -39,24 +37,6 @@ type TabKey =
   | 'runs'
   | 'summary'
   | 'output';
-
-const toOptions = (arr: string[]) =>
-  arr.map((item) => ({ value: item, label: item }));
-
-const executionModeOptions = toOptions(['Static', 'Dynamic']);
-
-const extractionStrategyOptions = toOptions([
-  'Css',
-  'JsonLd',
-  'XPath',
-  'Regex',
-]);
-
-const paginationTypeOptions = toOptions([
-  'None',
-  'InfiniteScroll',
-  'NextButton',
-]);
 
 interface ScraperEditorPage {
   authorized: boolean;
@@ -75,7 +55,12 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
   const [error, setError] = useState<string | null>(null);
   const isNew = scraperId === 'new';
 
-  const activeTab = tabId as TabKey || 'general';
+  const [parentId, setParentId] = useState<Guid | null>(null);
+  const [parentSelectors, setParentSelectors] = useState<
+    ScraperSelector[] | null
+  >(null);
+
+  const activeTab = (tabId as TabKey) || 'general';
 
   const handleTabChange = (key: TabKey) => {
     navigate(`/scrapers/${scraperId}/${key}`);
@@ -183,6 +168,27 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
     }
   }, [scraperId, isNew, authorized]);
 
+  // Keep parent selectors up-to-date
+  useEffect(() => {
+    const loadParent = async () => {
+      const parentSelectors = await ScrapersApi.getSelectors(
+        parentId as string,
+      );
+
+      setParentSelectors(parentSelectors);
+    };
+
+    if (
+      !!parentId &&
+      (!parentSelectors?.length ||
+        parentSelectors?.some((s) => s.scraperDefinitionId != parentId))
+    ) {
+      void loadParent();
+    } else {
+      setParentSelectors(null);
+    }
+  }, [parentId]);
+
   const handleSaveGeneral = async () => {
     if (!scraper) return;
     try {
@@ -196,7 +202,15 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
           extractionStrategy: scraper.extractionStrategy,
           paginationType: scraper.paginationType,
           useYearTracking: scraper.useYearTracking,
-          venueId: scraper.venueId ?? undefined,
+          venueId: scraper.venueId,
+          method: scraper.method,
+          parameters: scraper.parameters?.map(
+            (p) =>
+              ({
+                ...p,
+                id: !p.id ? null : p.id,
+              }) as ApiParameter,
+          ),
         });
         navigate(`/scrapers/${created.id}`);
       } else if (scraperId) {
@@ -209,7 +223,15 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
           extractionStrategy: scraper.extractionStrategy,
           paginationType: scraper.paginationType,
           useYearTracking: scraper.useYearTracking,
-          venueId: scraper.venueId ?? undefined,
+          venueId: scraper.venueId,
+          method: scraper.method,
+          parameters: scraper.parameters?.map(
+            (p) =>
+              ({
+                ...p,
+                id: !p.id ? null : p.id,
+              }) as ApiParameter,
+          ),
         });
       }
       alert('Saved.');
@@ -229,177 +251,111 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
       <div className={pageStyles.pageHeader}>
         {/* <h2>{isNew ? 'New Scraper' : `Edit Scraper – ${scraper.name}`}</h2> */}
         <h2>{scraper.name}</h2>
-        <SquareButton onClick={() => navigate('/scrapers')}>Back</SquareButton>
+        <Button onClick={() => navigate('/scrapers')}>Back</Button>
       </div>
 
       <Tab.Container activeKey={activeTab}>
-        <div className={styles.tabs}>
-          <Button
-            variant={activeTab == 'general' ? 'active' : 'default'}
-            onClick={() => handleTabChange('general')}
-          >
-            General
-          </Button>
-          <Button
-            variant={activeTab == 'selectors' ? 'active' : 'default'}
-            disabled={isNew}
-            onClick={() => handleTabChange('selectors')}
-          >
-            Selectors
-          </Button>
-          <Button
-            variant={activeTab == 'mapping' ? 'active' : 'default'}
-            disabled={isNew}
-            onClick={() => handleTabChange('mapping')}
-          >
-            Mapping
-          </Button>
-          <Button
-            variant={activeTab == 'classification' ? 'active' : 'default'}
-            disabled={isNew}
-            onClick={() => handleTabChange('classification')}
-          >
-            Classification
-          </Button>
-          <Button
-            variant={activeTab == 'summary' ? 'active' : 'default'}
-            disabled={isNew}
-            onClick={() => handleTabChange('summary')}
-          >
-            Summary
-          </Button>
-          <Button
-            variant={activeTab == 'runs' ? 'active' : 'default'}
-            disabled={isNew}
-            onClick={() => handleTabChange('runs')}
-          >
-            Runs
-          </Button>
-          <Button
-            variant={activeTab == 'output' ? 'active' : 'default'}
-            disabled={isNew}
-            onClick={() => handleTabChange('output')}
-          >
-            Output
-          </Button>
+        <div className={styles.Header}>
+          <div className={styles.ButtonContainer}>
+            <Button
+              variant={activeTab == 'general' ? 'active' : 'default'}
+              onClick={() => handleTabChange('general')}
+            >
+              General
+            </Button>
+            <Button
+              variant={activeTab == 'selectors' ? 'active' : 'default'}
+              disabled={isNew}
+              onClick={() => handleTabChange('selectors')}
+            >
+              Selectors
+            </Button>
+            <Button
+              variant={activeTab == 'mapping' ? 'active' : 'default'}
+              disabled={isNew}
+              onClick={() => handleTabChange('mapping')}
+            >
+              Mapping
+            </Button>
+            <Button
+              variant={activeTab == 'classification' ? 'active' : 'default'}
+              disabled={isNew}
+              onClick={() => handleTabChange('classification')}
+            >
+              Classification
+            </Button>
+            <Button
+              variant={activeTab == 'summary' ? 'active' : 'default'}
+              disabled={isNew}
+              onClick={() => handleTabChange('summary')}
+            >
+              Summary
+            </Button>
+            <Button
+              variant={activeTab == 'runs' ? 'active' : 'default'}
+              disabled={isNew}
+              onClick={() => handleTabChange('runs')}
+            >
+              Runs
+            </Button>
+            <Button
+              variant={activeTab == 'output' ? 'active' : 'default'}
+              disabled={isNew}
+              onClick={() => handleTabChange('output')}
+            >
+              Output
+            </Button>
+          </div>
+
+          {!!scraper.parents && scraper.parents.length > 0 && (
+            <div className={styles.ButtonContainer}>
+              <DropdownButton
+                title={
+                  scraper.parents.find((s) => s.id == parentId)?.name ??
+                  `(${scraper.parents.length}) reference${scraper.parents.length > 1 ? 's' : ''}`
+                }
+                as={ButtonGroup}
+                variant="outline-secondary"
+              >
+                <Dropdown.Item onClick={() => setParentId(null)}>
+                  {'\<None\>'}
+                </Dropdown.Item>
+                {scraper.parents.map((s) => (
+                  <Dropdown.Item onClick={() => setParentId(s.id)}>
+                    {s.name}
+                  </Dropdown.Item>
+                ))}
+              </DropdownButton>
+              <Button
+                disabled={!parentId}
+                onClick={() => {
+                  setParentSelectors(null);
+                  navigate(`/scrapers/${parentId}/selectors`);
+                  setParentId(null);
+                }}
+              >
+                <Icon name="external" />
+              </Button>
+            </div>
+          )}
         </div>
 
         <Tab.Content>
           <Tab.Pane eventKey="general">
-            <Card className={cardStyles.BgCard}>
-              <Card.Body>
-                <Form className={formStyles.form}>
-                  <div className={formStyles.formGroup}>
-                    <FormInput
-                      className={styles.InputGrow}
-                      label="Name"
-                      value={scraper.name}
-                      onChange={(name) => setScraper({ ...scraper, name })}
-                    />
-
-                    <FormCheck
-                      label="Disabled"
-                      checked={scraper.disabled}
-                      onChange={(disabled) =>
-                        setScraper({ ...scraper, disabled })
-                      }
-                    />
-                  </div>
-
-                  <FormSelect
-                    label="Venue"
-                    value={scraper.venueId ?? ''}
-                    onChange={(venueId) =>
-                      setScraper({
-                        ...scraper,
-                        venueId: venueId ? (venueId as Guid) : null,
-                      })
-                    }
-                    options={[{ value: '', label: '(none)' }].concat(
-                      venues.map((v) => ({ value: v.id, label: v.name })),
-                    )}
-                  />
-
-                  <div className={formStyles.formGroup}>
-                    <FormInput
-                      className={styles.InputGrow}
-                      label="Base URL"
-                      value={scraper.baseUrl}
-                      onChange={(baseUrl) =>
-                        setScraper({ ...scraper, baseUrl })
-                      }
-                    />
-                    <Button href={scraper.baseUrl} target="_blank">
-                      <Icon name="external" />
-                    </Button>
-                  </div>
-
-                  <FormText
-                    label="Notes"
-                    value={scraper.notes}
-                    onChange={(notes) => setScraper({ ...scraper, notes })}
-                  />
-
-                  <hr />
-
-                  <FormSelect
-                    label="Execution Mode"
-                    value={scraper.executionMode}
-                    onChange={(executionMode) =>
-                      setScraper({
-                        ...scraper,
-                        executionMode: executionMode as ExecutionMode,
-                      })
-                    }
-                    options={executionModeOptions}
-                  />
-                  <FormSelect
-                    label="Extraction Strategy"
-                    value={scraper.extractionStrategy}
-                    onChange={(extractionStrategy) =>
-                      setScraper({
-                        ...scraper,
-                        extractionStrategy:
-                          extractionStrategy as ExtractionStrategy,
-                      })
-                    }
-                    options={extractionStrategyOptions}
-                  />
-                  <FormSelect
-                    label="Paging Type"
-                    value={scraper.paginationType}
-                    onChange={(paginationType) =>
-                      setScraper({
-                        ...scraper,
-                        paginationType: paginationType as PaginationType,
-                      })
-                    }
-                    options={paginationTypeOptions}
-                  />
-                  <FormCheck
-                    label="Use Year Tracking"
-                    checked={scraper.useYearTracking}
-                    onChange={(useYearTracking) =>
-                      setScraper({
-                        ...scraper,
-                        useYearTracking: useYearTracking,
-                      })
-                    }
-                  />
-                  <div className={formStyles.buttonRow}>
-                    <SquareButton onClick={handleSaveGeneral}>
-                      Save
-                    </SquareButton>
-                  </div>
-                </Form>
-              </Card.Body>
-            </Card>
+            <GeneralTab
+              scraper={scraper}
+              venues={venues}
+              onSave={handleSaveGeneral}
+              onUpdate={setScraper}
+            />
           </Tab.Pane>
 
           <Tab.Pane eventKey="selectors">
             <SelectorsTab
               scraper={scraper}
               selectors={selectors}
+              parentId={parentId}
+              parentSelectors={parentSelectors}
               refresh={loadSelectors}
             />
           </Tab.Pane>

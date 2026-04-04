@@ -10,5 +10,7 @@ public enum SelectorType
     Scroll,
     Input,
     CaptureLink,
-    FollowLink
+    FollowLink,
+    CallApi,
+    ConstantValue
 }
