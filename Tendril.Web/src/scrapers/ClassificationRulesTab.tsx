@@ -1,7 +1,7 @@
 import cn from 'classnames';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Card, Form, Table } from 'react-bootstrap';
-import { ScrapersApi } from '../api/scrapers';
+import { ActionsApi } from '../api/scrapers';
 import { TagApi } from '../api/tags';
 import { SquareButton as Button } from '../components/button';
 import {
@@ -74,7 +74,7 @@ export const ClassificationRulesTab: React.FC<Props> = ({
   const loadRules = useCallback(async (signal?: AbortSignal) => {
     try {
       if (scraperId !== 'new') {
-        const rules = await ScrapersApi.getClassificationRules(
+        const rules = await ActionsApi.getClassificationRules(
           scraperId,
           signal,
         );
@@ -131,7 +131,7 @@ export const ClassificationRulesTab: React.FC<Props> = ({
     // }
 
     if (isNew) {
-      await ScrapersApi.createClassificationRule(scraperId, {
+      await ActionsApi.createClassificationRule(scraperId, {
         order: editing.order ?? 0,
         disabled: editing.disabled ?? false,
         sourceJsonPath: editing.sourceJsonPath ?? '',
@@ -140,7 +140,7 @@ export const ClassificationRulesTab: React.FC<Props> = ({
         assignments: editing.assignments ?? [],
       });
     } else if (editing.id) {
-      await ScrapersApi.updateClassificationRule(scraperId, editing.id, {
+      await ActionsApi.updateClassificationRule(scraperId, editing.id, {
         order: editing.order ?? 0,
         disabled: editing.disabled ?? false,
         sourceJsonPath: editing.sourceJsonPath ?? '',
@@ -155,7 +155,7 @@ export const ClassificationRulesTab: React.FC<Props> = ({
 
   const remove = async (rule: ScraperClassificationRule) => {
     if (!window.confirm(`Delete classification rule?`)) return;
-    await ScrapersApi.deleteClassificationRule(scraperId, rule.id);
+    await ActionsApi.deleteClassificationRule(scraperId, rule.id);
     await load();
   };
 

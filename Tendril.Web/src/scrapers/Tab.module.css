@@ -19,7 +19,15 @@
   color: var(--muted-foreground);
 }
 
+.HeaderRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 1em;
+}
+
 .ParameterRow {
   display: flex;
   gap: 1em;
+  align-items: flex-end;
 }

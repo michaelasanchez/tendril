@@ -57,6 +57,15 @@ public class ApiScraper(ITemplateService templateService)
             request.Headers.TryAddWithoutValidation(header.Key, header.Value);
         }
 
+        var uri = request.RequestUri?.ToString();
+
+        if (uri is null || (context.ParentIgnoreDuplicateUrls && context.HasVisited(uri)))
+        {
+            yield break;
+        }
+
+        context.MarkVisited(uri);
+
         // 6. FETCH & YIELD (Using your Container Pattern)
         var response = await client.SendAsync(request, ct);
         response.EnsureSuccessStatusCode();
@@ -66,8 +75,10 @@ public class ApiScraper(ITemplateService templateService)
         // Using JsonNode for easier path-based navigation
         var root = JsonNode.Parse(json);
 
+        // TODO: Need to perform pre container selectors here
+
         // 3. CONTAINER PATTERN
-        var containerSelector = def.Selectors.SingleOrDefault(x => x.Type == SelectorType.Container);
+        var containerSelector = def.Actions.SingleOrDefault(x => x.Type == ActionType.Container);
         if (containerSelector == null) yield break;
 
         // Extract items using the Container's "Path" (JsonPath)
@@ -80,13 +91,13 @@ public class ApiScraper(ITemplateService templateService)
             var partial = false;
 
             // 4. FIELD EXTRACTION
-            var fieldSelectors = def.Selectors
-                .Where(x => x.Type != SelectorType.Container && !x.IsPaginationTrigger)
+            var fieldSelectors = def.Actions
+                .Where(x => x.Type != ActionType.Container && !x.IsPaginationTrigger)
                 .OrderBy(x => x.Order);
 
             foreach (var step in fieldSelectors)
             {
-                if (step.ChildScraperDefinitionId.HasValue)
+                if (step.Type == ActionType.FollowLink && step.ChildScraperDefinitionId.HasValue)
                 {
                     // Logic to extract a URL/ID for the next scraper
                     var childUrl = node?[step.Selector]?.ToString();

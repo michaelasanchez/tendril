@@ -26,7 +26,7 @@ public static class DependencyInjection
         services.AddScoped<IMappingRuleRepository, MappingRuleRepository>();
         services.AddScoped<IRawEventRepository, RawEventRepository>();
         services.AddScoped<IScraperRepository, ScraperRepository>();
-        services.AddScoped<ISelectorRepository, SelectorRepository>();
+        services.AddScoped<IActionRepository, ActionRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<ITagRepository, TagRepository>();
         services.AddScoped<IUserRepository, UserRepository>();

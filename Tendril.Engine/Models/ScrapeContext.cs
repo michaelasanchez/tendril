@@ -9,6 +9,7 @@ public class ScrapeContext
     public HttpClient? StaticClient { get; set; }
 
     public RawScrapedData? ParentData { get; set; }
+    public bool ParentIgnoreDuplicateUrls { get; set; } = false;
 
     private readonly ConcurrentDictionary<string, byte> _visitedUrls = new();
     public bool HasVisited(string url) => _visitedUrls.ContainsKey(url);

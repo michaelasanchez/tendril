@@ -2,7 +2,7 @@
 
 namespace Tendril.Core.Domain.Entities;
 
-public class ScraperSelector
+public class ScraperAction
 {
     public Guid Id { get; set; }
 
@@ -14,7 +14,7 @@ public class ScraperSelector
 
     public int Order { get; set; } = 0;
     public bool Root { get; set; } = false;
-    public SelectorType Type { get; set; } = SelectorType.Text;
+    public ActionType Type { get; set; } = ActionType.Text;
 
     public string? AttributeName { get; set; }
     public int? Delay { get; set; }

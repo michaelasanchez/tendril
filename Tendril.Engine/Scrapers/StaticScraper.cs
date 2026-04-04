@@ -43,7 +43,7 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
             // 2. STRATEGY: JSON-LD
             if (def.ExtractionStrategy == ExtractionStrategy.JsonLd)
             {
-                var data = jsonLd.Extract(html, def.Selectors.FirstOrDefault()?.Selector ?? "Event");
+                var data = jsonLd.Extract(html, def.Actions.FirstOrDefault()?.Selector ?? "Event");
                 if (data != null) yield return new ScrapeYieldItem { Data = data };
                 // JsonLD usually doesn't have "Next Page" buttons in the DOM easily, 
                 // but if it does, the logic below handles it. 
@@ -91,11 +91,11 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
     private IEnumerable<ScrapeYieldItem> ExtractDomItems(HtmlDocument page, ScraperDefinition def, ScrapeContext context, string currentUrl)
     {
         // 1. Pre-Scrape (Header data, etc)
-        var container = def.Selectors.SingleOrDefault(x => x.Type == SelectorType.Container);
+        var container = def.Actions.SingleOrDefault(x => x.Type == ActionType.Container);
         if (container == null) yield break;
 
-        var preSelectors = def.Selectors
-            .Where(x => x.Order < container.Order && x.Type != SelectorType.Container)
+        var preSelectors = def.Actions
+            .Where(x => x.Order < container.Order && x.Type != ActionType.Container)
             .OrderBy(x => x.Order);
 
         var preResult = new ScrapeYieldItem();
@@ -121,16 +121,16 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
 
             var partial = false;
 
-            var fieldSelectors = def.Selectors
+            var fieldSelectors = def.Actions
                 .Where(x =>
-                    x.Type != SelectorType.Container &&
+                    x.Type != ActionType.Container &&
                     x.Order > container.Order &&
                     !x.IsPaginationTrigger)
                 .OrderBy(x => x.Order);
 
             foreach (var step in fieldSelectors)
             {
-                if (step.Type == SelectorType.FollowLink && step.ChildScraperDefinitionId.HasValue)
+                if (step.Type == ActionType.FollowLink && step.ChildScraperDefinitionId.HasValue)
                 {
                     var targetNode = FindNode(item, step, def.ExtractionStrategy);
 
@@ -152,8 +152,10 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
                         break; // Stop processing this specific list item
                     }
                 }
-                else if (step.Type == SelectorType.CallApi)
+                else if (step.Type == ActionType.CallApi)
                 {
+                    context.ParentIgnoreDuplicateUrls = step.IgnoreDuplicateUrls;
+
                     result = result with
                     {
                         ChildScraperId = step.ChildScraperDefinitionId
@@ -177,7 +179,7 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
     {
         if (def.PaginationType != PaginationType.NextButton) return null;
 
-        var nextBtnDef = def.Selectors.FirstOrDefault(s => s.IsPaginationTrigger);
+        var nextBtnDef = def.Actions.FirstOrDefault(s => s.IsPaginationTrigger);
 
         if (nextBtnDef == null) return null;
 
@@ -208,7 +210,7 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
     }
 
     // Helper to switch between CSS/XPath logic for finding nodes
-    private static HtmlNode? FindNode(HtmlNode scope, ScraperSelector step, ExtractionStrategy strategy)
+    private static HtmlNode? FindNode(HtmlNode scope, ScraperAction step, ExtractionStrategy strategy)
     {
         if (string.IsNullOrWhiteSpace(step.Selector)) return scope;
 
@@ -222,7 +224,7 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
         }
     }
 
-    private static void ExtractField(HtmlDocument page, HtmlNode? parentNode, ScraperSelector step, RawScrapedData rawEvent, ExtractionStrategy strategy, string currentUrl)
+    private static void ExtractField(HtmlDocument page, HtmlNode? parentNode, ScraperAction step, RawScrapedData rawEvent, ExtractionStrategy strategy, string currentUrl)
     {
         try
         {
@@ -243,14 +245,14 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
 
             string? value = step.Type switch
             {
-                SelectorType.Text => targetNode.InnerText.Trim(),
-                SelectorType.Attribute => targetNode.GetAttributeValue(step.AttributeName ?? "", ""),
-                SelectorType.ConstantValue => step.ConstantValue,
+                ActionType.Text => targetNode.InnerText.Trim(),
+                ActionType.Attribute => targetNode.GetAttributeValue(step.AttributeName ?? "", ""),
+                ActionType.ConstantValue => step.ConstantValue,
                 _ => null
             };
 
             // FIX: Check for relative URLs on href/src attributes
-            if (step.Type == SelectorType.Attribute &&
+            if (step.Type == ActionType.Attribute &&
                 (step.AttributeName == "href" || step.AttributeName == "src") &&
                 !string.IsNullOrWhiteSpace(value))
             {
@@ -282,7 +284,7 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
     // REGEX IMPLEMENTATION
     private IEnumerable<ScrapeYieldItem> RunRegexExtraction(string html, ScraperDefinition def)
     {
-        var containerDef = def.Selectors.SingleOrDefault(x => x.Type == SelectorType.Container);
+        var containerDef = def.Actions.SingleOrDefault(x => x.Type == ActionType.Container);
         if (containerDef == null) yield break;
 
         var matches = Regex.Matches(html, containerDef.Selector, RegexOptions.Singleline);
@@ -291,7 +293,7 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
         {
             var result = new ScrapeYieldItem();
 
-            var fieldSelectors = def.Selectors.Where(x => x.Type != SelectorType.Container);
+            var fieldSelectors = def.Actions.Where(x => x.Type != ActionType.Container);
 
             foreach (var step in fieldSelectors)
             {

@@ -9,7 +9,7 @@ import {
 import { useState } from 'react';
 import { Card, Table } from 'react-bootstrap';
 
-import { ScrapersApi } from '../api/scrapers';
+import { ActionsApi } from '../api/scrapers';
 import { SquareButton as Button } from '../components/button';
 import { ElapsedClock } from '../components/ElapsedClock';
 import styles from '../pages/ScraperEditorPage.module.css';
@@ -36,25 +36,25 @@ export const RunsTab: React.FC<Props> = ({
   const [loading, setLoading] = useState(false);
   const [runStart, setRunStart] = useState<Date | null>(null);
 
-  const run = async (kind: 'selectors' | 'mapping' | 'test' | 'now') => {
+  const run = async (kind: 'actions' | 'mapping' | 'test' | 'now') => {
     setRunStart(new Date());
     setLoading(true);
     setResult(null);
     try {
       let res: ScrapeRunResponse;
       switch (kind) {
-        case 'selectors':
-          res = await ScrapersApi.testSelectors(scraperId);
+        case 'actions':
+          res = await ActionsApi.testActions(scraperId);
           break;
         case 'mapping':
-          res = await ScrapersApi.testMapping(scraperId);
+          res = await ActionsApi.testMapping(scraperId);
           break;
         case 'test':
-          res = await ScrapersApi.testRun(scraperId);
+          res = await ActionsApi.testRun(scraperId);
           break;
         case 'now':
         default:
-          res = await ScrapersApi.runNow(scraperId);
+          res = await ActionsApi.runNow(scraperId);
           break;
       }
       setResult(res);
@@ -77,8 +77,8 @@ export const RunsTab: React.FC<Props> = ({
       <Card className={cardStyles.BgCard}>
         <Card.Body>
           <div className={styles.ButtonContainer}>
-            <Button disabled={loading} onClick={() => run('selectors')}>
-              Test Selectors
+            <Button disabled={loading} onClick={() => run('actions')}>
+              Test Actions
             </Button>
             <Button disabled={loading} onClick={() => run('mapping')}>
               Test Mapping

@@ -3,7 +3,7 @@ import type { Guid, ScraperSummary } from '../types/api';
 import cn from 'classnames';
 import { useCallback, useEffect, useState } from 'react';
 import { Card } from 'react-bootstrap';
-import { ScrapersApi } from '../api/scrapers';
+import { ActionsApi } from '../api/scrapers';
 import { cardStyles, pageStyles } from '../styles';
 
 interface Props {
@@ -15,7 +15,7 @@ export const SummaryTab: React.FC<Props> = ({ scraperId }) => {
 
   const loadTags = useCallback(async (signal?: AbortSignal) => {
     try {
-      const summary = await ScrapersApi.getScraperSummary(scraperId, signal);
+      const summary = await ActionsApi.getScraperSummary(scraperId, signal);
 
       setSummary(summary);
     } catch (err) {

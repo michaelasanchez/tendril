@@ -1,6 +1,6 @@
 ﻿namespace Tendril.Core.Domain.Enums;
 
-public enum SelectorType
+public enum ActionType
 {
     Container,
     Text,

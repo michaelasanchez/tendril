@@ -18,7 +18,7 @@ public class ScraperRepository(TendrilDbContext db) : IScraperRepository
     {
         return await db.Scrapers
             .Include(s => s.Parameters)
-            .Include(s => s.Selectors.Where(z => !z.Disabled))
+            .Include(s => s.Actions.Where(z => !z.Disabled))
             .Include(s => s.ClassificationRules.Where(z => !z.Disabled))
             .Include(s => s.MappingRules.Where(z => !z.Disabled))
             .ToListAsync(cancellationToken);
@@ -35,7 +35,7 @@ public class ScraperRepository(TendrilDbContext db) : IScraperRepository
     {
         return await db.Scrapers
             .Include(s => s.Parameters)
-            .Include(s => s.Selectors)
+            .Include(s => s.Actions)
             .Include(s => s.ClassificationRules)
             .Include(s => s.MappingRules)
             .Include(s => s.ParentSelectors)
@@ -47,7 +47,7 @@ public class ScraperRepository(TendrilDbContext db) : IScraperRepository
     {
         return await db.Scrapers
             .Include(s => s.Parameters)
-            .Include(s => s.Selectors.Where(z => !z.Disabled))
+            .Include(s => s.Actions.Where(z => !z.Disabled))
             .Include(s => s.ClassificationRules.Where(z => !z.Disabled))
             .Include(s => s.MappingRules.Where(z => !z.Disabled))
             .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);

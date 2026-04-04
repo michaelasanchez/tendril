@@ -3,7 +3,7 @@ import { ButtonGroup, Dropdown, DropdownButton, Tab } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router';
 import { CategoriesApi } from '../api/categories';
 import { EventsApi } from '../api/events';
-import { ScrapersApi } from '../api/scrapers';
+import { ActionsApi } from '../api/scrapers';
 import { VenuesApi } from '../api/venues';
 import { SquareButton as Button } from '../components/button';
 import { Icon } from '../components/Icon';
@@ -11,7 +11,7 @@ import {
   GeneralTab,
   MappingRulesTab,
   RunsTab,
-  SelectorsTab,
+  ActionsTab,
   SummaryTab,
 } from '../scrapers';
 import { ClassificationRulesTab } from '../scrapers/ClassificationRulesTab';
@@ -24,14 +24,14 @@ import type {
   Guid,
   ScraperAttemptHistory,
   ScraperDefinition,
-  ScraperSelector,
+  ScraperAction,
   Venue,
 } from '../types/api';
 import styles from './ScraperEditorPage.module.css';
 
 type TabKey =
   | 'general'
-  | 'selectors'
+  | 'actions'
   | 'mapping'
   | 'classification'
   | 'runs'
@@ -56,8 +56,8 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
   const isNew = scraperId === 'new';
 
   const [parentId, setParentId] = useState<Guid | null>(null);
-  const [parentSelectors, setParentSelectors] = useState<
-    ScraperSelector[] | null
+  const [parentActions, setParentActions] = useState<
+    ScraperAction[] | null
   >(null);
 
   const activeTab = (tabId as TabKey) || 'general';
@@ -75,22 +75,22 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
   };
   /* Events */
 
-  /* Selectors */
-  const [selectors, setSelectors] = useState<ScraperSelector[]>([]);
+  /* Actions */
+  const [actions, setActions] = useState<ScraperAction[]>([]);
 
-  const loadSelectors = async () => {
+  const loadActions = async () => {
     if (!scraperId) return;
-    const data = await ScrapersApi.getSelectors(scraperId);
-    setSelectors(data);
+    const data = await ActionsApi.getActions(scraperId);
+    setActions(data);
   };
-  /* Selectors */
+  /* Actions */
 
   /* Attempts */
   const [attempts, setAttempts] = useState<ScraperAttemptHistory[]>([]);
 
   const loadAttemptHistories = async () => {
     if (!scraperId) return;
-    const attempts = await ScrapersApi.getAttemptHistories(scraperId);
+    const attempts = await ActionsApi.getAttemptHistories(scraperId);
     setAttempts(attempts);
   };
   /* Attempts */
@@ -121,7 +121,7 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
       var abortController = new AbortController();
 
       void loadEvents();
-      void loadSelectors();
+      void loadActions();
       void loadAttemptHistories();
       void loadCategories(abortController.signal);
     }
@@ -136,7 +136,7 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
           VenuesApi.getAll(),
           isNew || !scraperId
             ? Promise.resolve<ScraperDefinition | null>(null)
-            : ScrapersApi.getById(scraperId as Guid),
+            : ActionsApi.getById(scraperId as Guid),
         ]);
 
         setVenues(vs);
@@ -168,24 +168,24 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
     }
   }, [scraperId, isNew, authorized]);
 
-  // Keep parent selectors up-to-date
+  // Keep parent actions up-to-date
   useEffect(() => {
     const loadParent = async () => {
-      const parentSelectors = await ScrapersApi.getSelectors(
+      const parentActions = await ActionsApi.getActions(
         parentId as string,
       );
 
-      setParentSelectors(parentSelectors);
+      setParentActions(parentActions);
     };
 
     if (
       !!parentId &&
-      (!parentSelectors?.length ||
-        parentSelectors?.some((s) => s.scraperDefinitionId != parentId))
+      (!parentActions?.length ||
+        parentActions?.some((s) => s.scraperDefinitionId != parentId))
     ) {
       void loadParent();
     } else {
-      setParentSelectors(null);
+      setParentActions(null);
     }
   }, [parentId]);
 
@@ -193,7 +193,7 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
     if (!scraper) return;
     try {
       if (isNew) {
-        const created = await ScrapersApi.create({
+        const created = await ActionsApi.create({
           name: scraper.name,
           baseUrl: scraper.baseUrl,
           disabled: scraper.disabled,
@@ -214,7 +214,7 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
         });
         navigate(`/scrapers/${created.id}`);
       } else if (scraperId) {
-        await ScrapersApi.update(scraperId as Guid, {
+        await ActionsApi.update(scraperId as Guid, {
           name: scraper.name,
           baseUrl: scraper.baseUrl,
           disabled: scraper.disabled,
@@ -264,11 +264,11 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
               General
             </Button>
             <Button
-              variant={activeTab == 'selectors' ? 'active' : 'default'}
+              variant={activeTab == 'actions' ? 'active' : 'default'}
               disabled={isNew}
-              onClick={() => handleTabChange('selectors')}
+              onClick={() => handleTabChange('actions')}
             >
-              Selectors
+              Actions
             </Button>
             <Button
               variant={activeTab == 'mapping' ? 'active' : 'default'}
@@ -329,8 +329,8 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
               <Button
                 disabled={!parentId}
                 onClick={() => {
-                  setParentSelectors(null);
-                  navigate(`/scrapers/${parentId}/selectors`);
+                  setParentActions(null);
+                  navigate(`/scrapers/${parentId}/actions`);
                   setParentId(null);
                 }}
               >
@@ -350,20 +350,20 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
             />
           </Tab.Pane>
 
-          <Tab.Pane eventKey="selectors">
-            <SelectorsTab
+          <Tab.Pane eventKey="actions">
+            <ActionsTab
               scraper={scraper}
-              selectors={selectors}
+              actions={actions}
               parentId={parentId}
-              parentSelectors={parentSelectors}
-              refresh={loadSelectors}
+              parentActions={parentActions}
+              refresh={loadActions}
             />
           </Tab.Pane>
 
           <Tab.Pane eventKey="mapping">
             <MappingRulesTab
               scraperId={scraperId as Guid}
-              selectors={selectors}
+              actions={actions}
             />
           </Tab.Pane>
 

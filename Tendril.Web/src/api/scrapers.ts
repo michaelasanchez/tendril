@@ -10,7 +10,7 @@ import type {
   ScraperClassificationRule,
   ScraperDefinition,
   ScraperMappingRule,
-  ScraperSelector,
+  ScraperAction as ScraperAction,
   ScraperSummary,
   ScrapeRunResponse,
 } from '../types/api';
@@ -32,7 +32,7 @@ export interface CreateScraperRequest {
 
 export interface UpdateScraperRequest extends Partial<CreateScraperRequest> {}
 
-export const ScrapersApi = {
+export const ActionsApi = {
   getAll(): Promise<ScraperDefinition[]> {
     return apiGet('/scrapers');
   },
@@ -77,28 +77,28 @@ export const ScrapersApi = {
     return apiDelete(`/scrapers/${scraperId}/api-parameters/${ruleId}`);
   },
 
-  // Selectors
-  getSelectors(scraperId: Guid): Promise<ScraperSelector[]> {
-    return apiGet(`/scrapers/${scraperId}/selectors`);
+  // Actions
+  getActions(scraperId: Guid): Promise<ScraperAction[]> {
+    return apiGet(`/scrapers/${scraperId}/actions`);
   },
 
-  createSelector(
+  createAction(
     scraperId: Guid,
-    req: Omit<ScraperSelector, 'id' | 'scraperDefinitionId'>,
-  ): Promise<ScraperSelector> {
-    return apiPost(`/scrapers/${scraperId}/selectors`, req);
+    req: Omit<ScraperAction, 'id' | 'scraperDefinitionId'>,
+  ): Promise<ScraperAction> {
+    return apiPost(`/scrapers/${scraperId}/actions`, req);
   },
 
-  updateSelector(
+  updateAction(
     scraperId: Guid,
-    selectorId: Guid,
-    req: Partial<ScraperSelector>,
+    actionId: Guid,
+    req: Partial<ScraperAction>,
   ): Promise<void> {
-    return apiPut(`/scrapers/${scraperId}/selectors/${selectorId}`, req);
+    return apiPut(`/scrapers/${scraperId}/actions/${actionId}`, req);
   },
 
-  deleteSelector(scraperId: Guid, selectorId: Guid): Promise<void> {
-    return apiDelete(`/scrapers/${scraperId}/selectors/${selectorId}`);
+  deleteAction(scraperId: Guid, actionId: Guid): Promise<void> {
+    return apiDelete(`/scrapers/${scraperId}/actions/${actionId}`);
   },
 
   // Classification rules
@@ -166,8 +166,8 @@ export const ScrapersApi = {
   },
 
   // Runs
-  testSelectors(scraperId: Guid): Promise<ScrapeRunResponse> {
-    return apiPost(`/scrapers/${scraperId}/runs/test-selectors`);
+  testActions(scraperId: Guid): Promise<ScrapeRunResponse> {
+    return apiPost(`/scrapers/${scraperId}/runs/test-actions`);
   },
 
   testMapping(scraperId: Guid): Promise<ScrapeRunResponse> {

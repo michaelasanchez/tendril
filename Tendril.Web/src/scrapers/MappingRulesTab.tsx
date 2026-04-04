@@ -1,7 +1,7 @@
 import cn from 'classnames';
 import React, { useEffect, useState, type JSX } from 'react';
 import { Card, Form, Table } from 'react-bootstrap';
-import { ScrapersApi } from '../api/scrapers';
+import { ActionsApi } from '../api/scrapers';
 import { SquareButton as Button } from '../components/button';
 import {
   FormCheck,
@@ -16,13 +16,13 @@ import formStyles from '../styles/Form.module.css';
 import type {
   Guid,
   ScraperMappingRule,
-  ScraperSelector,
+  ScraperAction,
   TransformType,
 } from '../types/api';
 
 interface Props {
   scraperId: Guid;
-  selectors: ScraperSelector[];
+  actions: ScraperAction[];
 }
 
 const transformTypeOptions: SelectOption[] = [
@@ -59,7 +59,7 @@ const targetFieldOptions: SelectOption[] = [
 
 export const MappingRulesTab: React.FC<Props> = ({
   scraperId,
-  selectors,
+  actions,
 }) => {
   const [rules, setRules] = useState<ScraperMappingRule[]>([]);
   const [editing, setEditing] = useState<Partial<ScraperMappingRule>>({});
@@ -71,7 +71,7 @@ export const MappingRulesTab: React.FC<Props> = ({
 
   const load = async () => {
     if (scraperId !== 'new') {
-      const rules = await ScrapersApi.getMappingRules(scraperId);
+      const rules = await ActionsApi.getMappingRules(scraperId);
 
       setRules(rules);
     }
@@ -82,7 +82,7 @@ export const MappingRulesTab: React.FC<Props> = ({
   }, [scraperId]);
 
   useEffect(() => {
-    const sourceFields = selectors.map((s) => s.fieldName);
+    const sourceFields = actions.map((s) => s.fieldName);
     const ruleTargetFields = rules.map((r) => r.targetField);
     const eventTargetFields = targetFieldOptions.map((o) => o.value);
 
@@ -96,7 +96,7 @@ export const MappingRulesTab: React.FC<Props> = ({
         label: o,
       })),
     );
-  }, [rules, selectors]);
+  }, [rules, actions]);
 
   const startNew = () => {
     setIsNew(true);
@@ -128,7 +128,7 @@ export const MappingRulesTab: React.FC<Props> = ({
     if (!editing.targetField || !editing.transformType) return;
 
     if (isNew) {
-      await ScrapersApi.createMappingRule(scraperId, {
+      await ActionsApi.createMappingRule(scraperId, {
         targetField: editing.targetField,
         sourceField: editing.sourceField ?? '',
         combineWithField: editing.combineWithField ?? null,
@@ -142,7 +142,7 @@ export const MappingRulesTab: React.FC<Props> = ({
         disabled: editing.disabled ?? false,
       });
     } else if (editing.id) {
-      await ScrapersApi.updateMappingRule(scraperId, editing.id, {
+      await ActionsApi.updateMappingRule(scraperId, editing.id, {
         targetField: editing.targetField,
         sourceField: editing.sourceField,
         combineWithField: editing.combineWithField,
@@ -162,7 +162,7 @@ export const MappingRulesTab: React.FC<Props> = ({
 
   const remove = async (rule: ScraperMappingRule) => {
     if (!window.confirm(`Delete mapping rule for ${rule.targetField}?`)) return;
-    await ScrapersApi.deleteMappingRule(scraperId, rule.id);
+    await ActionsApi.deleteMappingRule(scraperId, rule.id);
     await load();
   };
 

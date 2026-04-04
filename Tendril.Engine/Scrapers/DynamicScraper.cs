@@ -54,7 +54,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
                 }
 
                 // Use the same helper used in StaticScraper (you'd inject this)
-                var result = jsonLd.Extract(content, definition.Selectors.FirstOrDefault()?.Selector ?? "Event");
+                var result = jsonLd.Extract(content, definition.Actions.FirstOrDefault()?.Selector ?? "Event");
 
                 if (result != null)
                 {
@@ -71,10 +71,10 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
 
         // 3. PRE-SCRAPE PHASE
         // Run any interactions (like typing zip code) required BEFORE the list appears.
-        var container = definition.Selectors.Single(x => x.Type == SelectorType.Container);
+        var container = definition.Actions.Single(x => x.Type == ActionType.Container);
 
-        var preSelectors = definition.Selectors
-            .Where(x => x.Order < container.Order && x.Type != SelectorType.Container)
+        var preSelectors = definition.Actions
+            .Where(x => x.Order < container.Order && x.Type != ActionType.Container)
             .OrderBy(x => x.Order);
 
         var preResult = new ScrapeYieldItem();
@@ -110,14 +110,14 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
 
                 var partial = false;
 
-                var fieldSelectors = definition.Selectors
-                    .Where(x => x.Type != SelectorType.Container && !x.IsPaginationTrigger)
+                var fieldSelectors = definition.Actions
+                    .Where(x => x.Type != ActionType.Container && !x.IsPaginationTrigger)
                     .OrderBy(x => x.Order);
 
                 foreach (var step in fieldSelectors)
                 {
                     // Check if this step triggers a child scraper (Deep Dive)
-                    if (step.Type == SelectorType.FollowLink && step.ChildScraperDefinitionId.HasValue)
+                    if (step.Type == ActionType.FollowLink && step.ChildScraperDefinitionId.HasValue)
                     {
                         var linkEl = string.IsNullOrEmpty(step.Selector)
                             ? item
@@ -144,8 +144,10 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
                             }
                         }
                     }
-                    else if (step.Type == SelectorType.CallApi && step.ChildScraperDefinitionId.HasValue)
+                    else if (step.Type == ActionType.CallApi && step.ChildScraperDefinitionId.HasValue)
                     {
+                        context.ParentIgnoreDuplicateUrls = step.IgnoreDuplicateUrls;
+
                         result = result with
                         {
                             ChildScraperId = step.ChildScraperDefinitionId
@@ -183,11 +185,11 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
     private static async Task ProcessSelector(
         IPage page,
         IElementHandle? item,
-        ScraperSelector step,
+        ScraperAction step,
         RawScrapedData? scrapedData)
     {
         // 1. Exclusions
-        if (step.Type is SelectorType.Container or SelectorType.FollowLink) return;
+        if (step.Type is ActionType.Container or ActionType.FollowLink) return;
 
         try
         {
@@ -212,21 +214,21 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
             // 3. Handle Interactions (Click, Input, Scroll, Hover)
             switch (step.Type)
             {
-                case SelectorType.Click:
+                case ActionType.Click:
                 {
                     await targetElement.ClickAsync();
                     await PerformWait(page, step.Delay);
                     return;
                 }
 
-                case SelectorType.Hover:
+                case ActionType.Hover:
                 {
                     await targetElement.HoverAsync();
                     await PerformWait(page, step.Delay);
                     return;
                 }
 
-                case SelectorType.Input:
+                case ActionType.Input:
                 {
                     if (!string.IsNullOrEmpty(step.InteractionValue))
                     {
@@ -236,16 +238,12 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
                     return;
                 }
 
-                case SelectorType.Scroll:
+                case ActionType.Scroll:
                 {
                     await PerformScroll(page, targetElement, step.Delay);
                     return;
                 }
             }
-
-            // TODO: Eventually, everything below should fall under SeletorType.Selector which will rename to ActionType.Selector
-            //  maybe an ExtractionType enum (Text, Attribute, CaptureLink, ConstantValue)
-            //  and finally ScraperSelector -> ScraperAction
 
             // 4. Handle Data Extraction (Text, Attribute, CaptureLink)
             // If we don't have an event object to write to, we can stop here.
@@ -253,17 +251,17 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
 
             string? value = null;
 
-            if (step.Type == SelectorType.CaptureLink)
+            if (step.Type == ActionType.CaptureLink)
             {
                 // TODO: Looks like this was only ever implemented in StaticScraper
                 // [Insert your existing CaptureLink logic here]
                 // value = popupPage.Url;
             }
-            else if (step.Type == SelectorType.Text)
+            else if (step.Type == ActionType.Text)
             {
                 value = await targetElement.InnerTextAsync();
             }
-            else if (step.Type == SelectorType.Attribute)
+            else if (step.Type == ActionType.Attribute)
             {
                 // FIX: If we are grabbing an 'href' or 'src', ask the browser for the computed property
                 if (step.AttributeName is "href" or "src")
@@ -277,7 +275,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
                     value = await targetElement.GetAttributeAsync(step.AttributeName ?? "");
                 }
             }
-            else if (step.Type == SelectorType.ConstantValue)
+            else if (step.Type == ActionType.ConstantValue)
             {
                 value = step.ConstantValue;
             }
@@ -305,7 +303,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
 
         if (def.PaginationType == PaginationType.NextButton)
         {
-            var nextBtnDef = def.Selectors.FirstOrDefault(s => s.IsPaginationTrigger);
+            var nextBtnDef = def.Actions.FirstOrDefault(s => s.IsPaginationTrigger);
             if (nextBtnDef == null) return false;
 
             var nextBtn = await page.QuerySelectorAsync(nextBtnDef.Selector);

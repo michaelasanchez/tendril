@@ -20,8 +20,8 @@ public class ScraperRunsController(
     IIngestionService ingestionService) : ControllerBase
 {
     // 1️⃣ Test selectors only (Stream -> List in memory)
-    [HttpPost("test-selectors")]
-    public async Task<ActionResult> TestSelectors(Guid scraperId, [FromQuery] int? limit, CancellationToken ct)
+    [HttpPost("test-actions")]
+    public async Task<ActionResult> TestActions(Guid scraperId, [FromQuery] int? limit, CancellationToken ct)
     {
         var scraper = await scrapers.GetByIdWithDetailsAsync(scraperId, ct);
         if (scraper == null) return NotFound();

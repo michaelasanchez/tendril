@@ -74,7 +74,7 @@ export interface ScraperDefinition {
   parameters?: ApiParameter[] | null;
 }
 
-export type SelectorType =
+export type ActionType =
   | 'Container'
   | 'Text'
   | 'Attribute'
@@ -87,14 +87,14 @@ export type SelectorType =
   | 'ConstantValue'
   | 'CallApi';
 
-export interface ScraperSelector {
+export interface ScraperAction {
   id: Guid;
   scraperDefinitionId: Guid;
   fieldName: string;
   selector: string;
   order: number;
   root: boolean;
-  type: SelectorType;
+  type: ActionType;
   attribute: string | null;
   delay: number | null;
   constantValue: string | null;

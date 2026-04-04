@@ -5,7 +5,7 @@ import { SquareButton as Button } from '../components/button';
 import { FormCheck } from '../components/form';
 import { Icon } from '../components/Icon';
 import { cardStyles, tableStyles } from '../styles';
-import type { ScraperSelector } from '../types/api';
+import type { ScraperAction as ScraperAction } from '../types/api';
 
 export interface ScraperOption {
   label: string;
@@ -15,16 +15,18 @@ export interface ScraperOption {
 interface Props {
   disabled?: boolean;
   scraperOptions?: ScraperOption[];
-  selectors: ScraperSelector[];
-  onDisable?: (scraper: ScraperSelector) => void;
-  onEdit?: (scraper: ScraperSelector) => void;
-  onRemove?: (scraper: ScraperSelector) => void;
+  actions: ScraperAction[];
+  showDisabled?: boolean;
+  onDisable?: (scraper: ScraperAction) => void;
+  onEdit?: (scraper: ScraperAction) => void;
+  onRemove?: (scraper: ScraperAction) => void;
 }
 
-export const SelectorsCard: React.FC<Props> = ({
+export const ActionsCard: React.FC<Props> = ({
   disabled,
   scraperOptions,
-  selectors,
+  actions,
+  showDisabled = false,
   onDisable,
   onEdit,
   onRemove,
@@ -58,7 +60,8 @@ export const SelectorsCard: React.FC<Props> = ({
             </tr>
           </thead>
           <tbody>
-            {selectors
+            {actions
+              .filter((s) => showDisabled || !s.disabled)
               .sort((a, b) => a.order - b.order)
               .map((s) => (
                 <tr
@@ -91,7 +94,7 @@ export const SelectorsCard: React.FC<Props> = ({
                             <Button
                               onClick={() =>
                                 navigate(
-                                  `/scrapers/${s.childScraperId}/selectors`,
+                                  `/scrapers/${s.childScraperId}/actions`,
                                 )
                               }
                             >
@@ -137,9 +140,9 @@ export const SelectorsCard: React.FC<Props> = ({
                   )}
                 </tr>
               ))}
-            {selectors.length === 0 && (
+            {actions.length === 0 && (
               <tr>
-                <td colSpan={5}>No selectors defined.</td>
+                <td colSpan={5}>No actions defined.</td>
               </tr>
             )}
           </tbody>

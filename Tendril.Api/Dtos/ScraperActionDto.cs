@@ -1,6 +1,6 @@
 ﻿namespace Tendril.Api.Dtos;
 
-public record ScraperSelectorDto(
+public record ScraperActionDto(
     Guid Id,
     string FieldName,
     string Selector,

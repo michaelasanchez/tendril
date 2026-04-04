@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Table } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
-import { ScrapersApi } from '../api/scrapers';
+import { ActionsApi } from '../api/scrapers';
 import { SquareButton as Button, SquareButton } from '../components/button';
 import { Icon } from '../components/Icon';
 import { pageStyles, tableStyles } from '../styles';
@@ -58,7 +58,7 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({
     setLoading(true);
     setError(null);
     try {
-      const data = await ScrapersApi.getAll();
+      const data = await ActionsApi.getAll();
       setScrapers(data);
     } catch (e: any) {
       setError(e.message ?? 'Error loading scrapers.');
@@ -101,7 +101,7 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({
   const handleRunNow = async (id: string) => {
     if (!window.confirm('Run this scraper now?')) return;
     try {
-      await ScrapersApi.runNow(id);
+      await ActionsApi.runNow(id);
       await load();
     } catch (e: any) {
       alert(e.message ?? 'Run failed.');

@@ -1,22 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Form } from 'react-bootstrap';
-import { SelectorsCard, type ScraperOption } from '.';
-import { ScrapersApi } from '../api/scrapers';
+import { ActionsCard, type ScraperOption } from '.';
+import { ActionsApi } from '../api/scrapers';
 import { SquareButton as Button } from '../components/button';
 import { FormCheck, FormInput, FormSelect } from '../components/form';
+import { Icon } from '../components/Icon';
 import { cardStyles, formStyles, pageStyles } from '../styles';
 import type {
   Guid,
+  ScraperAction,
   ScraperDefinition,
-  ScraperSelector,
-  SelectorType,
+  ActionType,
 } from '../types/api';
 
 interface Props {
   scraper: ScraperDefinition;
   parentId: Guid | null;
-  selectors: ScraperSelector[];
-  parentSelectors: ScraperSelector[] | null;
+  actions: ScraperAction[];
+  parentActions: ScraperAction[] | null;
   refresh: () => Promise<void>;
 }
 
@@ -34,51 +35,52 @@ const selectorTypeOptions = toOptions([
   'Input',
   'Capture Link',
   'Follow Link',
-  'CallApi',
+  'Call Api',
 ]);
 
-export const SelectorsTab: React.FC<Props> = ({
+export const ActionsTab: React.FC<Props> = ({
   scraper,
   parentId,
-  selectors,
-  parentSelectors,
+  actions,
+  parentActions,
   refresh: load,
 }) => {
-  const [editing, setEditing] = useState<Partial<ScraperSelector>>({});
+  const [editing, setEditing] = useState<Partial<ScraperAction>>({});
   const [isNew, setIsNew] = useState(false);
+  const [showDisabled, setShowDisabled] = useState(true);
 
   const [scraperOptions, setScraperOptions] = useState<ScraperOption[]>([]);
 
   useEffect(() => {
     if (
       !!parentId ||
-      selectors.some((s) => s.type === 'FollowLink') ||
+      actions.some((s) => s.type === 'FollowLink') ||
       editing.type === 'FollowLink'
     ) {
       const loadScrapers = async () => {
-        const data = await ScrapersApi.getAll();
+        const data = await ActionsApi.getAll();
         const options = data.map((s) => ({ label: s.name, value: s.id }));
         setScraperOptions(options);
       };
 
       void loadScrapers();
     }
-  }, [selectors, editing, parentId]);
+  }, [actions, editing, parentId]);
 
   const startNew = () => {
     setIsNew(true);
     setEditing({
       fieldName: '',
       selector: '',
-      order: selectors.length,
+      order: actions.length,
       root: false,
       type: 'Text',
       attribute: null,
       delay: null,
-    } as Partial<ScraperSelector>);
+    } as Partial<ScraperAction>);
   };
 
-  const startEdit = (sel: ScraperSelector) => {
+  const startEdit = (sel: ScraperAction) => {
     setIsNew(false);
     setEditing({ ...sel });
   };
@@ -92,10 +94,10 @@ export const SelectorsTab: React.FC<Props> = ({
     if (!editing.fieldName || !editing.type) return;
 
     if (isNew) {
-      await ScrapersApi.createSelector(scraper.id, {
+      await ActionsApi.createAction(scraper.id, {
         fieldName: editing.fieldName,
         selector: editing.selector ?? '',
-        order: editing.order ?? selectors.length,
+        order: editing.order ?? actions.length,
         root: editing.root ?? false,
         type: editing.type,
         attribute:
@@ -111,7 +113,7 @@ export const SelectorsTab: React.FC<Props> = ({
         disabled: editing.disabled ?? false,
       });
     } else if (editing.id) {
-      await ScrapersApi.updateSelector(scraper.id, editing.id, {
+      await ActionsApi.updateAction(scraper.id, editing.id, {
         fieldName: editing.fieldName,
         selector: editing.selector,
         order: editing.order,
@@ -134,42 +136,52 @@ export const SelectorsTab: React.FC<Props> = ({
     cancelEdit();
   };
 
-  const toggleDisable = async (sel: ScraperSelector) => {
-    await ScrapersApi.updateSelector(scraper.id, sel.id, {
+  const toggleDisable = async (sel: ScraperAction) => {
+    await ActionsApi.updateAction(scraper.id, sel.id, {
       ...sel,
       disabled: !sel.disabled,
     });
     await load();
   };
 
-  const remove = async (sel: ScraperSelector) => {
+  const remove = async (sel: ScraperAction) => {
     if (!window.confirm(`Delete selector "${sel.fieldName}"?`)) return;
-    await ScrapersApi.deleteSelector(scraper.id, sel.id);
+    await ActionsApi.deleteAction(scraper.id, sel.id);
     await load();
   };
 
   return (
     <>
       <div className={pageStyles.pageHeader}>
-        <h3>Selectors</h3>
+        <h3>Actions</h3>
         <div style={{ display: 'flex', gap: '1em' }}>
+          {actions.some((a) => a.disabled) && (
+            <Button
+              variant="outline-primary"
+              onClick={() => setShowDisabled(!showDisabled)}
+            >
+              <Icon name={showDisabled ? 'visible' : 'invisible'} /> Disabled
+            </Button>
+          )}
           <Button variant="primary" onClick={startNew}>
-            Add Selector
+            <Icon name="create" /> Add
           </Button>
         </div>
       </div>
 
-      {!!parentSelectors && parentSelectors.length > 0 && (
-        <SelectorsCard
+      {!!parentActions && parentActions.length > 0 && (
+        <ActionsCard
           disabled
           scraperOptions={scraperOptions}
-          selectors={parentSelectors}
+          actions={parentActions}
+          showDisabled={showDisabled}
         />
       )}
 
-      <SelectorsCard
+      <ActionsCard
         scraperOptions={scraperOptions}
-        selectors={selectors}
+        actions={actions}
+        showDisabled={showDisabled}
         onDisable={toggleDisable}
         onEdit={startEdit}
         // onRemove={remove}
@@ -177,7 +189,7 @@ export const SelectorsTab: React.FC<Props> = ({
 
       {editing.fieldName !== undefined && (
         <>
-          <h4>{isNew ? 'New Selector' : 'Edit Selector'}</h4>
+          <h4>{isNew ? 'New Action' : 'Edit Action'}</h4>
           <Card className={cardStyles.BgCard}>
             <Card.Body>
               <Form className={formStyles.form}>
@@ -202,49 +214,50 @@ export const SelectorsTab: React.FC<Props> = ({
                   label="Type"
                   value={editing.type ?? 'Text'}
                   onChange={(value) =>
-                    setEditing({ ...editing, type: value as SelectorType })
+                    setEditing({ ...editing, type: value as ActionType })
                   }
                   options={selectorTypeOptions}
                 />
                 {editing.type != 'CallApi' &&
                   editing.type != 'ConstantValue' && (
-                    <>
-                      <FormInput
-                        label="Selector"
-                        value={editing.selector ?? ''}
-                        onChange={(selector) =>
-                          setEditing({ ...editing, selector })
+                    <FormInput
+                      label="Selector"
+                      value={editing.selector ?? ''}
+                      onChange={(selector) =>
+                        setEditing({ ...editing, selector })
+                      }
+                    />
+                  )}
+                <div className={formStyles.formGroup}>
+                  {editing.type != 'CallApi' &&
+                    editing.type != 'ConstantValue' && (
+                      <FormCheck
+                        label="Root"
+                        checked={editing.root ?? false}
+                        onChange={(checked) =>
+                          setEditing({ ...editing, root: checked })
                         }
                       />
-                      <div className={formStyles.formGroup}>
-                        <FormCheck
-                          label="Root"
-                          checked={editing.root ?? false}
-                          onChange={(checked) =>
-                            setEditing({ ...editing, root: checked })
-                          }
-                        />
-                        {editing.type == 'Click' && (
-                          <FormCheck
-                            label="Pagination Trigger"
-                            checked={editing.isPaginationTrigger ?? false}
-                            onChange={(isPaginationTrigger) =>
-                              setEditing({ ...editing, isPaginationTrigger })
-                            }
-                          />
-                        )}
-                        {editing.type == 'FollowLink' && (
-                          <FormCheck
-                            label="Ignore Duplicate URLs"
-                            checked={editing.ignoreDuplicateUrls ?? false}
-                            onChange={(ignoreDuplicateUrls) =>
-                              setEditing({ ...editing, ignoreDuplicateUrls })
-                            }
-                          />
-                        )}
-                      </div>
-                    </>
+                    )}
+                  {editing.type == 'Click' && (
+                    <FormCheck
+                      label="Pagination Trigger"
+                      checked={editing.isPaginationTrigger ?? false}
+                      onChange={(isPaginationTrigger) =>
+                        setEditing({ ...editing, isPaginationTrigger })
+                      }
+                    />
                   )}
+                  {editing.type == 'FollowLink' && (
+                    <FormCheck
+                      label="Ignore Duplicate URLs"
+                      checked={editing.ignoreDuplicateUrls ?? false}
+                      onChange={(ignoreDuplicateUrls) =>
+                        setEditing({ ...editing, ignoreDuplicateUrls })
+                      }
+                    />
+                  )}
+                </div>
                 {editing.type === 'Attribute' && (
                   <FormInput
                     label="Attribute"
@@ -300,10 +313,10 @@ export const SelectorsTab: React.FC<Props> = ({
                   }
                 />
                 <div className={formStyles.buttonRow}>
+                  <Button onClick={cancelEdit}>Cancel</Button>
                   <Button variant="primary" onClick={save}>
                     Save
                   </Button>
-                  <Button onClick={cancelEdit}>Cancel</Button>
                 </div>
               </Form>
             </Card.Body>

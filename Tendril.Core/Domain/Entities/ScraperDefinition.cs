@@ -34,10 +34,10 @@ public class ScraperDefinition
     //public Dictionary<string, string> Headers { get; set; } = [];
     //public string? RequestBodyTemplate { get; set; }
 
-    public List<ScraperSelector> Selectors { get; set; } = [];
+    public List<ScraperAction> Actions { get; set; } = [];
     public List<ScraperMappingRule> MappingRules { get; set; } = [];
     public List<ScraperClassificationRule> ClassificationRules { get; set; } = [];
     public List<ScraperAttemptHistory> AttemptHistory { get; set; } = [];
 
-    public List<ScraperSelector> ParentSelectors { get; set; } = [];
+    public List<ScraperAction> ParentSelectors { get; set; } = [];
 }

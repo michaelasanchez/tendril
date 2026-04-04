@@ -5,11 +5,11 @@ using Tendril.Core.Domain.Entities;
 
 namespace Tendril.Data.Configurations;
 
-public class ScraperSelectorConfig : IEntityTypeConfiguration<ScraperSelector>
+public class ScraperActionConfig : IEntityTypeConfiguration<ScraperAction>
 {
-    public void Configure(EntityTypeBuilder<ScraperSelector> builder)
+    public void Configure(EntityTypeBuilder<ScraperAction> builder)
     {
-        builder.ToTable("ScraperSelector");
+        builder.ToTable("ScraperAction");
 
         builder.HasKey(x => x.Id);
 
