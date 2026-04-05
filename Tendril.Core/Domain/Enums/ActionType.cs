@@ -2,15 +2,19 @@
 
 public enum ActionType
 {
+    ConstantValue,
     Container,
+
     Text,
     Attribute,
+
     Click,
     Hover,
     Scroll,
     Input,
+    //Page,
+
     CaptureLink,
     FollowLink,
-    CallApi,
-    ConstantValue
+    CallApi
 }

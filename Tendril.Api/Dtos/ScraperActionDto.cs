@@ -2,6 +2,7 @@
 
 public record ScraperActionDto(
     Guid Id,
+    string Name,
     string FieldName,
     string Selector,
     int Order,

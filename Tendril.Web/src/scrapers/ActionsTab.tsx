@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Form } from 'react-bootstrap';
 import { ActionsCard, type ScraperOption } from '.';
-import { ActionsApi } from '../api/scrapers';
+import { ScrapersApi } from '../api/scrapers';
 import { SquareButton as Button } from '../components/button';
 import { FormCheck, FormInput, FormSelect } from '../components/form';
 import { Icon } from '../components/Icon';
 import { cardStyles, formStyles, pageStyles } from '../styles';
 import type {
+  ActionType,
   Guid,
   ScraperAction,
   ScraperDefinition,
-  ActionType,
 } from '../types/api';
 
 interface Props {
@@ -33,9 +33,9 @@ const selectorTypeOptions = toOptions([
   'Hover',
   'Scroll',
   'Input',
-  'Capture Link',
-  'Follow Link',
-  'Call Api',
+  'CaptureLink',
+  'FollowLink',
+  'CallApi',
 ]);
 
 export const ActionsTab: React.FC<Props> = ({
@@ -54,11 +54,11 @@ export const ActionsTab: React.FC<Props> = ({
   useEffect(() => {
     if (
       !!parentId ||
-      actions.some((s) => s.type === 'FollowLink') ||
+      actions.some((s) => s.type === 'FollowLink' || s.type === 'CallApi') ||
       editing.type === 'FollowLink'
     ) {
       const loadScrapers = async () => {
-        const data = await ActionsApi.getAll();
+        const data = await ScrapersApi.getAll();
         const options = data.map((s) => ({ label: s.name, value: s.id }));
         setScraperOptions(options);
       };
@@ -94,7 +94,8 @@ export const ActionsTab: React.FC<Props> = ({
     if (!editing.fieldName || !editing.type) return;
 
     if (isNew) {
-      await ActionsApi.createAction(scraper.id, {
+      await ScrapersApi.createAction(scraper.id, {
+        name: editing.name ?? '',
         fieldName: editing.fieldName,
         selector: editing.selector ?? '',
         order: editing.order ?? actions.length,
@@ -113,7 +114,8 @@ export const ActionsTab: React.FC<Props> = ({
         disabled: editing.disabled ?? false,
       });
     } else if (editing.id) {
-      await ActionsApi.updateAction(scraper.id, editing.id, {
+      await ScrapersApi.updateAction(scraper.id, editing.id, {
+        name: editing.name,
         fieldName: editing.fieldName,
         selector: editing.selector,
         order: editing.order,
@@ -136,17 +138,17 @@ export const ActionsTab: React.FC<Props> = ({
     cancelEdit();
   };
 
-  const toggleDisable = async (sel: ScraperAction) => {
-    await ActionsApi.updateAction(scraper.id, sel.id, {
-      ...sel,
-      disabled: !sel.disabled,
+  const toggleDisable = async (action: ScraperAction) => {
+    await ScrapersApi.updateAction(scraper.id, action.id, {
+      ...action,
+      disabled: !action.disabled,
     });
     await load();
   };
 
   const remove = async (sel: ScraperAction) => {
     if (!window.confirm(`Delete selector "${sel.fieldName}"?`)) return;
-    await ActionsApi.deleteAction(scraper.id, sel.id);
+    await ScrapersApi.deleteAction(scraper.id, sel.id);
     await load();
   };
 
@@ -194,9 +196,14 @@ export const ActionsTab: React.FC<Props> = ({
             <Card.Body>
               <Form className={formStyles.form}>
                 <FormInput
+                  label="Name"
+                  value={editing.name ?? ''}
+                  onChange={(name) => setEditing({ ...editing, name })}
+                />
+                <FormInput
                   label="Field Name"
                   value={editing.fieldName ?? ''}
-                  autoFocus={true}
+                  autoFocus={isNew}
                   onChange={(fieldName) =>
                     setEditing({ ...editing, fieldName })
                   }
@@ -223,6 +230,7 @@ export const ActionsTab: React.FC<Props> = ({
                     <FormInput
                       label="Selector"
                       value={editing.selector ?? ''}
+                      autoFocus={!isNew}
                       onChange={(selector) =>
                         setEditing({ ...editing, selector })
                       }
@@ -248,7 +256,8 @@ export const ActionsTab: React.FC<Props> = ({
                       }
                     />
                   )}
-                  {editing.type == 'FollowLink' && (
+                  {(editing.type == 'FollowLink' ||
+                    editing.type == 'CallApi') && (
                     <FormCheck
                       label="Ignore Duplicate URLs"
                       checked={editing.ignoreDuplicateUrls ?? false}
@@ -285,17 +294,17 @@ export const ActionsTab: React.FC<Props> = ({
                     }
                   />
                 )}
-                {editing.type == 'FollowLink' ||
-                  (editing.type == 'CallApi' && (
-                    <FormSelect
-                      label="Child Scraper"
-                      value={editing.childScraperId ?? ''}
-                      options={scraperOptions}
-                      onChange={(childScraperId) =>
-                        setEditing({ ...editing, childScraperId })
-                      }
-                    />
-                  ))}
+                {(editing.type == 'FollowLink' ||
+                  editing.type == 'CallApi') && (
+                  <FormSelect
+                    label="Child Scraper"
+                    value={editing.childScraperId ?? ''}
+                    options={scraperOptions}
+                    onChange={(childScraperId) =>
+                      setEditing({ ...editing, childScraperId })
+                    }
+                  />
+                )}
                 <FormInput
                   type="number"
                   label="Order"

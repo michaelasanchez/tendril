@@ -6,6 +6,7 @@ public class CreateScraperRequest
 {
     public string Name { get; set; } = null!;
     public string BaseUrl { get; set; } = null!;
+    public bool IsEventFeed { get; set; }
     public bool Disabled { get; set; } = false;
     public string Notes { get; set; } = null!;
     public ExecutionMode? ExecutionMode { get; set; }

@@ -1,7 +1,7 @@
 import cn from 'classnames';
 import React, { useEffect, useState, type JSX } from 'react';
 import { Card, Form, Table } from 'react-bootstrap';
-import { ActionsApi } from '../api/scrapers';
+import { ScrapersApi } from '../api/scrapers';
 import { SquareButton as Button } from '../components/button';
 import {
   FormCheck,
@@ -15,8 +15,8 @@ import { cardStyles, pageStyles, tableStyles } from '../styles';
 import formStyles from '../styles/Form.module.css';
 import type {
   Guid,
-  ScraperMappingRule,
   ScraperAction,
+  ScraperMappingRule,
   TransformType,
 } from '../types/api';
 
@@ -57,13 +57,11 @@ const targetFieldOptions: SelectOption[] = [
   'TicketUrl',
 ].map((o) => ({ value: o, label: o }));
 
-export const MappingRulesTab: React.FC<Props> = ({
-  scraperId,
-  actions,
-}) => {
+export const MappingRulesTab: React.FC<Props> = ({ scraperId, actions }) => {
   const [rules, setRules] = useState<ScraperMappingRule[]>([]);
   const [editing, setEditing] = useState<Partial<ScraperMappingRule>>({});
   const [isNew, setIsNew] = useState(false);
+  const [showDisabled, setShowDisabled] = useState(true);
 
   const [sourceFieldOptions, setSourceFieldOptions] = useState<SelectOption[]>(
     [],
@@ -71,7 +69,7 @@ export const MappingRulesTab: React.FC<Props> = ({
 
   const load = async () => {
     if (scraperId !== 'new') {
-      const rules = await ActionsApi.getMappingRules(scraperId);
+      const rules = await ScrapersApi.getMappingRules(scraperId);
 
       setRules(rules);
     }
@@ -128,7 +126,7 @@ export const MappingRulesTab: React.FC<Props> = ({
     if (!editing.targetField || !editing.transformType) return;
 
     if (isNew) {
-      await ActionsApi.createMappingRule(scraperId, {
+      await ScrapersApi.createMappingRule(scraperId, {
         targetField: editing.targetField,
         sourceField: editing.sourceField ?? '',
         combineWithField: editing.combineWithField ?? null,
@@ -142,7 +140,7 @@ export const MappingRulesTab: React.FC<Props> = ({
         disabled: editing.disabled ?? false,
       });
     } else if (editing.id) {
-      await ActionsApi.updateMappingRule(scraperId, editing.id, {
+      await ScrapersApi.updateMappingRule(scraperId, editing.id, {
         targetField: editing.targetField,
         sourceField: editing.sourceField,
         combineWithField: editing.combineWithField,
@@ -160,12 +158,6 @@ export const MappingRulesTab: React.FC<Props> = ({
     cancelEdit();
   };
 
-  const remove = async (rule: ScraperMappingRule) => {
-    if (!window.confirm(`Delete mapping rule for ${rule.targetField}?`)) return;
-    await ActionsApi.deleteMappingRule(scraperId, rule.id);
-    await load();
-  };
-
   const emphasizeDynamicFields = (str: string) => {
     return !sourceFieldOptions.some((o) => o.value === str) &&
       !targetFieldOptions.some((o) => o.value === str) ? (
@@ -175,6 +167,20 @@ export const MappingRulesTab: React.FC<Props> = ({
     );
   };
 
+  const toggleDisable = async (rule: ScraperMappingRule) => {
+    await ScrapersApi.updateMappingRule(scraperId, rule.id, {
+      ...rule,
+      disabled: !rule.disabled,
+    });
+    await load();
+  };
+
+  // const remove = async (rule: ScraperMappingRule) => {
+  //   if (!window.confirm(`Delete mapping rule for ${rule.targetField}?`)) return;
+  //   await ScrapersApi.deleteMappingRule(scraperId, rule.id);
+  //   await load();
+  // };
+
   return (
     <>
       <div className={pageStyles.pageHeader}>
@@ -183,7 +189,7 @@ export const MappingRulesTab: React.FC<Props> = ({
           <div>
             Remaining:{' '}
             {targetFieldOptions
-              .filter((o) => !rules.some((r) => r.targetField === o.value))
+              .filter((o) => !rules.some((r) => !r.disabled && r.targetField === o.value))
               .map((o) => <em key={o.value}>{o.label}</em>)
               .reduce(
                 (acc, cur, i) =>
@@ -198,9 +204,19 @@ export const MappingRulesTab: React.FC<Props> = ({
               )}
           </div>
         </div>
-        <Button variant="primary" onClick={startNew}>
-          Add&nbsp;Rule
-        </Button>
+        <div style={{ display: 'flex', gap: '1em' }}>
+          {rules.some((a) => a.disabled) && (
+            <Button
+              variant="outline-primary"
+              onClick={() => setShowDisabled(!showDisabled)}
+            >
+              <Icon name={showDisabled ? 'visible' : 'invisible'} /> Disabled
+            </Button>
+          )}
+          <Button variant="primary" onClick={startNew}>
+            Add&nbsp;Rule
+          </Button>
+        </div>
       </div>
       <Card className={cn(cardStyles.BgCard, cardStyles.MarginBottom)}>
         <Card.Body>
@@ -222,6 +238,7 @@ export const MappingRulesTab: React.FC<Props> = ({
             </thead>
             <tbody>
               {rules
+                .filter((r) => showDisabled || !r.disabled)
                 .sort((a, b) => a.order - b.order)
                 .map((r) => (
                   <tr
@@ -243,12 +260,15 @@ export const MappingRulesTab: React.FC<Props> = ({
                         <Button onClick={() => startEdit(r)}>
                           <Icon name="edit" />
                         </Button>
-                        <Button
+                        <Button onClick={() => toggleDisable(r)}>
+                          <Icon name={r.disabled ? 'disabled' : 'enable'} />
+                        </Button>
+                        {/* <Button
                           variant="outline-danger"
                           onClick={() => remove(r)}
                         >
                           <Icon name="remove" />
-                        </Button>
+                        </Button> */}
                       </div>
                     </td>
                   </tr>

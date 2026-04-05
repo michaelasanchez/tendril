@@ -31,6 +31,7 @@ public sealed class Worker(
 
             try
             {
+                // TODO: make sure we only grab .Where(scraper => scraper.IsEventFeed)
                 foreach (var scraper in await scrapers.GetAllWithDetailsAsync(ct))
                 {
                     ct.ThrowIfCancellationRequested();

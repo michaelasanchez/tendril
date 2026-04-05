@@ -45,6 +45,7 @@ export const ActionsCard: React.FC<Props> = ({
         <Table className={tableStyles.Table} hover responsive>
           <thead>
             <tr>
+              <th>Name</th>
               <th>Field</th>
               <th>Selector</th>
               <th>Order</th>
@@ -68,6 +69,7 @@ export const ActionsCard: React.FC<Props> = ({
                   key={s.id}
                   className={s.disabled ? tableStyles.Disabled : ''}
                 >
+                  <td>{s.name}</td>
                   <td>{s.fieldName}</td>
                   <td>
                     <code>{s.selector}</code>

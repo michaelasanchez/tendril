@@ -9,6 +9,7 @@ public class ScraperDefinition
     public string Name { get; set; } = null!;
     public string BaseUrl { get; set; } = null!;
 
+    public bool IsEventFeed { get; set; } = false;
     public string Notes { get; set; } = "";
     public bool RequireReview { get; set; } = false;
     public bool Disabled { get; set; } = false;

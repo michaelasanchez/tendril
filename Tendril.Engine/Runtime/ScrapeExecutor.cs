@@ -69,7 +69,7 @@ public class ScrapeExecutor(
             childDef.BaseUrl = parentItem.ChildUrl;
         }
 
-        context.ParentData = parentItem.Data;
+        context.ParentItem = parentItem;
 
         IAsyncEnumerable<RawScrapedData> pipeline = childDef.ExecutionMode switch
         {
@@ -85,7 +85,7 @@ public class ScrapeExecutor(
         }
 
         childDef.BaseUrl = previousBaseUrl;
-        context.ParentData = null;
+        context.ParentItem = null;
     }
 
     // --- PIPELINE 1: STATIC --- //

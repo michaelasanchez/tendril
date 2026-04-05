@@ -57,6 +57,7 @@ export interface ScraperDefinition {
   id: Guid;
   name: string;
   baseUrl: string;
+  isEventFeed: boolean;
   disabled: boolean;
   notes: string;
   executionMode: ExecutionMode;
@@ -90,6 +91,7 @@ export type ActionType =
 export interface ScraperAction {
   id: Guid;
   scraperDefinitionId: Guid;
+  name: string;
   fieldName: string;
   selector: string;
   order: number;
@@ -229,7 +231,9 @@ export interface Event {
   venueName: string;
   venueUrl: string;
   status: EventStatus;
-  updatedUtc: string;
+  isReviewRequired: boolean;
+  updatedAtUtc: string;
+  reviewRequiredAtUtc: string;
 }
 
 export interface ScrapeRunResponse {

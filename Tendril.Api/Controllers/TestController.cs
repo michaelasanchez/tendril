@@ -19,7 +19,7 @@ public class ScraperRunsController(
     IMapperService mapper,
     IIngestionService ingestionService) : ControllerBase
 {
-    // 1️⃣ Test selectors only (Stream -> List in memory)
+    // 1) Test selectors only (Stream -> List in memory)
     [HttpPost("test-actions")]
     public async Task<ActionResult> TestActions(Guid scraperId, [FromQuery] int? limit, CancellationToken ct)
     {
@@ -64,9 +64,9 @@ public class ScraperRunsController(
         });
     }
 
-    // 2️⃣ Test mapping only (No changes needed, uses DB)
+    // 2️) Test mapping only (No changes needed, uses DB)
     [HttpPost("test-mapping")]
-    public async Task<ActionResult> TestMapping(Guid scraperId, CancellationToken ct)
+    public async Task<ActionResult> TestMapping(Guid scraperId, [FromQuery] int? limit, CancellationToken ct)
     {
         var yearTracker = new YearTracker();
 
@@ -104,7 +104,7 @@ public class ScraperRunsController(
         });
     }
 
-    // 3️⃣ Full end-to-end test run (Stream -> Map -> Return JSON, no DB save)
+    // 3️) Full end-to-end test run (Stream -> Map -> Return JSON, no DB save)
     [HttpPost("test-run")]
     public async Task<ActionResult> TestRun(Guid scraperId, CancellationToken ct)
     {

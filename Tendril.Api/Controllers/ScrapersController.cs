@@ -42,6 +42,7 @@ public class ScrapersController(
             Id = Guid.NewGuid(),
             Name = request.Name,
             BaseUrl = request.BaseUrl,
+            IsEventFeed = request.IsEventFeed,
             Disabled = request.Disabled,
             Notes = request.Notes ?? string.Empty,
             ExecutionMode = request.ExecutionMode ?? Core.Domain.Enums.ExecutionMode.Dynamic,
@@ -68,6 +69,7 @@ public class ScrapersController(
         return CreatedAtAction(nameof(GetById), new { id = scraper.Id },
             mapper.Map<ScraperDto>(scraper));
     }
+
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, UpdateScraperRequest request, CancellationToken cancellationToken)
     {
@@ -79,6 +81,7 @@ public class ScrapersController(
         // Standard properties
         if (request.Name is not null) scraper.Name = request.Name;
         if (request.BaseUrl is not null) scraper.BaseUrl = request.BaseUrl;
+        if (request.IsEventFeed is not null) scraper.IsEventFeed = request.IsEventFeed.Value;
         if (request.Disabled is not null) scraper.Disabled = request.Disabled.Value;
         if (request.Notes is not null) scraper.Notes = request.Notes;
         if (request.ExecutionMode is not null) scraper.ExecutionMode = request.ExecutionMode.Value;

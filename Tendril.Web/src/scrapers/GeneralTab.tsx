@@ -62,12 +62,22 @@ export const GeneralTab: React.FC<Props> = ({
       <Card className={cn(cardStyles.BgCard, cardStyles.MarginBottom)}>
         <Card.Body>
           <Form className={formStyles.form}>
+            <FormInput
+              className={styles.InputGrow}
+              label="Name"
+              value={scraper.name}
+              onChange={(name) => onUpdate({ ...scraper, name })}
+            />
             <div className={formStyles.formGroup}>
-              <FormInput
-                className={styles.InputGrow}
-                label="Name"
-                value={scraper.name}
-                onChange={(name) => onUpdate({ ...scraper, name })}
+              <FormCheck
+                label="Event Feed"
+                checked={scraper.isEventFeed}
+                onChange={(isEventFeed) =>
+                  onUpdate({
+                    ...scraper,
+                    isEventFeed,
+                  })
+                }
               />
 
               <FormCheck

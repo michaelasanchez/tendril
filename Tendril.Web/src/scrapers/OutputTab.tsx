@@ -128,7 +128,7 @@ export const OutputTab: React.FC<Props> = ({
       <div className={pageStyles.pageHeader}>
         <h3>Output</h3>
       </div>
-      <Card className={cn(cardStyles.BgCard, cardStyles.MarginBottom)}>
+      <Card className={cn(cardStyles.BgCard, cardStyles.MarginBottom, cardStyles.Opaque, styles.FilterRow)}>
         <Card.Body
           style={{
             display: 'flex',
@@ -200,7 +200,8 @@ export const OutputTab: React.FC<Props> = ({
                 flexGrow: 1,
                 opacity: e.status === 'Suppressed' ? 0.4 : 1,
                 border:
-                  e.status === 'Pending' ? '2px dashed orange' : undefined,
+                  e.isReviewRequired ? '2px solid #7a3333' : e.status === 'Pending' ? '2px dashed orange' : undefined,
+                  boxShadow: e.isReviewRequired ? '0 0 10px #c96f6f88' : undefined,
               }}
             >
               {
@@ -213,7 +214,8 @@ export const OutputTab: React.FC<Props> = ({
                   }}
                 />
               }
-              <Card.Body>
+              <Card.Body style={{ display: 'flex', gap: '1em', justifyContent: 'space-between'}}>
+                <div>
                 <h3>{e.title}</h3>
                 <p
                   className={cn(
@@ -230,7 +232,7 @@ export const OutputTab: React.FC<Props> = ({
                 <div>
                   {e.detailsUrl && <SquareButton href={e.detailsUrl} target="_blank">Details</SquareButton>}
                   {e.ticketUrl && <SquareButton href={e.ticketUrl} target="_blank">Tickets</SquareButton>}
-                </div>
+                </div></div><div><SquareButton><Icon name="copy" /></SquareButton></div>
               </Card.Body>
             </Card>
             <div style={{ minWidth: '120px', width: '120px' }}>
@@ -274,6 +276,9 @@ export const OutputTab: React.FC<Props> = ({
                 <Icon
                   name={e.status !== 'Suppressed' ? 'archive' : 'unarchive'}
                 />
+              </Button>
+              <Button onClick={() => EventsApi.patch(e.id, { isReviewRequired: !e.isReviewRequired }).then(() => loadEvents())}>
+                <Icon name={e.isReviewRequired ? 'flagOff' : 'flag'} />
               </Button>
             </div>
           </div>

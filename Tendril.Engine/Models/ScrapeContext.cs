@@ -8,7 +8,7 @@ public class ScrapeContext
     public IBrowserContext? DynamicBrowser { get; set; }
     public HttpClient? StaticClient { get; set; }
 
-    public RawScrapedData? ParentData { get; set; }
+    public ScrapeYieldItem? ParentItem { get; set; }
     public bool ParentIgnoreDuplicateUrls { get; set; } = false;
 
     private readonly ConcurrentDictionary<string, byte> _visitedUrls = new();

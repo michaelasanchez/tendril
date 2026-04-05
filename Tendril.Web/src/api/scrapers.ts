@@ -19,6 +19,7 @@ import { apiDelete, apiGet, apiPost, apiPut } from './client';
 export interface CreateScraperRequest {
   name: string;
   baseUrl: string;
+  isEventFeed: boolean;
   disabled: boolean;
   notes: string;
   executionMode: ExecutionMode;
@@ -32,7 +33,7 @@ export interface CreateScraperRequest {
 
 export interface UpdateScraperRequest extends Partial<CreateScraperRequest> {}
 
-export const ActionsApi = {
+export const ScrapersApi = {
   getAll(): Promise<ScraperDefinition[]> {
     return apiGet('/scrapers');
   },

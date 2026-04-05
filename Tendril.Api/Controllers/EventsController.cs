@@ -78,6 +78,12 @@ public class EventsController(IEventRepository events, IMapper mapper) : Control
                 @event.StatusAtUtc = DateTimeOffset.UtcNow;
             }
 
+            if (request.IsReviewRequired is not null)
+            {
+                @event.IsReviewRequired = request.IsReviewRequired.Value;
+                @event.ReviewRequiredAtUtc = DateTimeOffset.UtcNow;
+            }
+
             await events.UpdateAsync(@event, ct);
         }
 

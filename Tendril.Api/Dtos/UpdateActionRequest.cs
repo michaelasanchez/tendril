@@ -4,6 +4,7 @@ namespace Tendril.Api.Dtos;
 
 public class UpdateActionRequest
 {
+    public string? Name { get; set; }
     public string? FieldName { get; set; }
     public string? Selector { get; set; }
     public int? Order { get; set; }

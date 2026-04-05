@@ -98,7 +98,7 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
             .Where(x => x.Order < container.Order && x.Type != ActionType.Container)
             .OrderBy(x => x.Order);
 
-        var preResult = new ScrapeYieldItem();
+        var preResult = context.ParentItem ?? new ScrapeYieldItem();
 
         foreach (var step in preSelectors)
         {
@@ -136,9 +136,11 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
 
                     var url = targetNode?.GetAttributeValue("href", "");
 
+                    result.Data.Fields[step.OutputField] = url;
+
                     if (!string.IsNullOrWhiteSpace(url) && (!step.IgnoreDuplicateUrls || !context.HasVisited(url)))
                     {
-                        context.MarkVisited(url); // Claim it now so subsequent items skip it
+                        context.MarkVisited(url);
 
                         result = result with
                         {
@@ -171,7 +173,6 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
             {
                 yield return preResult.Merge(result);
             }
-
         }
     }
 
@@ -270,9 +271,9 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
                 }
             }
 
-            if (!string.IsNullOrWhiteSpace(value) && !string.IsNullOrWhiteSpace(step.FieldName))
+            if (!string.IsNullOrWhiteSpace(value) && !string.IsNullOrWhiteSpace(step.OutputField))
             {
-                rawEvent.Fields[step.FieldName] = value;
+                rawEvent.Fields[step.OutputField] = value;
             }
         }
         catch
@@ -299,9 +300,9 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
             {
                 if (string.IsNullOrWhiteSpace(step.Selector))
                 {
-                    if (match.Groups.ContainsKey(step.FieldName))
+                    if (match.Groups.ContainsKey(step.OutputField))
                     {
-                        result.Data.Fields[step.FieldName] = match.Groups[step.FieldName].Value;
+                        result.Data.Fields[step.OutputField] = match.Groups[step.OutputField].Value;
                     }
                 }
                 else
@@ -310,7 +311,7 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
                     if (subMatch.Success)
                     {
                         var val = subMatch.Groups.Count > 1 ? subMatch.Groups[1].Value : subMatch.Value;
-                        result.Data.Fields[step.FieldName] = val;
+                        result.Data.Fields[step.OutputField] = val;
                     }
                 }
             }

@@ -9,7 +9,9 @@ public class ScraperAction
     public Guid ScraperDefinitionId { get; set; }
     public ScraperDefinition ScraperDefinition { get; set; } = null!;
 
+    public string Name { get; set; } = null!;
     public string FieldName { get; set; } = null!;
+    public string OutputField => string.IsNullOrEmpty(FieldName) ? Name : FieldName;
     public string Selector { get; set; } = null!;
 
     public int Order { get; set; } = 0;

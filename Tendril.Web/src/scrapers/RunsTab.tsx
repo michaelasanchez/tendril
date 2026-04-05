@@ -9,7 +9,7 @@ import {
 import { useState } from 'react';
 import { Card, Table } from 'react-bootstrap';
 
-import { ActionsApi } from '../api/scrapers';
+import { ScrapersApi } from '../api/scrapers';
 import { SquareButton as Button } from '../components/button';
 import { ElapsedClock } from '../components/ElapsedClock';
 import styles from '../pages/ScraperEditorPage.module.css';
@@ -44,17 +44,17 @@ export const RunsTab: React.FC<Props> = ({
       let res: ScrapeRunResponse;
       switch (kind) {
         case 'actions':
-          res = await ActionsApi.testActions(scraperId);
+          res = await ScrapersApi.testActions(scraperId);
           break;
         case 'mapping':
-          res = await ActionsApi.testMapping(scraperId);
+          res = await ScrapersApi.testMapping(scraperId);
           break;
         case 'test':
-          res = await ActionsApi.testRun(scraperId);
+          res = await ScrapersApi.testRun(scraperId);
           break;
         case 'now':
         default:
-          res = await ActionsApi.runNow(scraperId);
+          res = await ScrapersApi.runNow(scraperId);
           break;
       }
       setResult(res);

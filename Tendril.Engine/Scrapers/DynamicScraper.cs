@@ -77,7 +77,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
             .Where(x => x.Order < container.Order && x.Type != ActionType.Container)
             .OrderBy(x => x.Order);
 
-        var preResult = new ScrapeYieldItem();
+        var preResult = context.ParentItem ?? new ScrapeYieldItem();
 
         foreach (var step in preSelectors)
         {
@@ -126,6 +126,8 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
                         if (linkEl is not null)
                         {
                             var url = await linkEl.GetAttributeAsync("href");
+
+                            result.Data.Fields[step.OutputField] = url;
 
                             if (!string.IsNullOrWhiteSpace(url) && (!step.IgnoreDuplicateUrls || !context.HasVisited(url)))
                             {
@@ -281,9 +283,9 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
             }
 
             // 5. Assign to Event
-            if (!string.IsNullOrWhiteSpace(value) && !string.IsNullOrWhiteSpace(step.FieldName))
+            if (!string.IsNullOrWhiteSpace(value) && !string.IsNullOrWhiteSpace(step.OutputField))
             {
-                scrapedData.Fields[step.FieldName] = value.Trim();
+                scrapedData.Fields[step.OutputField] = value.Trim();
             }
         }
         catch (Exception ex)

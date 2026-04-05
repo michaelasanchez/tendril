@@ -3,7 +3,7 @@ import { ButtonGroup, Dropdown, DropdownButton, Tab } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router';
 import { CategoriesApi } from '../api/categories';
 import { EventsApi } from '../api/events';
-import { ActionsApi } from '../api/scrapers';
+import { ScrapersApi } from '../api/scrapers';
 import { VenuesApi } from '../api/venues';
 import { SquareButton as Button } from '../components/button';
 import { Icon } from '../components/Icon';
@@ -80,7 +80,7 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
 
   const loadActions = async () => {
     if (!scraperId) return;
-    const data = await ActionsApi.getActions(scraperId);
+    const data = await ScrapersApi.getActions(scraperId);
     setActions(data);
   };
   /* Actions */
@@ -90,7 +90,7 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
 
   const loadAttemptHistories = async () => {
     if (!scraperId) return;
-    const attempts = await ActionsApi.getAttemptHistories(scraperId);
+    const attempts = await ScrapersApi.getAttemptHistories(scraperId);
     setAttempts(attempts);
   };
   /* Attempts */
@@ -136,7 +136,7 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
           VenuesApi.getAll(),
           isNew || !scraperId
             ? Promise.resolve<ScraperDefinition | null>(null)
-            : ActionsApi.getById(scraperId as Guid),
+            : ScrapersApi.getById(scraperId as Guid),
         ]);
 
         setVenues(vs);
@@ -145,6 +145,7 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
             id: '' as Guid,
             name: '',
             baseUrl: '',
+            isEventFeed: false,
             disabled: false,
             notes: '',
             executionMode: 'Static',
@@ -171,7 +172,7 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
   // Keep parent actions up-to-date
   useEffect(() => {
     const loadParent = async () => {
-      const parentActions = await ActionsApi.getActions(
+      const parentActions = await ScrapersApi.getActions(
         parentId as string,
       );
 
@@ -193,9 +194,10 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
     if (!scraper) return;
     try {
       if (isNew) {
-        const created = await ActionsApi.create({
+        const created = await ScrapersApi.create({
           name: scraper.name,
           baseUrl: scraper.baseUrl,
+          isEventFeed: scraper.isEventFeed,
           disabled: scraper.disabled,
           notes: scraper.notes,
           executionMode: scraper.executionMode,
@@ -214,9 +216,10 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
         });
         navigate(`/scrapers/${created.id}`);
       } else if (scraperId) {
-        await ActionsApi.update(scraperId as Guid, {
+        await ScrapersApi.update(scraperId as Guid, {
           name: scraper.name,
           baseUrl: scraper.baseUrl,
+          isEventFeed: scraper.isEventFeed,
           disabled: scraper.disabled,
           notes: scraper.notes,
           executionMode: scraper.executionMode,

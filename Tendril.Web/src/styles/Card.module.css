@@ -15,6 +15,11 @@
     opacity: 0.5;
   }
 
+  &.Opaque {
+    background-color: #444852;
+    opacity: 1;
+  }
+
   .CardImage {
     aspect-ratio: 16 / 12;
     object-fit: cover;

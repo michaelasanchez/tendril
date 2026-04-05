@@ -24,6 +24,7 @@ public class ActionsController : ControllerBase
 
         return Ok(list.Select(s => new ScraperActionDto(
             s.Id,
+            s.Name,
             s.FieldName,
             s.Selector,
             s.Order,
@@ -47,6 +48,7 @@ public class ActionsController : ControllerBase
         {
             Id = Guid.NewGuid(),
             ScraperDefinitionId = scraperId,
+            Name = request.Name,
             FieldName = request.FieldName,
             Selector = request.Selector,
             Order = request.Order,
@@ -74,6 +76,7 @@ public class ActionsController : ControllerBase
 
         if (action is null) return NotFound();
 
+        action.Name = request.FieldName ?? action.Name;
         action.FieldName = request.FieldName ?? action.FieldName;
         action.Selector = request.Selector ?? action.Selector;
         action.Order = request.Order ?? action.Order;

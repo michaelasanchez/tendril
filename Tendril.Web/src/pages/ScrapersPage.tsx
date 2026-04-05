@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Table } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
-import { ActionsApi } from '../api/scrapers';
+import { ScrapersApi } from '../api/scrapers';
 import { SquareButton as Button, SquareButton } from '../components/button';
 import { Icon } from '../components/Icon';
 import { pageStyles, tableStyles } from '../styles';
@@ -21,6 +21,52 @@ interface ScrapersPageProps {
   authLoading: boolean;
 }
 
+interface Sort {
+  key: SortKey;
+  direction: SortDirection;
+}
+
+const sortScraper = (scrapers: ScraperDefinition[], sort: Sort | null) =>
+  scrapers.sort((a, b) => {
+    if (!sort) return 0;
+
+    const aValue = a[sort.key];
+    const bValue = b[sort.key];
+
+    // 3. Handle checking for null/undefined values (optional but recommended)
+    if (aValue == null) return 1;
+    if (bValue == null) return -1;
+
+    // 4. Compare based on type
+    // If it's a string, use localeCompare for accurate text sorting
+    if (sort.key === 'lastSuccessUtc' || sort.key === 'lastFailureUtc') {
+      // Convert to timestamp (number)
+      const aTime = new Date(aValue).getTime();
+      const bTime = new Date(bValue).getTime();
+
+      // Handle invalid dates (optional safety check)
+      if (isNaN(aTime)) return 1;
+      if (isNaN(bTime)) return -1;
+
+      return sort.direction === 'asc' ? aTime - bTime : bTime - aTime;
+    }
+
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      return sort.direction === 'asc'
+        ? aValue.localeCompare(bValue)
+        : bValue.localeCompare(aValue);
+    }
+
+    // Default comparison (numbers, dates, booleans)
+    if (aValue < bValue) {
+      return sort.direction === 'asc' ? -1 : 1;
+    }
+    if (aValue > bValue) {
+      return sort.direction === 'asc' ? 1 : -1;
+    }
+    return 0;
+  });
+
 export const ScrapersPage: React.FC<ScrapersPageProps> = ({
   authorized,
   authLoading,
@@ -31,10 +77,10 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({
 
   const hasLoaded = useRef(false);
 
-  const [sort, setSort] = useState<{
-    key: SortKey;
-    direction: SortDirection;
-  } | null>({ key: 'name', direction: 'asc' });
+  const [sort, setSort] = useState<Sort | null>({
+    key: 'name',
+    direction: 'asc',
+  });
 
   const onSort = (key: SortKey) => {
     setSort((prev) => {
@@ -58,7 +104,7 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({
     setLoading(true);
     setError(null);
     try {
-      const data = await ActionsApi.getAll();
+      const data = await ScrapersApi.getAll();
       setScrapers(data);
     } catch (e: any) {
       setError(e.message ?? 'Error loading scrapers.');
@@ -101,7 +147,7 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({
   const handleRunNow = async (id: string) => {
     if (!window.confirm('Run this scraper now?')) return;
     try {
-      await ActionsApi.runNow(id);
+      await ScrapersApi.runNow(id);
       await load();
     } catch (e: any) {
       alert(e.message ?? 'Run failed.');
@@ -110,8 +156,10 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({
 
   const scraperGroups = useMemo(() => {
     // 1. Create temporary buckets
-    const strategyMap = new Map<string, ScraperDefinition[]>();
-    const unknownList: ScraperDefinition[] = [];
+    const feedList: ScraperDefinition[] = [];
+    const otherList: ScraperDefinition[] = [];
+    // const strategyMap = new Map<string, ScraperDefinition[]>();
+    // const unknownList: ScraperDefinition[] = [];
     const disabledList: ScraperDefinition[] = [];
 
     // 2. Sort items into buckets (Single pass)
@@ -121,71 +169,28 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({
         return;
       }
 
-      if (scraper.extractionStrategy) {
-        if (!strategyMap.has(scraper.extractionStrategy)) {
-          strategyMap.set(scraper.extractionStrategy, []);
-        }
-        strategyMap.get(scraper.extractionStrategy)!.push(scraper);
-      } else {
-        unknownList.push(scraper);
+      if (scraper.isEventFeed) {
+        feedList.push(scraper);
+        return;
       }
+
+      otherList.push(scraper);
     });
 
-    // 3. Transform Strategy Map to Array and Sort Alphabetically
-    const sortedStrategies = Array.from(strategyMap.entries())
-      .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
-      .map(([key, list]) => ({
-        key,
-        scrapers: list.sort((a, b) => {
-          if (!sort) return 0;
-
-          const aValue = a[sort.key];
-          const bValue = b[sort.key];
-
-          // 3. Handle checking for null/undefined values (optional but recommended)
-          if (aValue == null) return 1;
-          if (bValue == null) return -1;
-
-          // 4. Compare based on type
-          // If it's a string, use localeCompare for accurate text sorting
-          if (sort.key === 'lastSuccessUtc' || sort.key === 'lastFailureUtc') {
-            // Convert to timestamp (number)
-            const aTime = new Date(aValue).getTime();
-            const bTime = new Date(bValue).getTime();
-
-            // Handle invalid dates (optional safety check)
-            if (isNaN(aTime)) return 1;
-            if (isNaN(bTime)) return -1;
-
-            return sort.direction === 'asc' ? aTime - bTime : bTime - aTime;
-          }
-
-          if (typeof aValue === 'string' && typeof bValue === 'string') {
-            return sort.direction === 'asc'
-              ? aValue.localeCompare(bValue)
-              : bValue.localeCompare(aValue);
-          }
-
-          // Default comparison (numbers, dates, booleans)
-          if (aValue < bValue) {
-            return sort.direction === 'asc' ? -1 : 1;
-          }
-          if (aValue > bValue) {
-            return sort.direction === 'asc' ? 1 : -1;
-          }
-          return 0;
-        }),
-      }));
-
     // 4. Construct Final List (Strategies -> Unknown -> Disabled)
-    const result = [...sortedStrategies];
+    const result = [
+      { key: 'Event Feeds', scrapers: sortScraper(feedList, sort) },
+    ];
 
-    if (unknownList.length > 0) {
-      result.push({ key: 'Unknown', scrapers: unknownList });
+    if (otherList.length > 0) {
+      result.push({ key: 'Component', scrapers: sortScraper(otherList, sort) });
     }
 
     if (disabledList.length > 0) {
-      result.push({ key: 'Disabled', scrapers: disabledList });
+      result.push({
+        key: 'Disabled',
+        scrapers: sortScraper(disabledList, sort),
+      });
     }
 
     return result;
@@ -230,7 +235,7 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({
           {scraperGroups.map(({ key, scrapers }) => (
             <tbody key={key}>
               <tr className={tableStyles.GroupHeader}>
-                <td colSpan={6}>{key}</td>
+                <td colSpan={7}>{key}</td>
               </tr>
 
               {scrapers.map((s) => (
@@ -241,7 +246,7 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({
                       {s.baseUrl}
                     </a>
                   </td>
-                  <td>{s.state}</td>
+                  <td>{s.isEventFeed ? s.state : '-'}</td>
                   <td>
                     {s.lastSuccessUtc ? formatDate(s.lastSuccessUtc) : '-'}
                   </td>
@@ -253,12 +258,14 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({
                       <Button onClick={() => navigate(`/scrapers/${s.id}`)}>
                         <Icon name="edit" />
                       </Button>
-                      <Button
-                        variant="outline-primary"
-                        onClick={() => handleRunNow(s.id)}
-                      >
-                        <Icon name="run" />
-                      </Button>
+                      {s.isEventFeed && (
+                        <Button
+                          variant="outline-primary"
+                          onClick={() => handleRunNow(s.id)}
+                        >
+                          <Icon name="run" />
+                        </Button>
+                      )}
                     </div>
                   </td>
                 </tr>
