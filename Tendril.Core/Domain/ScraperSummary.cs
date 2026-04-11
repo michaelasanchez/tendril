@@ -37,6 +37,7 @@ public class MappingSummary
 
 public class ScraperSummary
 {
+    public string Name { get; set; } = null!;
     public MappingSummary Mapping { get; set; } = new MappingSummary();
 
     //public Guid Id { get; set; }

@@ -10,6 +10,7 @@ import {
   EventsPage,
   ScraperEditorPage,
   ScrapersPage,
+  SummaryPage,
   TagsPage,
   VenuesPage,
 } from './pages';
@@ -41,6 +42,7 @@ export default function App() {
             }
           />
           <Route path="/categories" element={<CategoriesPage />} />
+          <Route path="/summary" element={<SummaryPage />} />
           <Route path="/tags" element={<TagsPage />} />
           <Route path="/venues" element={<VenuesPage />} />
 

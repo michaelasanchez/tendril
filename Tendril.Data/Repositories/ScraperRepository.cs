@@ -71,6 +71,16 @@ public class ScraperRepository(TendrilDbContext db) : IScraperRepository
         await db.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task<List<ScraperSummary>> GetFeedSummaries(CancellationToken ct)
+    {
+        var scrapers = await db.Scrapers
+            .Include(x => x.MappingRules.Where(x => !x.Disabled))
+            .Where(x => x.IsEventFeed)
+            .ToListAsync();
+
+        return [.. scrapers.Select(GetSummary)];
+    }
+
     public async Task<ScraperSummary?> GetSummaryByIdAsync(Guid id, CancellationToken cancellationToken)
     {
         var scraper = await db.Scrapers
@@ -82,22 +92,25 @@ public class ScraperRepository(TendrilDbContext db) : IScraperRepository
             return null;
         }
 
-        return new ScraperSummary
-        {
-            Mapping = new MappingSummary
-            {
-                Title = scraper.MappingRules.Any(x => x.TargetField == TargetField.Title),
-                Description = scraper.MappingRules.Any(x => x.TargetField == TargetField.Description),
-                Location = scraper.MappingRules.Any(x => x.TargetField == TargetField.Location),
-                Venue = scraper.VenueId is not null,
-                StartUtc = scraper.MappingRules.Any(x => x.TargetField == TargetField.StartUtc),
-                EndUtc = scraper.MappingRules.Any(x => x.TargetField == TargetField.EndUtc),
-                MinPrice = scraper.MappingRules.Any(x => x.TargetField == TargetField.MinPrice),
-                MaxPrice = scraper.MappingRules.Any(x => x.TargetField == TargetField.MaxPrice),
-                DetailsUrl = scraper.MappingRules.Any(x => x.TargetField == TargetField.DetailsUrl),
-                ImageUrl = scraper.MappingRules.Any(x => x.TargetField == TargetField.ImageUrl),
-                TicketUrl = scraper.MappingRules.Any(x => x.TargetField == TargetField.TicketUrl)
-            }
-        };
+        return GetSummary(scraper);
     }
+
+    public ScraperSummary GetSummary(ScraperDefinition scraper) => new()
+    {
+        Name = scraper.Name,
+        Mapping = new MappingSummary
+        {
+            Title = scraper.MappingRules.Any(x => x.TargetField == TargetField.Title),
+            Description = scraper.MappingRules.Any(x => x.TargetField == TargetField.Description),
+            Location = scraper.MappingRules.Any(x => x.TargetField == TargetField.Location),
+            Venue = scraper.VenueId is not null,
+            StartUtc = scraper.MappingRules.Any(x => x.TargetField == TargetField.StartUtc),
+            EndUtc = scraper.MappingRules.Any(x => x.TargetField == TargetField.EndUtc),
+            MinPrice = scraper.MappingRules.Any(x => x.TargetField == TargetField.MinPrice),
+            MaxPrice = scraper.MappingRules.Any(x => x.TargetField == TargetField.MaxPrice),
+            DetailsUrl = scraper.MappingRules.Any(x => x.TargetField == TargetField.DetailsUrl),
+            ImageUrl = scraper.MappingRules.Any(x => x.TargetField == TargetField.ImageUrl),
+            TicketUrl = scraper.MappingRules.Any(x => x.TargetField == TargetField.TicketUrl)
+        }
+    };
 }

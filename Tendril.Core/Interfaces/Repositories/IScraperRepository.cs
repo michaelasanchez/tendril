@@ -15,5 +15,6 @@ public interface IScraperRepository
 
     // Used by Worker
     Task<List<ScraperDefinition>> GetAllWithDetailsAsync(CancellationToken cancellationToken = default);
+    Task<List<ScraperSummary>> GetFeedSummaries(CancellationToken ct);
     Task<ScraperSummary?> GetSummaryByIdAsync(Guid id, CancellationToken cancellationToken);
 }

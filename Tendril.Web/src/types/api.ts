@@ -202,6 +202,7 @@ export interface MappingSummary {
 }
 
 export interface ScraperSummary {
+  name: string;
   mapping: MappingSummary;
 }
 

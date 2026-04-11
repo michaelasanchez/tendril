@@ -6,11 +6,11 @@ import type {
   Guid,
   HttpMethod,
   PaginationType,
+  ScraperAction,
   ScraperAttemptHistory,
   ScraperClassificationRule,
   ScraperDefinition,
   ScraperMappingRule,
-  ScraperAction as ScraperAction,
   ScraperSummary,
   ScrapeRunResponse,
 } from '../types/api';
@@ -159,11 +159,15 @@ export const ScrapersApi = {
   },
 
   // Summaries
+  getFeedSummaries(signal?: AbortSignal): Promise<ScraperSummary[]> {
+    return apiGet(`/scrapers/summaries`, signal);
+  },
+
   getScraperSummary(
     scraperId: Guid,
     signal?: AbortSignal,
   ): Promise<ScraperSummary> {
-    return apiGet(`/scrapers/${scraperId}/summaries`, signal);
+    return apiGet(`/scrapers/summaries/${scraperId}`, signal);
   },
 
   // Runs

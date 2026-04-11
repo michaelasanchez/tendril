@@ -25,7 +25,7 @@ const toOptions = (arr: string[]) =>
   arr.map((item) => ({ value: item, label: item }));
 
 const selectorTypeOptions = toOptions([
-  'Constant',
+  'ConstantValue',
   'Container',
   'Text',
   'Attribute',
@@ -237,8 +237,8 @@ export const ActionsTab: React.FC<Props> = ({
                     />
                   )}
                 <div className={formStyles.formGroup}>
-                  {editing.type != 'CallApi' &&
-                    editing.type != 'ConstantValue' && (
+                  {(editing.type != 'CallApi' &&
+                    editing.type != 'ConstantValue') && (
                       <FormCheck
                         label="Root"
                         checked={editing.root ?? false}
@@ -267,7 +267,7 @@ export const ActionsTab: React.FC<Props> = ({
                     />
                   )}
                 </div>
-                {editing.type === 'Attribute' && (
+                {editing.type == 'Attribute' && (
                   <FormInput
                     label="Attribute"
                     value={editing.attribute ?? ''}
@@ -276,7 +276,7 @@ export const ActionsTab: React.FC<Props> = ({
                     }
                   />
                 )}
-                {editing.type === 'ConstantValue' && (
+                {editing.type == 'ConstantValue' && (
                   <FormInput
                     label="Constant Value"
                     value={editing.constantValue ?? ''}
@@ -285,7 +285,7 @@ export const ActionsTab: React.FC<Props> = ({
                     }
                   />
                 )}
-                {editing.type === 'Input' && (
+                {editing.type == 'Input' && (
                   <FormInput
                     label="Interaction Value"
                     value={editing.interactionValue ?? ''}

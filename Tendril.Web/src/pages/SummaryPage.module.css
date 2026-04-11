@@ -1,0 +1,26 @@
+.Grid {
+  display: grid;
+  grid-template-columns: minmax(120px, auto) repeat(10, 1fr);
+  gap: 1px;
+  border: 1px solid #ccc;
+  overflow-x: auto;
+}
+
+.Cell {
+  padding: 4px 10px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.Header {
+  font-weight: bold;
+}
+
+.Sticky {
+  background: var(--bs-body-bg);
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
