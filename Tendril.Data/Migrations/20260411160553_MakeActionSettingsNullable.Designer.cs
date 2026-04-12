@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tendril.Data;
 
@@ -11,9 +12,11 @@ using Tendril.Data;
 namespace Tendril.Data.Migrations
 {
     [DbContext(typeof(TendrilDbContext))]
-    partial class TendrilDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260411160553_MakeActionSettingsNullable")]
+    partial class MakeActionSettingsNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -282,8 +285,10 @@ namespace Tendril.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<bool?>("AllowDuplicateUrls")
-                        .HasColumnType("bit");
+                    b.Property<bool>("AllowDuplicateUrls")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<bool?>("AllowEmptyResult")
                         .HasColumnType("bit");

@@ -35,7 +35,7 @@ public class ActionsController : ControllerBase
             s.ConstantValue,
             s.InteractionValue,
             s.ChildScraperDefinitionId,
-            s.IgnoreDuplicateUrls,
+            s.AllowDuplicateUrls,
             s.IsPaginationTrigger,
             s.Disabled
         )));
@@ -59,7 +59,7 @@ public class ActionsController : ControllerBase
             ConstantValue = request.ConstantValue,
             InteractionValue = request.InteractionValue,
             ChildScraperDefinitionId = request.ChildScraperId,
-            IgnoreDuplicateUrls = request.IgnoreDuplicateUrls,
+            AllowDuplicateUrls = request.IgnoreDuplicateUrls,
             IsPaginationTrigger = request.IsPaginationTrigger,
             Disabled = request.Disabled
         };
@@ -87,7 +87,7 @@ public class ActionsController : ControllerBase
         action.ConstantValue = request.ConstantValue;
         action.InteractionValue = request.InteractionValue;
         action.ChildScraperDefinitionId = request.ChildScraperId;
-        action.IgnoreDuplicateUrls = request.IgnoreDuplicateUrls ?? action.IgnoreDuplicateUrls;
+        action.AllowDuplicateUrls = request.IgnoreDuplicateUrls ?? action.AllowDuplicateUrls;
         action.IsPaginationTrigger = request.IsPaginationTrigger ?? action.IsPaginationTrigger;
         action.Disabled = request.Disabled ?? action.Disabled;
 

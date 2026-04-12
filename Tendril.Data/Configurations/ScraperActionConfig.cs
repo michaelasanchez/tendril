@@ -24,10 +24,6 @@ public class ScraperActionConfig : IEntityTypeConfiguration<ScraperAction>
             .HasConversion<string>()
             .IsRequired();
 
-        builder.Property(x => x.IgnoreDuplicateUrls)
-            .HasDefaultValue(true)
-            .IsRequired();
-
         builder.HasOne<ScraperDefinition>()
             .WithMany(x => x.ParentSelectors)
             .HasForeignKey(x => x.ChildScraperDefinitionId)

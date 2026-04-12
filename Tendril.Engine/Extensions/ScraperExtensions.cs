@@ -28,7 +28,9 @@ public static class ScraperExtensions
 
             // Keep the child's navigation details since that is the "current" context
             ChildUrl = child.ChildUrl,
-            ChildScraperId = child.ChildScraperId
+            ChildScraperId = child.ChildScraperId,
+            AllowDuplicateUrls = child.AllowDuplicateUrls,
+            AllowEmptyResult = child.AllowEmptyResult
         };
     }
 }

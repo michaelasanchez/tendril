@@ -59,7 +59,11 @@ public class ApiScraper(ITemplateService templateService)
 
         // Check duplicate url
         var uri = request.RequestUri?.ToString();
-        if (uri is null || (context.ParentIgnoreDuplicateUrls && context.HasVisited(uri)))
+        // step.AllowDuplicateUrls is true || !context.HasVisited(url)
+        //  (A || !B)
+        // !(A || !B)
+        // !A && B
+        if (uri is null || (context.ParentItem?.AllowDuplicateUrls is false && context.HasVisited(uri)))
         {
             yield break;
         }
@@ -72,7 +76,11 @@ public class ApiScraper(ITemplateService templateService)
         var json = await response.Content.ReadAsStringAsync(ct);
         var root = JsonNode.Parse(json);
 
-        var preResult = context.ParentItem ?? new ScrapeYieldItem();
+        var preResult = (context.ParentItem ?? new ScrapeYieldItem()) with
+        {
+            ChildScraperId = null,
+            ChildUrl = null,
+        };
 
         // TODO: Need to perform pre container selectors here
 
@@ -80,6 +88,8 @@ public class ApiScraper(ITemplateService templateService)
         if (containerSelector == null) yield break;
 
         var items = ExtractJsonNodes(root, containerSelector.Selector);
+
+        var foundChildren = false;
 
         foreach (var node in items)
         {
@@ -102,10 +112,20 @@ public class ApiScraper(ITemplateService templateService)
                     {
                         result = result with
                         {
+                            ChildScraperId = step.ChildScraperDefinitionId,
                             ChildUrl = val,
-                            ChildScraperId = step.ChildScraperDefinitionId
+                            AllowEmptyResult = step.AllowDuplicateUrls
                         };
                     }
+                }
+                else if (step.Type == ActionType.CallApi && step.ChildScraperDefinitionId.HasValue)
+                {
+                    result = result with
+                    {
+                        ChildScraperId = step.ChildScraperDefinitionId,
+                        AllowDuplicateUrls = step.AllowDuplicateUrls,
+                        AllowEmptyResult = step.AllowEmptyResult
+                    };
                 }
                 else if (val != null)
                 {
@@ -113,7 +133,14 @@ public class ApiScraper(ITemplateService templateService)
                 }
             }
 
+            foundChildren = true;
+
             yield return preResult.Merge(result);
+        }
+
+        if (!items.Any() && context.ParentItem?.AllowEmptyResult is true)
+        {
+            yield return preResult;
         }
     }
 

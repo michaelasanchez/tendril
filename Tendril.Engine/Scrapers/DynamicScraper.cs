@@ -77,7 +77,11 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
             .Where(x => x.Order < container.Order && x.Type != ActionType.Container)
             .OrderBy(x => x.Order);
 
-        var preResult = context.ParentItem ?? new ScrapeYieldItem();
+        var preResult = (context.ParentItem ?? new ScrapeYieldItem()) with
+        {
+            ChildScraperId = null,
+            ChildUrl = null,
+        };
 
         foreach (var step in preSelectors)
         {
@@ -129,14 +133,15 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
 
                             result.Data.Fields[step.OutputField] = url;
 
-                            if (!string.IsNullOrWhiteSpace(url) && (!step.IgnoreDuplicateUrls || !context.HasVisited(url)))
+                            if (!string.IsNullOrWhiteSpace(url) && (step.AllowDuplicateUrls is true || !context.HasVisited(url)))
                             {
                                 context.MarkVisited(url); // Claim it now so subsequent items skip it
 
                                 result = result with
                                 {
+                                    ChildScraperId = step.ChildScraperDefinitionId,
                                     ChildUrl = url,
-                                    ChildScraperId = step.ChildScraperDefinitionId
+                                    AllowEmptyResult = step.AllowDuplicateUrls
                                 };
                             }
                             else
@@ -148,11 +153,11 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
                     }
                     else if (step.Type == ActionType.CallApi && step.ChildScraperDefinitionId.HasValue)
                     {
-                        context.ParentIgnoreDuplicateUrls = step.IgnoreDuplicateUrls;
-
                         result = result with
                         {
-                            ChildScraperId = step.ChildScraperDefinitionId
+                            ChildScraperId = step.ChildScraperDefinitionId,
+                            AllowDuplicateUrls = step.AllowDuplicateUrls,
+                            AllowEmptyResult = step.AllowEmptyResult
                         };
                     }
                     else
@@ -172,9 +177,14 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
             }
 
             // B. PAGINATION ACTION
-            if (items.Count == 0)
+            if (!items.Any())
             {
                 hasMore = false;
+
+                if (context.ParentItem?.AllowEmptyResult == true)
+                {
+                    yield return preResult; // Yield what we have, even if it's empty
+                }
             }
             else
             {

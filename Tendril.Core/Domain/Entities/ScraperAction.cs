@@ -25,7 +25,8 @@ public class ScraperAction
     public string? InteractionValue { get; set; }
 
     public Guid? ChildScraperDefinitionId { get; set; }
-    public bool IgnoreDuplicateUrls { get; set; } = true;
+    public bool? AllowDuplicateUrls { get; set; }
+    public bool? AllowEmptyResult { get; set; }
 
     public bool IsPaginationTrigger { get; set; }
 

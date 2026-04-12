@@ -13,7 +13,7 @@ public record ScraperActionDto(
     string? ConstantValue,
     string? InteractionValue,
     Guid? ChildScraperId,
-    bool IgnoreDuplicateUrls,
+    bool? IgnoreDuplicateUrls,
     bool IsPaginationTrigger,
     bool Disabled
 );
