@@ -18,6 +18,7 @@ public class ScraperDefinition
     public ExtractionStrategy ExtractionStrategy { get; set; } = ExtractionStrategy.Css;
     public PaginationType PaginationType { get; set; } = PaginationType.None;
     public bool UseYearTracking { get; set; } = true;
+    public bool UseRealChrome { get; set; } = false;
 
     // Health monitoring
     public ScraperState State { get; set; } = ScraperState.Unknown;

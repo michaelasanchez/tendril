@@ -1,4 +1,5 @@
 ﻿using Microsoft.Playwright;
+using Tendril.Core.Domain.Entities;
 using Tendril.Engine.Models;
 using Tendril.Engine.Playwright;
 
@@ -20,13 +21,13 @@ public class ScrapeResourceManager(IHttpClientFactory httpClientFactory)
     // Returns a disposable "Lease". 
     // If we create the browser, the Lease will dispose it when done.
     // If the browser already existed, the Lease does nothing.
-    public async Task<BrowserScope> ResolveBrowserScope(ScrapeContext context)
+    public async Task<BrowserScope> ResolveBrowserScope(ScrapeContext context, ScraperDefinition def)
     {
         bool isOwner = false;
 
-        if (context.DynamicBrowser == null)
+        if (context.DynamicBrowser == null || def.UseRealChrome)
         {
-            context.DynamicBrowser = await PlaywrightContextFactory.CreateContextAsync();
+            context.DynamicBrowser = await PlaywrightContextFactory.CreateContextAsync(def.UseRealChrome);
             isOwner = true;
         }
 

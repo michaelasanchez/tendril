@@ -1,8 +1,8 @@
 ﻿using Tendril.Engine.Models;
 
-namespace Tendril.Engine.Abstractions;
+namespace Tendril.Engine.Interfaces;
 
 public interface IJsonLdProcessor
 {
-    RawScrapedData? Extract(string htmlContent, string targetType);
+    IEnumerable<RawScrapedData> ExtractAll(string htmlContent, string targetType);
 }

@@ -1,8 +1,8 @@
 ﻿using Microsoft.Playwright;
 using Tendril.Core.Domain.Entities;
 using Tendril.Core.Domain.Enums;
-using Tendril.Engine.Abstractions;
 using Tendril.Engine.Extensions;
+using Tendril.Engine.Interfaces;
 using Tendril.Engine.Models;
 
 namespace Tendril.Engine.Scrapers;
@@ -19,8 +19,9 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
         // 1. NAVIGATION
         try
         {
-            await page.GotoAsync(definition.BaseUrl, new PageGotoOptions { Timeout = 30000 });
+            await page.AddInitScriptAsync("delete Object.getPrototypeOf(navigator).webdriver;");
 
+            await page.GotoAsync(definition.BaseUrl, new PageGotoOptions { Timeout = 30000 });
             // Get the full HTML content
             string html = await page.ContentAsync();
 
@@ -35,46 +36,26 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
         // 2. CHECK STRATEGY
         if (definition.ExtractionStrategy is ExtractionStrategy.JsonLd)
         {
-            var maxRetries = 3;
-            var retry = 0;
-
-            while (retry < maxRetries)
+            try
             {
-
-                // If we are here, we paid the "Playwright Tax" to render the page.
-                // Now just grab the full HTML string and use the shared parser.
-                var content = await page.ContentAsync();
-
-                try
+                await page.WaitForSelectorAsync("script[type='application/ld+json']", new PageWaitForSelectorOptions
                 {
-                    // We wait up to 5 seconds for the script tag to appear in the DOM
-                    await page.WaitForSelectorAsync("script[type='application/ld+json']", new PageWaitForSelectorOptions
-                    {
-                        State = WaitForSelectorState.Attached,
-                        Timeout = 5000
-                    });
-                }
-                catch (TimeoutException)
-                {
-                    // If it doesn't show up in 5s, we proceed. 
-                    // It might just not be there, or the page is slow.
-                    // The processor will return null gracefully below.
-                }
-
-                // Use the same helper used in StaticScraper (you'd inject this)
-                var result = jsonLd.Extract(content, definition.Actions.FirstOrDefault()?.Selector ?? "Event");
-
-                if (result != null)
-                {
-                    yield return new ScrapeYieldItem { Data = result };
-                }
-
-                retry++;
+                    State = WaitForSelectorState.Attached,
+                    Timeout = 5000
+                });
+            }
+            catch (TimeoutException)
+            {
+                // Not present or slow — proceed anyway, ExtractAll will return empty
             }
 
-            // TODO: here we should log that we waited/retried three times and got nothing,
-            //  probably even log the content
-            yield break; // Done.
+            var content = await page.ContentAsync();
+            var targetType = definition.Actions.FirstOrDefault()?.Selector ?? "Event";
+
+            foreach (var data in jsonLd.ExtractAll(content, targetType))
+                yield return new ScrapeYieldItem { Data = data };
+
+            yield break;
         }
 
         // 3. PRE-SCRAPE PHASE

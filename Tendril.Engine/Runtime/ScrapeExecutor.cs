@@ -133,9 +133,10 @@ public class ScrapeExecutor(
         ScrapeContext context,
         [EnumeratorCancellation] CancellationToken ct)
     {
-        await using var scope = await resources.ResolveBrowserScope(context);
+        await using var scope = await resources.ResolveBrowserScope(context, def);
 
-        var page = await scope.Browser.NewPageAsync();
+        var page = scope.Browser.Browser.Contexts[0].Pages[1];
+        //var page = await scope.Browser.NewPageAsync();
 
         try
         {

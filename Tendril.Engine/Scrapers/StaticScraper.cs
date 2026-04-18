@@ -4,8 +4,8 @@ using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using Tendril.Core.Domain.Entities;
 using Tendril.Core.Domain.Enums;
-using Tendril.Engine.Abstractions;
 using Tendril.Engine.Extensions;
+using Tendril.Engine.Interfaces;
 using Tendril.Engine.Models;
 
 namespace Tendril.Engine.Scrapers;
@@ -43,11 +43,9 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
             // 2. STRATEGY: JSON-LD
             if (def.ExtractionStrategy == ExtractionStrategy.JsonLd)
             {
-                var data = jsonLd.Extract(html, def.Actions.FirstOrDefault()?.Selector ?? "Event");
-                if (data != null) yield return new ScrapeYieldItem { Data = data };
-                // JsonLD usually doesn't have "Next Page" buttons in the DOM easily, 
-                // but if it does, the logic below handles it. 
-                // If not, we break to avoid infinite loop on same URL.
+                foreach (var data in jsonLd.ExtractAll(html, def.Actions.FirstOrDefault()?.Selector ?? "Event"))
+                    yield return new ScrapeYieldItem { Data = data };
+
                 if (def.PaginationType == PaginationType.None) yield break;
             }
 
