@@ -25,7 +25,7 @@ const summaryKeys: SummaryKey[] = [
   { key: 'ticketUrl', priority: 1 },
 ];
 
-const stickyStyle: React.CSSProperties = {};
+// const stickyStyle: React.CSSProperties = {};
 
 export const SummaryPage: React.FC<Props> = () => {
   const [summaries, setSummaries] = useState<ScraperSummary[]>([]);

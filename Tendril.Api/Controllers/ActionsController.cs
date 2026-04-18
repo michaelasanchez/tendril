@@ -76,7 +76,7 @@ public class ActionsController : ControllerBase
 
         if (action is null) return NotFound();
 
-        action.Name = request.FieldName ?? action.Name;
+        action.Name = request.Name ?? action.Name;
         action.FieldName = request.FieldName ?? action.FieldName;
         action.Selector = request.Selector ?? action.Selector;
         action.Order = request.Order ?? action.Order;

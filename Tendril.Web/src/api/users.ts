@@ -17,7 +17,7 @@ export const UserApi = {
   // POST /api/user/login
   // Sending the code as a string directly
   login(code: string, signal?: AbortSignal): Promise<UserProfile> {
-    return apiPost<UserProfile>('/api/user/login', code);
+    return apiPost<UserProfile>('/api/user/login', code, signal);
   },
 
   // POST /api/user/logout

@@ -91,12 +91,12 @@ export const ActionsTab: React.FC<Props> = ({
   };
 
   const save = async () => {
-    if (!editing.fieldName || !editing.type) return;
+    if (!editing.type) return;
 
     if (isNew) {
       await ScrapersApi.createAction(scraper.id, {
         name: editing.name ?? '',
-        fieldName: editing.fieldName,
+        fieldName: editing.fieldName ?? '',
         selector: editing.selector ?? '',
         order: editing.order ?? actions.length,
         root: editing.root ?? false,
@@ -146,11 +146,11 @@ export const ActionsTab: React.FC<Props> = ({
     await load();
   };
 
-  const remove = async (sel: ScraperAction) => {
-    if (!window.confirm(`Delete selector "${sel.fieldName}"?`)) return;
-    await ScrapersApi.deleteAction(scraper.id, sel.id);
-    await load();
-  };
+  // const remove = async (sel: ScraperAction) => {
+  //   if (!window.confirm(`Delete selector "${sel.fieldName}"?`)) return;
+  //   await ScrapersApi.deleteAction(scraper.id, sel.id);
+  //   await load();
+  // };
 
   return (
     <>

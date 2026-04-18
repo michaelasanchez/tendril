@@ -9,6 +9,8 @@ namespace Tendril.Engine.Scrapers;
 
 public class DynamicScraper(IJsonLdProcessor jsonLd)
 {
+    private static readonly string ProcessedClass = "tendril-processed";
+
     public async IAsyncEnumerable<ScrapeYieldItem> ExecuteAsync(
         IPage page,
         ScraperDefinition definition,
@@ -18,6 +20,12 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
         try
         {
             await page.GotoAsync(definition.BaseUrl, new PageGotoOptions { Timeout = 30000 });
+
+            // Get the full HTML content
+            string html = await page.ContentAsync();
+
+            // Output to console
+            ;
         }
         catch (Exception ex)
         {
@@ -105,8 +113,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
 
         do
         {
-            // A. EXTRACT VISIBLE ITEMS
-            var items = await page.QuerySelectorAllAsync(container.Selector);
+            var items = await page.QuerySelectorAllAsync($"{container.Selector}:not(.{ProcessedClass})");
 
             foreach (var item in items)
             {
@@ -166,6 +173,8 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
                         await ProcessSelector(page, item, step, result.Data);
                     }
                 }
+
+                await item.EvaluateAsync($"el => el.classList.add('{ProcessedClass}')");
 
                 // Dedup check (simple hash of fields)
                 var signature = result.Data.GetSignature();
