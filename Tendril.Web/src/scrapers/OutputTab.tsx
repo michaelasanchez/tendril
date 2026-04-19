@@ -109,12 +109,21 @@ export const OutputTab: React.FC<Props> = ({
         (e) => startOfDay(new Date(e.startUtc)) <= today,
       ).length;
 
+      // Default category show to true
+      const categories = Object.keys(stats.category).reduce((a, c) => {
+        a[c] ??= true;
+        return a;
+      }, {} as ShowCategory);
+
       setStats(stats);
+      setShow({
+        ...show,
+        category: categories
+      })
     }
   }, [events]);
 
   useEffect(() => {
-    void loadEvents();
   }, [scraperId]);
 
   const filteredEvents = useMemo(() => {

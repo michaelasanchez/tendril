@@ -220,7 +220,7 @@ public class IngestionService(
     {
         var changes = new List<RevisionResult>();
 
-        current.Category = Update("Category", current.Category, incoming.Category, changes);
+        current.CategoryId = Update("Category", current.CategoryId, incoming.CategoryId, changes);
         current.Title = Update("Title", current.Title, incoming.Title, changes);
         current.Location = Update("Location", current.Location, incoming.Location, changes);
         current.Description = Update("Description", current.Description, incoming.Description, changes);

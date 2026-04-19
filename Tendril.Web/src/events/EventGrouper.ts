@@ -24,7 +24,7 @@ function groupEventsByDay(events: Event[]): EventGroup[] {
       const dateObj = parse(g, 'yyyy-MM-dd', new Date());
 
       return {
-        label: format(dateObj, 'MMM dd'),
+        label: format(dateObj, 'EEEE, MMM dd'),
         events: grouped[g],
       };
     });
