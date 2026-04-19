@@ -25,18 +25,18 @@ public class ScrapeResourceManager(IHttpClientFactory httpClientFactory)
     {
         bool isOwner = false;
 
-        // TODO: for now we just dispose and recreate the browser if UseRealChrome changes,
-        //  but we could be smarter about this if needed
-        if (!def.UseHeadlessBrowser && context.DynamicBrowser != null)
+        // TODO: for now we just dispose and recreate the browser if this option changes,
+        //  but we could be smarter about this if needed -> Dictionary<int, IBrowserContext>
+        if (!def.UseHeadlessBrowser && context.BrowserContext != null)
         {
-            await context.DynamicBrowser.DisposeAsync();
+            await context.BrowserContext.DisposeAsync();
 
-            context.DynamicBrowser = null;
+            context.BrowserContext = null;
         }
 
-        if (context.DynamicBrowser == null)
+        if (context.BrowserContext == null)
         {
-            context.DynamicBrowser = await PlaywrightContextFactory.CreateContextAsync(def);
+            context.BrowserContext = await PlaywrightContextFactory.CreateContextAsync(def);
             isOwner = true;
         }
 
@@ -47,16 +47,16 @@ public class ScrapeResourceManager(IHttpClientFactory httpClientFactory)
     // --- HELPER CLASSES ---
     public readonly struct BrowserScope(ScrapeContext context, bool isOwner) : IAsyncDisposable
     {
-        // The non-nullable reference you wanted!
-        public IBrowserContext Browser => context.DynamicBrowser!;
+        public IBrowserContext BrowserContext => context.BrowserContext!;
+
+        public IPage? GetPage() => BrowserContext!.Pages.FirstOrDefault();
 
         public async ValueTask DisposeAsync()
         {
-            // Only dispose if we are the ones who created it
-            if (isOwner && context.DynamicBrowser != null)
+            if (isOwner && context.BrowserContext != null)
             {
-                await context.DynamicBrowser.DisposeAsync();
-                context.DynamicBrowser = null;
+                await context.BrowserContext.DisposeAsync();
+                context.BrowserContext = null;
             }
         }
     }

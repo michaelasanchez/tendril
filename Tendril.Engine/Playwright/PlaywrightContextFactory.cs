@@ -9,7 +9,9 @@ public static class PlaywrightContextFactory
     private const string ChromePath = @"C:\Program Files\Google\Chrome\Application\chrome.exe";
 
     private static IPlaywright? _playwright;
+
     private static IBrowser? _browser;
+
     private static Process? _process;
 
     private static readonly BrowserNewContextOptions DesktopOptions = new()
@@ -62,8 +64,8 @@ public static class PlaywrightContextFactory
 
     private static async Task<IBrowserContext> ScrapeWithPersistentChrome(IPlaywright playwright, ScraperDefinition def)
     {
-        string userDataDir = def.Id.ToString(); // @"C:\temp\meijer_scraping_profile";
-        string targetUrl = def.BaseUrl; // "https://www.meijergardens.org/calendar/";
+        string userDataDir = $@"C:\temp\{def.Id}";
+        string targetUrl = def.BaseUrl;
 
         // 1. Launch the process
         _process = new Process();

@@ -52,42 +52,6 @@ public class ScrapeExecutor(
         }
     }
 
-    // --- CHILD DISPATCHER ---
-    private async IAsyncEnumerable<RawScrapedData> RunChildDispatchAsync(
-        ScrapeYieldItem parentItem,
-        ScrapeContext context,
-        [EnumeratorCancellation] CancellationToken ct)
-    {
-        var childDef = await repo.GetByIdWithDetailsAsync(parentItem.ChildScraperId!.Value, ct);
-
-        if (childDef == null) yield break;
-
-        var previousBaseUrl = childDef.BaseUrl; // Store previous base URL to restore later
-
-        if (parentItem.ChildUrl is not null)
-        {
-            childDef.BaseUrl = parentItem.ChildUrl;
-        }
-
-        context.ParentItem = parentItem;
-
-        IAsyncEnumerable<RawScrapedData> pipeline = childDef.ExecutionMode switch
-        {
-            ExecutionMode.Static => RunStaticPipelineAsync(childDef, context, ct),
-            ExecutionMode.Dynamic => RunDynamicPipelineAsync(childDef, context, ct),
-            ExecutionMode.Api => RunApiPipelineAsync(childDef, context, ct),
-            _ => throw new ArgumentOutOfRangeException(nameof(childDef.ExecutionMode))
-        };
-
-        await foreach (var res in pipeline)
-        {
-            yield return res;
-        }
-
-        childDef.BaseUrl = previousBaseUrl;
-        context.ParentItem = null;
-    }
-
     // --- PIPELINE 1: STATIC --- //
     private async IAsyncEnumerable<RawScrapedData> RunStaticPipelineAsync(
         ScraperDefinition def,
@@ -136,8 +100,8 @@ public class ScrapeExecutor(
         await using var scope = await resources.ResolveBrowserScope(context, def);
 
         var page = def.UseHeadlessBrowser
-            ? await scope.Browser.NewPageAsync()
-            : scope.Browser.Browser.Contexts[0].Pages[1];
+            ? await scope.BrowserContext.NewPageAsync()
+            : scope.GetPage() ?? await scope.BrowserContext.NewPageAsync();
 
         try
         {
@@ -214,4 +178,41 @@ public class ScrapeExecutor(
             }
         }
     }
+
+    // --- CHILD DISPATCHER ---
+    private async IAsyncEnumerable<RawScrapedData> RunChildDispatchAsync(
+        ScrapeYieldItem parentItem,
+        ScrapeContext context,
+        [EnumeratorCancellation] CancellationToken ct)
+    {
+        var childDef = await repo.GetByIdWithDetailsAsync(parentItem.ChildScraperId!.Value, ct);
+
+        if (childDef == null) yield break;
+
+        var previousBaseUrl = childDef.BaseUrl; // Store previous base URL to restore later
+
+        if (parentItem.ChildUrl is not null)
+        {
+            childDef.BaseUrl = parentItem.ChildUrl;
+        }
+
+        context.ParentItem = parentItem;
+
+        IAsyncEnumerable<RawScrapedData> pipeline = childDef.ExecutionMode switch
+        {
+            ExecutionMode.Static => RunStaticPipelineAsync(childDef, context, ct),
+            ExecutionMode.Dynamic => RunDynamicPipelineAsync(childDef, context, ct),
+            ExecutionMode.Api => RunApiPipelineAsync(childDef, context, ct),
+            _ => throw new ArgumentOutOfRangeException(nameof(childDef.ExecutionMode))
+        };
+
+        await foreach (var res in pipeline)
+        {
+            yield return res;
+        }
+
+        childDef.BaseUrl = previousBaseUrl;
+        context.ParentItem = null;
+    }
+
 }

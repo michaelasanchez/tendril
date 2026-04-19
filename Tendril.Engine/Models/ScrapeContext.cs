@@ -5,7 +5,7 @@ namespace Tendril.Engine.Models;
 
 public class ScrapeContext
 {
-    public IBrowserContext? DynamicBrowser { get; set; }
+    public IBrowserContext? BrowserContext { get; set; }
     public HttpClient? StaticClient { get; set; }
 
     public ScrapeYieldItem? ParentItem { get; set; }
