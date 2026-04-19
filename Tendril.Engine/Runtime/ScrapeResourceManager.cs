@@ -25,9 +25,18 @@ public class ScrapeResourceManager(IHttpClientFactory httpClientFactory)
     {
         bool isOwner = false;
 
-        if (context.DynamicBrowser == null || def.UseRealChrome)
+        // TODO: for now we just dispose and recreate the browser if UseRealChrome changes,
+        //  but we could be smarter about this if needed
+        if (!def.UseHeadlessBrowser && context.DynamicBrowser != null)
         {
-            context.DynamicBrowser = await PlaywrightContextFactory.CreateContextAsync(def.UseRealChrome);
+            await context.DynamicBrowser.DisposeAsync();
+
+            context.DynamicBrowser = null;
+        }
+
+        if (context.DynamicBrowser == null)
+        {
+            context.DynamicBrowser = await PlaywrightContextFactory.CreateContextAsync(def);
             isOwner = true;
         }
 
@@ -48,23 +57,6 @@ public class ScrapeResourceManager(IHttpClientFactory httpClientFactory)
             {
                 await context.DynamicBrowser.DisposeAsync();
                 context.DynamicBrowser = null;
-            }
-        }
-    }
-
-    private class NoOpDisposable : IAsyncDisposable
-    {
-        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
-    }
-
-    private class BrowserOwnerDisposable(ScrapeContext context) : IAsyncDisposable
-    {
-        public async ValueTask DisposeAsync()
-        {
-            if (context.DynamicBrowser != null)
-            {
-                await context.DynamicBrowser.DisposeAsync();
-                context.DynamicBrowser = null; // Null it out so upstream logic knows it's gone
             }
         }
     }

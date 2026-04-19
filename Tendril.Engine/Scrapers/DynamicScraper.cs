@@ -19,9 +19,12 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
         // 1. NAVIGATION
         try
         {
-            await page.AddInitScriptAsync("delete Object.getPrototypeOf(navigator).webdriver;");
+            //await page.AddInitScriptAsync("delete Object.getPrototypeOf(navigator).webdriver;");
 
-            await page.GotoAsync(definition.BaseUrl, new PageGotoOptions { Timeout = 30000 });
+            if (page.Url != definition.BaseUrl)
+            {
+                await page.GotoAsync(definition.BaseUrl, new PageGotoOptions { Timeout = 30000 });
+            }
             // Get the full HTML content
             string html = await page.ContentAsync();
 

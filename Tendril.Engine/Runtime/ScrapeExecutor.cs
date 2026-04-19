@@ -135,8 +135,9 @@ public class ScrapeExecutor(
     {
         await using var scope = await resources.ResolveBrowserScope(context, def);
 
-        var page = scope.Browser.Browser.Contexts[0].Pages[1];
-        //var page = await scope.Browser.NewPageAsync();
+        var page = def.UseHeadlessBrowser
+            ? await scope.Browser.NewPageAsync()
+            : scope.Browser.Browser.Contexts[0].Pages[1];
 
         try
         {
