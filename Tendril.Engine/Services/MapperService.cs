@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using HtmlAgilityPack;
+using System.Data;
 using System.Globalization;
 using System.Net;
 using System.Text.Json;
@@ -347,6 +348,15 @@ public class MapperService : IMapperService
                 if (string.IsNullOrWhiteSpace(primaryInput)) return primaryInput;
 
                 return WebUtility.HtmlDecode(primaryInput);
+            }
+
+            case TransformType.StripHtml:
+            {
+                if (string.IsNullOrWhiteSpace(primaryInput)) return primaryInput;
+
+                var doc = new HtmlDocument();
+                doc.LoadHtml(primaryInput);
+                return doc.DocumentNode.InnerText;
             }
 
             case TransformType.SrcSetToUrl:

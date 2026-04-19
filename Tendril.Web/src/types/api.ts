@@ -122,6 +122,8 @@ export type TransformType =
   | 'ToLower'
   | 'ToUpper'
   | 'Currency'
+  | 'DecodeHtml'
+  | 'StripHtml'
   | 'SrcSetToUrl';
 
 export interface ScraperMappingRule {

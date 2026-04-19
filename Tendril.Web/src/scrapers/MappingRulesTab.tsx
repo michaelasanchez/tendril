@@ -41,6 +41,7 @@ const transformTypeOptions: SelectOption[] = [
   'ToUpper',
   'Currency',
   'DecodeHtml',
+  'StripHtml',
   'SrcSetToUrl',
 ].map((o) => ({ value: o, label: o }));
 

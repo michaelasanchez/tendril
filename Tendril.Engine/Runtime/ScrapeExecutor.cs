@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using Microsoft.Playwright;
+using System.Runtime.CompilerServices;
 using Tendril.Core.Domain.Entities;
 using Tendril.Core.Domain.Enums;
 using Tendril.Core.Interfaces.Repositories;
@@ -97,9 +98,11 @@ public class ScrapeExecutor(
         ScrapeContext context,
         [EnumeratorCancellation] CancellationToken ct)
     {
+        IPage? page = null;
+
         await using var scope = await resources.ResolveBrowserScope(context, def);
 
-        var page = def.UseHeadlessBrowser
+        page = def.UseHeadlessBrowser
             ? await scope.BrowserContext.NewPageAsync()
             : scope.GetPage() ?? await scope.BrowserContext.NewPageAsync();
 
@@ -136,8 +139,18 @@ public class ScrapeExecutor(
         }
         finally
         {
-            // Close the tab
-            await page.CloseAsync();
+            try
+            {
+                await page.CloseAsync().WaitAsync(TimeSpan.FromSeconds(5));
+            }
+            catch (TimeoutException)
+            {
+                // page.Close hung, likely a stale CDP connection - continue cleanup
+            }
+            catch (Exception)
+            {
+                // ignore any other close errors, the context dispose will handle it
+            }
         }
     }
 

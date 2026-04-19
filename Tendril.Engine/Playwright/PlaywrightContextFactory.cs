@@ -4,15 +4,15 @@ using Tendril.Core.Domain.Entities;
 
 namespace Tendril.Engine.Playwright;
 
-public static class PlaywrightContextFactory
+public sealed class PlaywrightContextFactory : IAsyncDisposable
 {
     private const string ChromePath = @"C:\Program Files\Google\Chrome\Application\chrome.exe";
+    private static readonly SemaphoreSlim _lock = new(1, 1);
 
-    private static IPlaywright? _playwright;
-
-    private static IBrowser? _browser;
-
-    private static Process? _process;
+    private IPlaywright? _playwright;
+    private IBrowser? _browser;
+    private IBrowser? _cdpBrowser;
+    private Process? _process;
 
     private static readonly BrowserNewContextOptions DesktopOptions = new()
     {
@@ -20,35 +20,62 @@ public static class PlaywrightContextFactory
         UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     };
 
-    public static async Task<IBrowserContext> CreateContextAsync(ScraperDefinition def)
+    public async Task<IBrowserContext> CreateContextAsync(ScraperDefinition def)
     {
-        if (_browser == null)
+        await _lock.WaitAsync();
+        try
         {
-            _playwright = await Microsoft.Playwright.Playwright.CreateAsync();
+            _playwright ??= await Microsoft.Playwright.Playwright.CreateAsync();
 
             if (!def.UseHeadlessBrowser)
             {
-                return await ScrapeWithPersistentChrome(_playwright, def);
-            }
-            else
-            {
-                _browser = await _playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+                if (_cdpBrowser == null || !_cdpBrowser.Contexts.Any())
                 {
-                    Headless = true
-                });
-            }
-        }
+                    if (_cdpBrowser != null)
+                    {
+                        await _cdpBrowser.DisposeAsync();
+                        _cdpBrowser = null;
+                    }
 
-        return await _browser.NewContextAsync(DesktopOptions);
+                    if (_process != null && !_process.HasExited)
+                    {
+                        _process.Kill();
+                        _process.Dispose();
+                        _process = null;
+                    }
+
+                    return await ScrapeWithPersistentChrome(_playwright, def);
+                }
+
+                return _cdpBrowser.Contexts[0];
+            }
+
+            _browser ??= await _playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+            {
+                Headless = true
+            });
+
+            return await _browser.NewContextAsync(DesktopOptions);
+        }
+        finally
+        {
+            _lock.Release();
+        }
     }
 
-    public static async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         if (_browser != null)
         {
             await _browser.CloseAsync();
             await _browser.DisposeAsync();
             _browser = null;
+        }
+
+        if (_cdpBrowser != null)
+        {
+            await _cdpBrowser.DisposeAsync();
+            _cdpBrowser = null;
         }
 
         _playwright?.Dispose();
@@ -62,26 +89,44 @@ public static class PlaywrightContextFactory
         }
     }
 
-    private static async Task<IBrowserContext> ScrapeWithPersistentChrome(IPlaywright playwright, ScraperDefinition def)
+    private async Task<IBrowserContext> ScrapeWithPersistentChrome(
+        IPlaywright playwright,
+        ScraperDefinition def)
     {
         string userDataDir = $@"C:\temp\{def.Id}";
-        string targetUrl = def.BaseUrl;
 
-        // 1. Launch the process
         _process = new Process();
         _process.StartInfo.FileName = ChromePath;
-        _process.StartInfo.Arguments = $"--remote-debugging-port=9222 --user-data-dir=\"{userDataDir}\" --remote-allow-origins=* \"{targetUrl}\"";
+        _process.StartInfo.Arguments =
+            $"--remote-debugging-port=9222 --user-data-dir=\"{userDataDir}\" " +
+            $"--remote-allow-origins=* \"{def.BaseUrl}\"";
         _process.Start();
 
-        // 2. Wait for Chrome to actually wake up
-        await Task.Delay(3000);
+        await WaitForChromeAsync("http://127.0.0.1:9222");
 
-        // 3. Connect Playwright
-        var browser = await playwright.Chromium.ConnectOverCDPAsync("http://127.0.0.1:9222");
+        _cdpBrowser = await playwright.Chromium.ConnectOverCDPAsync("http://127.0.0.1:9222");
 
-        // 4. Find the tab that was opened by the launch command
-        var context = browser.Contexts[0];
+        return _cdpBrowser.Contexts[0];
+    }
 
-        return context;
+    private static async Task WaitForChromeAsync(string url, int timeoutMs = 10000)
+    {
+        using var http = new HttpClient();
+        var sw = Stopwatch.StartNew();
+
+        while (sw.ElapsedMilliseconds < timeoutMs)
+        {
+            try
+            {
+                await http.GetAsync(url + "/json/version");
+                return;
+            }
+            catch
+            {
+                await Task.Delay(200);
+            }
+        }
+
+        throw new TimeoutException("Chrome did not become ready in time.");
     }
 }

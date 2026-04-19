@@ -18,18 +18,27 @@ interface Props {
   loadEvents: () => Promise<void>;
 }
 
-interface Show {
+interface ShowStatus {
   past: boolean;
   pending: boolean;
   published: boolean;
   suppressed: boolean;
 }
 
+interface ShowCategory {
+  [category: string]: boolean;
+}
+
+interface Show {
+  status: ShowStatus;
+  category: ShowCategory;
+}
+
 interface CategoryStats {
   [category: string]: number;
 }
 
-type StatusStats = { [key in keyof Show]: number };
+type StatusStats = { [key in keyof ShowStatus]: number };
 
 interface Stats {
   total: StatusStats;
@@ -55,10 +64,13 @@ export const OutputTab: React.FC<Props> = ({
   loadEvents,
 }) => {
   const [show, setShow] = useState<Show>({
-    past: false,
-    pending: true,
-    published: true,
-    suppressed: false,
+    status: {
+      past: false,
+      pending: true,
+      published: true,
+      suppressed: false,
+    },
+    category: {},
   });
   const [stats, setStats] = useState<Stats>(defaultStats());
 
@@ -83,6 +95,12 @@ export const OutputTab: React.FC<Props> = ({
           }
 
           a.category[e.categoryName]++;
+        } else {
+          if (!a.category['None']) {
+            a.category['None'] = 0;
+          }
+
+          a.category['None']++;
         }
         return a;
       }, defaultStats());
@@ -102,23 +120,31 @@ export const OutputTab: React.FC<Props> = ({
   const filteredEvents = useMemo(() => {
     let filtered: Event[] = [...events];
 
-    if (!show.past) {
+    if (!show.status.past) {
       filtered = filtered.filter(
         (e) => startOfDay(new Date(e.startUtc)) >= today,
       );
     }
 
-    if (!show.pending) {
+    if (!show.status.pending) {
       filtered = filtered.filter((e) => e.status !== 'Pending');
     }
 
-    if (!show.published) {
+    if (!show.status.published) {
       filtered = filtered.filter((e) => e.status !== 'Published');
     }
 
-    if (!show.suppressed) {
+    if (!show.status.suppressed) {
       filtered = filtered.filter((e) => e.status !== 'Suppressed');
     }
+
+    var categories = Object.keys(stats.category);
+
+    categories.forEach((c) => {
+      if (!show.category[c]) {
+        filtered = filtered.filter((e) => e.categoryName !== c);
+      }
+    });
 
     return filtered;
   }, [events, show]);
@@ -128,7 +154,14 @@ export const OutputTab: React.FC<Props> = ({
       <div className={pageStyles.pageHeader}>
         <h3>Output</h3>
       </div>
-      <Card className={cn(cardStyles.BgCard, cardStyles.MarginBottom, cardStyles.Opaque, styles.FilterRow)}>
+      <Card
+        className={cn(
+          cardStyles.BgCard,
+          cardStyles.MarginBottom,
+          cardStyles.Opaque,
+          styles.FilterRow,
+        )}
+      >
         <Card.Body
           style={{
             display: 'flex',
@@ -140,32 +173,54 @@ export const OutputTab: React.FC<Props> = ({
             <div>
               <FormCheck
                 label={`Past (${stats.total.past})`}
-                checked={show.past}
-                onChange={() => setShow({ ...show, past: !show.past })}
+                checked={show.status.past}
+                onChange={() =>
+                  setShow({
+                    ...show,
+                    status: { ...show.status, past: !show.status.past },
+                  })
+                }
               />
             </div>
             <div>
               <FormCheck
                 label={`Pending (${stats.total.pending})`}
-                checked={show.pending}
-                onChange={() => setShow({ ...show, pending: !show.pending })}
+                checked={show.status.pending}
+                onChange={() =>
+                  setShow({
+                    ...show,
+                    status: { ...show.status, pending: !show.status.pending },
+                  })
+                }
               />
             </div>
             <div>
               <FormCheck
                 label={`Published (${stats.total.published})`}
-                checked={show.published}
+                checked={show.status.published}
                 onChange={() =>
-                  setShow({ ...show, published: !show.published })
+                  setShow({
+                    ...show,
+                    status: {
+                      ...show.status,
+                      published: !show.status.published,
+                    },
+                  })
                 }
               />
             </div>
             <div>
               <FormCheck
                 label={`Archived (${stats.total.suppressed})`}
-                checked={show.suppressed}
+                checked={show.status.suppressed}
                 onChange={() =>
-                  setShow({ ...show, suppressed: !show.suppressed })
+                  setShow({
+                    ...show,
+                    status: {
+                      ...show.status,
+                      suppressed: !show.status.suppressed,
+                    },
+                  })
                 }
               />
             </div>
@@ -173,7 +228,19 @@ export const OutputTab: React.FC<Props> = ({
           <div>
             {Object.entries(stats?.category).map(([category, count]) => (
               <div key={category}>
-                {category}: {count}
+                <FormCheck
+                  label={`${category}: ${count}`}
+                  checked={show.category[category]}
+                  onChange={() =>
+                    setShow({
+                      ...show,
+                      category: {
+                        ...show.category,
+                        [category]: !show.category[category],
+                      },
+                    })
+                  }
+                />
               </div>
             ))}
           </div>
@@ -199,9 +266,14 @@ export const OutputTab: React.FC<Props> = ({
                 flexDirection: 'row',
                 flexGrow: 1,
                 opacity: e.status === 'Suppressed' ? 0.4 : 1,
-                border:
-                  e.isReviewRequired ? '2px solid #7a3333' : e.status === 'Pending' ? '2px dashed orange' : undefined,
-                  boxShadow: e.isReviewRequired ? '0 0 10px #c96f6f88' : undefined,
+                border: e.isReviewRequired
+                  ? '2px solid #7a3333'
+                  : e.status === 'Pending'
+                    ? '2px dashed orange'
+                    : undefined,
+                boxShadow: e.isReviewRequired
+                  ? '0 0 10px #c96f6f88'
+                  : undefined,
               }}
             >
               {
@@ -214,25 +286,42 @@ export const OutputTab: React.FC<Props> = ({
                   }}
                 />
               }
-              <Card.Body style={{ display: 'flex', gap: '1em', justifyContent: 'space-between'}}>
+              <Card.Body
+                style={{
+                  display: 'flex',
+                  gap: '1em',
+                  justifyContent: 'space-between',
+                }}
+              >
                 <div>
-                <h3>{e.title}</h3>
-                <p
-                  className={cn(
-                    styles.Clamp,
-                    !e.description && styles.Muted,
-                  )}
-                >
-                  {e.description ?? 'No description available'}
-                </p>
-                <label>
-                  <h4>{format(new Date(e.startUtc), 'MMM dd yyy')}</h4>
-                  {format(new Date(e.startUtc), 'hh:mm aa')}
-                </label>
+                  <h3>{e.title}</h3>
+                  <p
+                    className={cn(styles.Clamp, !e.description && styles.Muted)}
+                  >
+                    {e.description ?? 'No description available'}
+                  </p>
+                  <label>
+                    <h4>{format(new Date(e.startUtc), 'MMM dd yyy')}</h4>
+                    {format(new Date(e.startUtc), 'hh:mm aa')}
+                  </label>
+                  <div>
+                    {e.detailsUrl && (
+                      <SquareButton href={e.detailsUrl} target="_blank">
+                        Details
+                      </SquareButton>
+                    )}
+                    {e.ticketUrl && (
+                      <SquareButton href={e.ticketUrl} target="_blank">
+                        Tickets
+                      </SquareButton>
+                    )}
+                  </div>
+                </div>
                 <div>
-                  {e.detailsUrl && <SquareButton href={e.detailsUrl} target="_blank">Details</SquareButton>}
-                  {e.ticketUrl && <SquareButton href={e.ticketUrl} target="_blank">Tickets</SquareButton>}
-                </div></div><div><SquareButton><Icon name="copy" /></SquareButton></div>
+                  <SquareButton>
+                    <Icon name="copy" />
+                  </SquareButton>
+                </div>
               </Card.Body>
             </Card>
             <div style={{ minWidth: '120px', width: '120px' }}>
@@ -277,7 +366,13 @@ export const OutputTab: React.FC<Props> = ({
                   name={e.status !== 'Suppressed' ? 'archive' : 'unarchive'}
                 />
               </Button>
-              <Button onClick={() => EventsApi.patch(e.id, { isReviewRequired: !e.isReviewRequired }).then(() => loadEvents())}>
+              <Button
+                onClick={() =>
+                  EventsApi.patch(e.id, {
+                    isReviewRequired: !e.isReviewRequired,
+                  }).then(() => loadEvents())
+                }
+              >
                 <Icon name={e.isReviewRequired ? 'flagOff' : 'flag'} />
               </Button>
             </div>

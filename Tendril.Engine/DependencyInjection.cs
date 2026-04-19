@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Tendril.Engine.Abstractions;
 using Tendril.Engine.Interfaces;
+using Tendril.Engine.Playwright;
 using Tendril.Engine.Runtime;
 using Tendril.Engine.Scrapers;
 using Tendril.Engine.Services;
@@ -24,6 +25,8 @@ public static class DependencyInjection
         services.AddScoped<ApiScraper>();
         services.AddScoped<DynamicScraper>();
         services.AddScoped<StaticScraper>();
+
+        services.AddSingleton<PlaywrightContextFactory>();
 
         return services;
     }

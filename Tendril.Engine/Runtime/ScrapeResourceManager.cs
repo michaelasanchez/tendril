@@ -5,7 +5,9 @@ using Tendril.Engine.Playwright;
 
 namespace Tendril.Engine.Runtime;
 
-public class ScrapeResourceManager(IHttpClientFactory httpClientFactory)
+public class ScrapeResourceManager(
+    IHttpClientFactory httpClientFactory,
+    PlaywrightContextFactory playwrightFactory)
 {
     // --- CLIENT MANAGEMENT ---
     // Ensure a client exists. We don't need a disposable return here 
@@ -36,7 +38,7 @@ public class ScrapeResourceManager(IHttpClientFactory httpClientFactory)
 
         if (context.BrowserContext == null)
         {
-            context.BrowserContext = await PlaywrightContextFactory.CreateContextAsync(def);
+            context.BrowserContext = await playwrightFactory.CreateContextAsync(def);
             isOwner = true;
         }
 
@@ -55,8 +57,18 @@ public class ScrapeResourceManager(IHttpClientFactory httpClientFactory)
         {
             if (isOwner && context.BrowserContext != null)
             {
-                await context.BrowserContext.DisposeAsync();
-                context.BrowserContext = null;
+                try
+                {
+                    await context.BrowserContext.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(10));
+                }
+                catch (TimeoutException)
+                {
+                    // stale connection, context is effectively dead anyway
+                }
+                finally
+                {
+                    context.BrowserContext = null;
+                }
             }
         }
     }

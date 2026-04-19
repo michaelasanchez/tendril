@@ -17,5 +17,6 @@ public enum TransformType
     ToUpper,
     Currency,
     DecodeHtml,
+    StripHtml,
     SrcSetToUrl
 }

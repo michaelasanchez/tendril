@@ -71,9 +71,7 @@ public class ScraperRunsController(
         var yearTracker = new YearTracker();
 
         var scraper = await scrapers.GetByIdWithDetailsAsync(scraperId, ct);
-
-        if (scraper == null)
-            return NotFound();
+        if (scraper == null) return NotFound();
 
         var raw = await rawEvents.GetMostRecentForScraperAsync(scraperId, ct);
 
