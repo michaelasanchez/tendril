@@ -8,10 +8,10 @@ import { VenuesApi } from '../api/venues';
 import { SquareButton as Button } from '../components/button';
 import { Icon } from '../components/Icon';
 import {
+  ActionsTab,
   GeneralTab,
   MappingRulesTab,
   RunsTab,
-  ActionsTab,
   SummaryTab,
 } from '../scrapers';
 import { ClassificationRulesTab } from '../scrapers/ClassificationRulesTab';
@@ -22,9 +22,9 @@ import type {
   Category,
   Event,
   Guid,
+  ScraperAction,
   ScraperAttemptHistory,
   ScraperDefinition,
-  ScraperAction,
   Venue,
 } from '../types/api';
 import styles from './ScraperEditorPage.module.css';
@@ -38,15 +38,9 @@ type TabKey =
   | 'summary'
   | 'output';
 
-interface ScraperEditorPage {
-  authorized: boolean;
-  authLoading: boolean;
-}
+interface ScraperEditorPage {}
 
-export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
-  authorized,
-  authLoading,
-}) => {
+export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({}) => {
   const { scraperId, tabId } = useParams();
   const navigate = useNavigate();
   const [events, setEvents] = useState<Event[]>([]);
@@ -56,14 +50,14 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
   const isNew = scraperId === 'new';
 
   const [parentId, setParentId] = useState<Guid | null>(null);
-  const [parentActions, setParentActions] = useState<
-    ScraperAction[] | null
-  >(null);
+  const [parentActions, setParentActions] = useState<ScraperAction[] | null>(
+    null,
+  );
 
   const activeTab = (tabId as TabKey) || 'general';
 
   const handleTabChange = (key: TabKey) => {
-    navigate(`/scrapers/${scraperId}/${key}`);
+    navigate(`/admin/scrapers/${scraperId}/${key}`);
   };
 
   /* Events */
@@ -117,7 +111,7 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
 
   // Initial load
   useEffect(() => {
-    if (authorized && scraperId !== 'new') {
+    if (scraperId !== 'new') {
       var abortController = new AbortController();
 
       void loadEvents();
@@ -125,7 +119,7 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
       void loadAttemptHistories();
       void loadCategories(abortController.signal);
     }
-  }, [scraperId, authorized]);
+  }, [scraperId]);
 
   useEffect(() => {
     const load = async () => {
@@ -164,17 +158,13 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
       }
     };
 
-    if (authorized) {
       void load();
-    }
-  }, [scraperId, isNew, authorized]);
+  }, [scraperId, isNew]);
 
   // Keep parent actions up-to-date
   useEffect(() => {
     const loadParent = async () => {
-      const parentActions = await ScrapersApi.getActions(
-        parentId as string,
-      );
+      const parentActions = await ScrapersApi.getActions(parentId as string);
 
       setParentActions(parentActions);
     };
@@ -214,7 +204,7 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
               }) as ApiParameter,
           ),
         });
-        navigate(`/scrapers/${created.id}`);
+        navigate(`/admin/scrapers/${created.id}`);
       } else if (scraperId) {
         await ScrapersApi.update(scraperId as Guid, {
           name: scraper.name,
@@ -243,9 +233,6 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
     }
   };
 
-  if (authLoading) return <div>Checking session...</div>;
-  if (!authorized) return <></>;
-
   if (!scraper) return <p>Loading…</p>;
   if (error) return <p className="error">{error}</p>;
 
@@ -254,7 +241,7 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
       <div className={pageStyles.pageHeader}>
         {/* <h2>{isNew ? 'New Scraper' : `Edit Scraper – ${scraper.name}`}</h2> */}
         <h2>{scraper.name}</h2>
-        <Button onClick={() => navigate('/scrapers')}>Back</Button>
+        <Button onClick={() => navigate('/admin/scrapers')}>Back</Button>
       </div>
 
       <Tab.Container activeKey={activeTab}>
@@ -333,7 +320,7 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
                 disabled={!parentId}
                 onClick={() => {
                   setParentActions(null);
-                  navigate(`/scrapers/${parentId}/actions`);
+                  navigate(`/admin/scrapers/${parentId}/actions`);
                   setParentId(null);
                 }}
               >
@@ -364,10 +351,7 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({
           </Tab.Pane>
 
           <Tab.Pane eventKey="mapping">
-            <MappingRulesTab
-              scraperId={scraperId as Guid}
-              actions={actions}
-            />
+            <MappingRulesTab scraperId={scraperId as Guid} actions={actions} />
           </Tab.Pane>
 
           <Tab.Pane eventKey="classification">

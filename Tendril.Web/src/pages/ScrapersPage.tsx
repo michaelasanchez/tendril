@@ -16,10 +16,7 @@ type SortKey =
 
 type SortDirection = 'asc' | 'desc';
 
-interface ScrapersPageProps {
-  authorized: boolean;
-  authLoading: boolean;
-}
+interface ScrapersPageProps {}
 
 interface Sort {
   key: SortKey;
@@ -67,10 +64,7 @@ const sortScraper = (scrapers: ScraperDefinition[], sort: Sort | null) =>
     return 0;
   });
 
-export const ScrapersPage: React.FC<ScrapersPageProps> = ({
-  authorized,
-  authLoading,
-}) => {
+export const ScrapersPage: React.FC<ScrapersPageProps> = ({}) => {
   const [scrapers, setScrapers] = useState<ScraperDefinition[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -117,11 +111,9 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({
   useEffect(() => {
     if (hasLoaded.current) return;
 
-    if (!authLoading && authorized) {
-      hasLoaded.current = true;
-      void load();
-    }
-  }, [authLoading, authorized]);
+    hasLoaded.current = true;
+    void load();
+  }, []);
 
   // Re-sort table
   useEffect(() => {
@@ -196,15 +188,12 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({
     return result;
   }, [scrapers]);
 
-  if (authLoading) return <div>Checking session...</div>;
-  if (!authorized) return <></>;
-
   return (
     <section>
       <>
         <div className={pageStyles.pageHeader}>
           <h2>Scrapers</h2>
-          <SquareButton onClick={() => navigate('/scrapers/new')}>
+          <SquareButton onClick={() => navigate('/admin/scrapers/new')}>
             New Scraper
           </SquareButton>
         </div>
@@ -255,7 +244,7 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({
                   </td>
                   <td className={tableStyles.TableActions}>
                     <div>
-                      <Button onClick={() => navigate(`/scrapers/${s.id}`)}>
+                      <Button onClick={() => navigate(`/admin/scrapers/${s.id}`)}>
                         <Icon name="edit" />
                       </Button>
                       {s.isEventFeed && (

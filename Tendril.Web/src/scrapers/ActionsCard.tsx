@@ -96,7 +96,7 @@ export const ActionsCard: React.FC<Props> = ({
                             <Button
                               onClick={() =>
                                 navigate(
-                                  `/scrapers/${s.childScraperId}/actions`,
+                                  `/admin/scrapers/${s.childScraperId}/actions`,
                                 )
                               }
                             >

@@ -1,5 +1,5 @@
 import cn from 'classnames';
-import { Navbar as BootstrapNavbar, Container } from 'react-bootstrap';
+import { Navbar as BootstrapNavbar, Container, Nav } from 'react-bootstrap';
 import type { AppTheme } from '../../hooks';
 import { cardStyles } from '../../styles';
 import { SquareButton } from '../button';
@@ -8,7 +8,6 @@ import styles from './Navbar.module.css';
 interface Props {
   authorized: boolean;
   theme: AppTheme;
-  onLogin: () => void;
   onLogout: () => void;
   onThemeToggle: () => void;
 }
@@ -16,12 +15,11 @@ interface Props {
 export const Navbar: React.FC<Props> = ({
   authorized,
   theme,
-  onLogin,
   onLogout,
   onThemeToggle,
 }) => {
   return (
-    <BootstrapNavbar className={styles.Navbar}>
+    <BootstrapNavbar className={styles.Navbar} expand={false}>
       <Container>
         <div className={styles.Group}>
           <div className={styles.Logo}>
@@ -41,16 +39,24 @@ export const Navbar: React.FC<Props> = ({
               <Icon name={theme} />
             </SquareButton>
           </div>
-          {!authorized ? (
-            <SquareButton onClick={onLogin}>
-              <Icon name="login" />
-            </SquareButton>
-          ) : (
-            <SquareButton onClick={onLogout}>
-              <Icon name="logout" />
-            </SquareButton>
+          {authorized && (
+            <>
+              <SquareButton onClick={onLogout}>
+                <Icon name="logout" />
+              </SquareButton>
+              <BootstrapNavbar.Toggle />
+            </>
           )}
         </div>
+        <BootstrapNavbar.Collapse>
+          <Nav>
+            <Nav.Link href="/admin/scrapers">Scrapers</Nav.Link>
+            <Nav.Link href="/admin/categories">Categories</Nav.Link>
+            <Nav.Link href="/admin/tags">Tags</Nav.Link>
+            <Nav.Link href="/admin/venues">Venues</Nav.Link>
+            <Nav.Link href="/admin/summary">Summary</Nav.Link>
+          </Nav>
+        </BootstrapNavbar.Collapse>
       </Container>
     </BootstrapNavbar>
   );
