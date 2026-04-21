@@ -33,6 +33,12 @@ export interface CreateScraperRequest {
 
 export interface UpdateScraperRequest extends Partial<CreateScraperRequest> {}
 
+export type ReorderDirection = 'up' | 'down';
+
+export interface ReorderScraperRequest {
+  direction: ReorderDirection;
+}
+
 export const ScrapersApi = {
   getAll(): Promise<ScraperDefinition[]> {
     return apiGet('/scrapers');
@@ -100,6 +106,10 @@ export const ScrapersApi = {
 
   deleteAction(scraperId: Guid, actionId: Guid): Promise<void> {
     return apiDelete(`/scrapers/${scraperId}/actions/${actionId}`);
+  },
+
+  reorderAction(scraperId: Guid, actionId: Guid, req: ReorderScraperRequest): Promise<void> {
+    return apiPost(`/scrapers/${scraperId}/actions/${actionId}/reorder`, req);
   },
 
   // Classification rules

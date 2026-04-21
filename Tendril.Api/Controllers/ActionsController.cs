@@ -106,4 +106,43 @@ public class ActionsController : ControllerBase
 
         return NoContent();
     }
+
+    [HttpPost("{id:guid}/reorder")]
+    public async Task<ActionResult> ReorderAction(Guid scraperId, Guid id, ReorderActionRequest request, CancellationToken cancellationToken)
+    {
+        var actions = await _actions.GetByScraperIdAsync(id, cancellationToken);
+
+        if (actions.Count == 0)
+        {
+            return NotFound();
+        }
+
+        var normalized = actions
+            .Where(a => !a.Disabled)
+            .OrderBy(a => a.Order)
+            .ThenBy(a => a.Id)
+            .Select((a, i) => { a.Order = i; return a; })
+            .ToList();
+
+        var index = normalized.FindIndex(a => a.Id == id);
+
+        if (index == -1)
+        {
+            return NotFound();
+        }
+
+        var swapIndex = request.Direction == ReorderDirection.Up ? index - 1 : index + 1;
+
+        if (swapIndex < 0 || swapIndex >= normalized.Count)
+        {
+            return BadRequest("Action cannot be moved further in that direction.");
+        }
+
+        // Swap
+        (normalized[swapIndex].Order, normalized[index].Order) = (normalized[index].Order, normalized[swapIndex].Order);
+
+        await _actions.UpdateRangeAsync(normalized, cancellationToken);
+
+        return NoContent();
+    }
 }

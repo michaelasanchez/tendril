@@ -26,21 +26,27 @@ public class ActionRepository : IActionRepository
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
 
-    public async Task AddAsync(ScraperAction selector, CancellationToken cancellationToken = default)
+    public async Task AddAsync(ScraperAction action, CancellationToken cancellationToken = default)
     {
-        _db.Actions.Add(selector);
+        _db.Actions.Add(action);
         await _db.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task UpdateAsync(ScraperAction selector, CancellationToken cancellationToken = default)
+    public async Task UpdateAsync(ScraperAction action, CancellationToken cancellationToken = default)
     {
-        _db.Actions.Update(selector);
+        _db.Actions.Update(action);
         await _db.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task DeleteAsync(ScraperAction selector, CancellationToken cancellationToken = default)
+    public async Task UpdateRangeAsync(IEnumerable<ScraperAction> actions, CancellationToken cancellationToken = default)
     {
-        _db.Actions.Remove(selector);
+        _db.Actions.UpdateRange(actions);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task DeleteAsync(ScraperAction action, CancellationToken cancellationToken = default)
+    {
+        _db.Actions.Remove(action);
         await _db.SaveChangesAsync(cancellationToken);
     }
 }

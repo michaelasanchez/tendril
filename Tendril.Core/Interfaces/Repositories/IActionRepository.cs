@@ -4,7 +4,8 @@ public interface IActionRepository
 {
     Task<List<ScraperAction>> GetByScraperIdAsync(Guid scraperId, CancellationToken cancellationToken = default);
     Task<ScraperAction?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
-    Task AddAsync(ScraperAction selector, CancellationToken cancellationToken = default);
-    Task UpdateAsync(ScraperAction selector, CancellationToken cancellationToken = default);
-    Task DeleteAsync(ScraperAction selector, CancellationToken cancellationToken = default);
+    Task AddAsync(ScraperAction action, CancellationToken cancellationToken = default);
+    Task UpdateAsync(ScraperAction action, CancellationToken cancellationToken = default);
+    Task UpdateRangeAsync(IEnumerable<ScraperAction> actions, CancellationToken cancellationToken = default);
+    Task DeleteAsync(ScraperAction action, CancellationToken cancellationToken = default);
 }
