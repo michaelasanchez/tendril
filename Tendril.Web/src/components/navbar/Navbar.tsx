@@ -39,22 +39,20 @@ export const Navbar: React.FC<Props> = ({
               <Icon name={theme} />
             </SquareButton>
           </div>
-          {authorized && (
-            <>
-              <SquareButton onClick={onLogout}>
-                <Icon name="logout" />
-              </SquareButton>
-              <BootstrapNavbar.Toggle />
-            </>
-          )}
+          {authorized && <BootstrapNavbar.Toggle />}
         </div>
         <BootstrapNavbar.Collapse>
-          <Nav>
+          <Nav className={styles.NavRight}>
             <Nav.Link href="/admin/scrapers">Scrapers</Nav.Link>
             <Nav.Link href="/admin/categories">Categories</Nav.Link>
             <Nav.Link href="/admin/tags">Tags</Nav.Link>
             <Nav.Link href="/admin/venues">Venues</Nav.Link>
             <Nav.Link href="/admin/summary">Summary</Nav.Link>
+            <hr />
+            <Nav.Link href="/">Events</Nav.Link>
+            <Nav.Link href="/" onClick={onLogout}>
+              Logout
+            </Nav.Link>
           </Nav>
         </BootstrapNavbar.Collapse>
       </Container>

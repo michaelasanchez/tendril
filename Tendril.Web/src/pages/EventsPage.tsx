@@ -49,7 +49,7 @@ export const EventsPage: React.FC = () => {
   const [showFavoritesOnly, setShowFavoritesOnly] = useState<boolean>(false);
   const [filter, setFilter] = useState<EventFilter>({
     startDate: format(new Date(), 'yyyy-MM-dd'),
-    endDate: ''
+    endDate: '',
   });
 
   const navigate = useNavigate();
@@ -63,27 +63,27 @@ export const EventsPage: React.FC = () => {
 
   const handleModalClose = () => navigate('/');
 
-  const handleOnNext = () => {
-    const currentIndex = filteredEvents.findIndex(
-      (e) => e.id === activeEventId,
-    );
+  // const handleOnNext = () => {
+  //   const currentIndex = filteredEvents.findIndex(
+  //     (e) => e.id === activeEventId,
+  //   );
 
-    if (currentIndex >= 0 && currentIndex < filteredEvents.length - 1) {
-      const nextEvent = filteredEvents[currentIndex + 1];
-      navigate(`/event/${nextEvent.id}`);
-    }
-  };
+  //   if (currentIndex >= 0 && currentIndex < filteredEvents.length - 1) {
+  //     const nextEvent = filteredEvents[currentIndex + 1];
+  //     navigate(`/event/${nextEvent.id}`);
+  //   }
+  // };
 
-  const handleOnPrev = () => {
-    const currentIndex = filteredEvents.findIndex(
-      (e) => e.id === activeEventId,
-    );
+  // const handleOnPrev = () => {
+  //   const currentIndex = filteredEvents.findIndex(
+  //     (e) => e.id === activeEventId,
+  //   );
 
-    if (currentIndex > 0) {
-      const prevEvent = filteredEvents[currentIndex - 1];
-      navigate(`/event/${prevEvent.id}`);
-    }
-  };
+  //   if (currentIndex > 0) {
+  //     const prevEvent = filteredEvents[currentIndex - 1];
+  //     navigate(`/event/${prevEvent.id}`);
+  //   }
+  // };
 
   const handleFavorite = (event: Event) => {
     setFavorites((prev) => {
@@ -302,8 +302,8 @@ export const EventsPage: React.FC = () => {
         event={activeIndex >= 0 ? filteredEvents[activeIndex] : null}
         show={activeIndex >= 0}
         onHide={handleModalClose}
-        onNext={handleOnNext}
-        onPrev={handleOnPrev}
+        // onNext={handleOnNext}
+        // onPrev={handleOnPrev}
       />
     </>
   );
