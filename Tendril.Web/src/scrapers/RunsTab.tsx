@@ -123,7 +123,7 @@ export const RunsTab: React.FC<Props> = ({
             <thead>
               <tr>
                 <th>Start</th>
-                <th>End</th>
+                {/* <th>End</th> */}
                 <th>Duration</th>
                 <th>Success</th>
                 <th>Extracted</th>
@@ -139,17 +139,18 @@ export const RunsTab: React.FC<Props> = ({
               {attempts.map((a) => (
                 <tr key={a.id}>
                   <td>{new Date(a.startTimeUtc).toLocaleString()}</td>
-                  <td>
+                  {/* <td>
                     {!!a.endTimeUtc && new Date(a.endTimeUtc).toLocaleString()}
-                  </td>
+                  </td> */}
                   <td>
                     {!!a.endTimeUtc &&
                       intervalToDuration({
                         start: parseISO(a.startTimeUtc),
                         end: parseISO(a.endTimeUtc),
-                      }).seconds}s
+                      }).seconds}
+                    s
                   </td>
-                  <td>{a.success ? 'Yes' : 'No'}</td>
+                  <td>{a.success ? '✅ Yes' : '❌ No'}</td>
                   <td>{a.extracted}</td>
                   <td>{a.mapped}</td>
                   <td>{a.created}</td>

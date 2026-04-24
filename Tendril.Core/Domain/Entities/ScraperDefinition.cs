@@ -11,7 +11,7 @@ public class ScraperDefinition
 
     public bool IsEventFeed { get; set; } = false;
     public string Notes { get; set; } = "";
-    public bool RequireReview { get; set; } = false;
+    public bool IsReviewRequired { get; set; } = false;
     public bool Disabled { get; set; } = false;
 
     public ExecutionMode ExecutionMode { get; set; } = ExecutionMode.Dynamic;

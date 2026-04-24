@@ -235,7 +235,10 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({}) => {
                       {s.baseUrl}
                     </a>
                   </td>
-                  <td>{s.isEventFeed ? s.state : '-'}</td>
+                  <td>
+                    {s.isEventFeed ? s.state : '-'}
+                    {s.isReviewRequired && <>&nbsp;🚩</>}
+                  </td>
                   <td>
                     {s.lastSuccessUtc ? formatDate(s.lastSuccessUtc) : '-'}
                   </td>
@@ -244,7 +247,9 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({}) => {
                   </td>
                   <td className={tableStyles.TableActions}>
                     <div>
-                      <Button onClick={() => navigate(`/admin/scrapers/${s.id}`)}>
+                      <Button
+                        onClick={() => navigate(`/admin/scrapers/${s.id}`)}
+                      >
                         <Icon name="edit" />
                       </Button>
                       {s.isEventFeed && (

@@ -119,6 +119,12 @@ export const GeneralTab: React.FC<Props> = ({
               onChange={(notes) => onUpdate({ ...scraper, notes })}
             />
 
+            <FormCheck
+              label="Needs Review"
+              checked={scraper.isReviewRequired}
+              onChange={(isReviewRequired) => onUpdate({ ...scraper, isReviewRequired })}
+            />
+
             <hr />
 
             <FormSelect

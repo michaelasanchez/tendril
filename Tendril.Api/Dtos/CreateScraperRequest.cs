@@ -9,6 +9,7 @@ public class CreateScraperRequest
     public bool IsEventFeed { get; set; }
     public bool Disabled { get; set; } = false;
     public string Notes { get; set; } = null!;
+    public bool IsReviewRequired { get; set; } = true;
     public ExecutionMode? ExecutionMode { get; set; }
     public ExtractionStrategy? ExtractionStrategy { get; set; }
     public PaginationType? PaginationType { get; set; }

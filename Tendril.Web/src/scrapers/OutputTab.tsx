@@ -90,16 +90,10 @@ export const OutputTab: React.FC<Props> = ({
         }
 
         if (!!e.categoryName) {
-          if (!a.category[e.categoryName]) {
-            a.category[e.categoryName] = 0;
-          }
-
+          a.category[e.categoryName] ??= 0;
           a.category[e.categoryName]++;
         } else {
-          if (!a.category['None']) {
-            a.category['None'] = 0;
-          }
-
+          a.category['None'] ??= 0;
           a.category['None']++;
         }
         return a;
@@ -118,13 +112,12 @@ export const OutputTab: React.FC<Props> = ({
       setStats(stats);
       setShow({
         ...show,
-        category: categories
-      })
+        category: categories,
+      });
     }
   }, [events]);
 
-  useEffect(() => {
-  }, [scraperId]);
+  useEffect(() => {}, [scraperId]);
 
   const filteredEvents = useMemo(() => {
     let filtered: Event[] = [...events];

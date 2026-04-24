@@ -25,6 +25,7 @@ type View = 'list' | 'map' | 'calendar';
 
 interface Loading {
   events: boolean;
+  categories: boolean;
   venues: boolean;
 }
 
@@ -36,6 +37,7 @@ export const EventsPage: React.FC = () => {
   const [venues, setVenues] = useState<Venue[]>([]);
   const [loading, setLoading] = useState<Loading>({
     events: false,
+    categories: false,
     venues: false,
   });
   const [nextCursor, setNextCursor] = useState<Guid | null>(null);
@@ -116,7 +118,9 @@ export const EventsPage: React.FC = () => {
         setNextCursor(result.nextCursor);
         setTotalCount(result.totalCount);
       } finally {
-        setLoading((prev) => ({ ...prev, events: false }));
+        if (!signal?.aborted) {
+          setLoading((prev) => ({ ...prev, events: false }));
+        }
       }
     },
     [],
@@ -132,7 +136,9 @@ export const EventsPage: React.FC = () => {
     } catch (err) {
       console.error('Failed to fetch categories', err);
     } finally {
-      setLoading((prev) => ({ ...prev, categories: false }));
+      if (!signal?.aborted) {
+        setLoading((prev) => ({ ...prev, categories: false }));
+      }
     }
   }, []);
 
@@ -152,7 +158,9 @@ export const EventsPage: React.FC = () => {
     } catch (err) {
       console.error('Failed to fetch venues', err);
     } finally {
-      setLoading((prev) => ({ ...prev, venues: false }));
+      if (!signal?.aborted) {
+        setLoading((prev) => ({ ...prev, venues: false }));
+      }
     }
   }, []);
 
@@ -243,12 +251,18 @@ export const EventsPage: React.FC = () => {
   //   [events]
   // );
 
+  console.log(loading);
+  console.log(events?.length);
+
   return (
     <>
       <section>
         <h1 className={styles.PageTitle}>Upcoming Events</h1>
         <div className={styles.SubHeaderRow}>
-          <div className={pageStyles.SubHeader}>{totalCount} events found</div>
+          <div className={cn(pageStyles.SubHeader, styles.EventsFound)}>
+            {totalCount} events found{' '}
+            {loading.events && <Spinner animation="border" size="sm" />}
+          </div>
           <div className={cn('d-lg-none', styles.PageControls)}>
             <SquareButton
               variant={showFilters ? 'primary' : undefined}
@@ -290,7 +304,7 @@ export const EventsPage: React.FC = () => {
               {loading.events && (
                 <div className={styles.Loading}>
                   <Spinner animation="border" className={styles.Spinner} />
-                  Loading more...
+                  Loading...
                 </div>
               )}
             </Col>

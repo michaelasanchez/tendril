@@ -60,6 +60,7 @@ export interface ScraperDefinition {
   isEventFeed: boolean;
   disabled: boolean;
   notes: string;
+  isReviewRequired: boolean;
   executionMode: ExecutionMode;
   extractionStrategy: ExtractionStrategy;
   paginationType: PaginationType;
