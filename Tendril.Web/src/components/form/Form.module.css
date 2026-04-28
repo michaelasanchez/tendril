@@ -1,0 +1,9 @@
+.Clearable {
+  display: flex;
+  gap: 0.5em;
+  align-items: flex-end;
+
+  & > div:first-child {
+    flex-grow: 1;
+  }
+}

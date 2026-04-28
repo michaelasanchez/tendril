@@ -16,6 +16,7 @@
     border-radius: calc(var(--spacing) * 2);
     color: var(--accent-foreground);
 
+    align-self: start;
     padding: calc(var(--spacing) * 2);
   }
 
@@ -39,6 +40,7 @@
     border: 1px solid var(--border);
     padding: calc(var(--spacing) * 2) calc(var(--spacing) * 4);
 
+    font-size: 0.8em;
     white-space: nowrap;
   }
 }

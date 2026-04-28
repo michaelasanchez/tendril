@@ -1,7 +1,7 @@
 const CLIENT_ID = import.meta.env.VITE_AUTH_CLIENT_ID;
 
 import { Container } from 'react-bootstrap';
-import { Navigate, Outlet, Route, Routes } from 'react-router';
+import { Navigate, Outlet, Route, Routes, useNavigate } from 'react-router';
 import { SquareButton } from './components/button';
 import { Navbar } from './components/navbar';
 import { useBootstrapTheme } from './hooks';
@@ -25,7 +25,7 @@ function AdminLayout({
 }) {
   if (loading) return null; // or a spinner
   if (!authorized) return <Navigate to="/" replace />;
-  
+
   return <Outlet />;
 }
 
@@ -59,11 +59,18 @@ export default function App() {
   const { theme, toggleTheme } = useBootstrapTheme();
   const { user, loading, login, logout } = useAuth(CLIENT_ID);
 
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
   return (
     <>
       <Navbar
         theme={theme}
-        onLogout={logout}
+        onLogout={handleLogout}
         onThemeToggle={toggleTheme}
         authorized={!!user}
       />

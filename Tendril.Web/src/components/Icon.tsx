@@ -23,13 +23,14 @@ import {
   Moon,
   Play,
   Plus,
+  Share2,
   SlidersHorizontal,
   Sun,
   Ticket,
   Trash,
   X,
   Zap,
-  ZapOff,
+  ZapOff
 } from 'lucide-react';
 
 const Icons = {
@@ -58,6 +59,7 @@ const Icons = {
   publish: CloudUpload,
   remove: Trash,
   run: Play,
+  share: Share2,
   sliders: SlidersHorizontal,
   ticket: Ticket,
   unarchive: ArchiveRestore,

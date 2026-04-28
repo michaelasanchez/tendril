@@ -1,4 +1,4 @@
-import type { Event, EventStatus, Guid, PagedResponse } from '../types/api';
+import type { Event, EventResponse, EventStatus, Guid } from '../types/api';
 import { apiGet, apiPatch } from './client';
 
 export interface PatchEventRequest {
@@ -20,7 +20,7 @@ export const EventsApi = {
     filter: EventFilter | null,
     cursor: Guid | null,
     signal?: AbortSignal,
-  ): Promise<PagedResponse> {
+  ): Promise<EventResponse> {
     const params = new URLSearchParams();
 
     if (!!filter?.title) {

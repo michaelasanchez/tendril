@@ -7,6 +7,7 @@ export interface FormInputProps {
   onChange: (value: string) => void;
   type?: "text" | "number" | "password" | "email";
   placeholder?: string;
+  clearable?: boolean;
   disabled?: boolean;
   autoFocus?: boolean;
 }

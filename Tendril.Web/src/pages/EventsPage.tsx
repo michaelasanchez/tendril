@@ -18,7 +18,7 @@ import { EventModal } from '../components/modal';
 import { EventList, FiltersCard } from '../events';
 import { useLocalStorage } from '../hooks';
 import { pageStyles } from '../styles';
-import type { Category, Event, Guid, Venue } from '../types/api';
+import type { Category, Event, EventResponse, Guid, Venue } from '../types/api';
 import styles from './EventsPage.module.css';
 
 type View = 'list' | 'map' | 'calendar';
@@ -28,6 +28,8 @@ interface Loading {
   categories: boolean;
   venues: boolean;
 }
+
+type Result = Omit<EventResponse, 'items'>;
 
 export const EventsPage: React.FC = () => {
   const [view] = useState<View>('list');
@@ -40,8 +42,14 @@ export const EventsPage: React.FC = () => {
     categories: false,
     venues: false,
   });
-  const [nextCursor, setNextCursor] = useState<Guid | null>(null);
-  const [totalCount, setTotalCount] = useState<number>(0);
+
+  const [result, setResult] = useState<Result>({
+    categoryIds: [],
+    venueIds: [],
+    totalCount: 0,
+    nextCursor: null,
+    hasNextPage: false,
+  });
 
   const favoritesStorage = useLocalStorage('favorites');
   const [favorites, setFavorites] = useState<Set<Guid>>(
@@ -111,12 +119,14 @@ export const EventsPage: React.FC = () => {
       setLoading((prev) => ({ ...prev, events: true }));
 
       try {
-        const result = await EventsApi.get(filter, cursor, signal);
-        setEvents((prev) =>
-          shouldAppend ? [...prev, ...result.items] : result.items,
+        const { items, ...result } = await EventsApi.get(
+          filter,
+          cursor,
+          signal,
         );
-        setNextCursor(result.nextCursor);
-        setTotalCount(result.totalCount);
+
+        setEvents((prev) => (shouldAppend ? [...prev, ...items] : items));
+        setResult(result);
       } finally {
         if (!signal?.aborted) {
           setLoading((prev) => ({ ...prev, events: false }));
@@ -182,9 +192,9 @@ export const EventsPage: React.FC = () => {
     if (
       activeIndex !== null &&
       activeIndex + 1 == filteredEvents.length &&
-      nextCursor
+      result.nextCursor
     ) {
-      loadEvents(filter, nextCursor, signal, true);
+      loadEvents(filter, result.nextCursor, signal, true);
     }
 
     return () => {
@@ -217,15 +227,19 @@ export const EventsPage: React.FC = () => {
       if (observer.current) observer.current.disconnect();
 
       observer.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && nextCursor && !showFavoritesOnly) {
-          loadEvents(filter, nextCursor, undefined, true);
+        if (
+          entries[0].isIntersecting &&
+          result.nextCursor &&
+          !showFavoritesOnly
+        ) {
+          loadEvents(filter, result.nextCursor, undefined, true);
         }
       });
 
       if (node) observer.current.observe(node);
     },
     // Fix dependencies to be specific
-    [loading.events, nextCursor, loadEvents, filter],
+    [loading.events, result.nextCursor, loadEvents, filter],
   );
 
   const filteredEvents = useMemo(() => {
@@ -260,7 +274,8 @@ export const EventsPage: React.FC = () => {
         <h1 className={styles.PageTitle}>Upcoming Events</h1>
         <div className={styles.SubHeaderRow}>
           <div className={cn(pageStyles.SubHeader, styles.EventsFound)}>
-            {totalCount} events found{' '}
+            {showFavoritesOnly ? filteredEvents.length : result.totalCount}{' '}
+            events found
             {loading.events && <Spinner animation="border" size="sm" />}
           </div>
           <div className={cn('d-lg-none', styles.PageControls)}>

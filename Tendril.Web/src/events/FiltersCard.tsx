@@ -4,7 +4,6 @@ import { Card } from 'react-bootstrap';
 import type { EventFilter } from '../api/events';
 import { Button } from '../components/button';
 import { FormDate, FormInput } from '../components/form';
-// import { DateForensics } from '../components/form/DateForensics';
 import { Icon } from '../components/Icon';
 import cardStyles from '../styles/Card.module.css';
 import type { Category, Venue } from '../types/api';
@@ -16,6 +15,7 @@ interface Props {
   filter: EventFilter;
   categories: Category[];
   venues: Venue[];
+  // available: AvailableFilters;
   onChange: (update: Partial<EventFilter>) => void;
   onToggleFavoritesOnly: () => void;
 }
@@ -23,12 +23,15 @@ interface Props {
 const categoryShowCount = 4;
 const venueShowCount = 4;
 
+// export type AvailableFilters = Pick<EventResponse, 'categoryIds' | 'venueIds'>;
+
 export const FiltersCard: React.FC<Props> = ({
   className,
   favoritesOnly,
   filter,
   categories,
   venues,
+  // available,
   onChange,
   onToggleFavoritesOnly,
 }) => {
@@ -43,13 +46,14 @@ export const FiltersCard: React.FC<Props> = ({
           Filters
         </h4>
         <FormInput
-          label="SEARCH EVENTS"
+          label="Search Events"
           value={filter.title ?? ''}
           placeholder="Search by event name..."
+          clearable
           onChange={(title) => onChange({ title })}
         />
         <FormDate
-          label="DATE RANGE"
+          label="Date Range"
           value={filter.startDate ?? ''}
           onChange={(startDate) => onChange({ startDate })}
         />
@@ -79,10 +83,16 @@ export const FiltersCard: React.FC<Props> = ({
           </Button>
 
           {categories
-            .slice(
-              0,
-              showMoreCategories ? categories.length : categoryShowCount,
+            .filter(
+              (c, i) =>
+                showMoreCategories ||
+                i < categoryShowCount ||
+                filter.categoryIds?.includes(c.id),
             )
+            // .slice(
+            //   0,
+            //   showMoreCategories ? categories.length : categoryShowCount,
+            // )
             .map((c, i) => {
               const active = filter.categoryIds?.includes(c.id);
 

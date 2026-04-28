@@ -58,6 +58,17 @@
     }
   }
 
+  &.OutlineSecondary {
+    --button-color: var(--accent-secondary);
+
+    
+    &:hover {
+      --button-hover-background: var(--accent);
+      --button-hover-border: var(--accent);
+      --button-hover-color: var(--accent-foreground);
+    }
+  }
+
   &.Danger {
     --button-background: var(--destructive);
     --button-border: var(--destructive);

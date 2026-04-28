@@ -7,6 +7,7 @@ export type Variant =
   | 'active' // TODO: should we get rid of this?
   | 'primary'
   | 'outline-primary'
+  | 'outline-secondary'
   | 'danger'
   | 'outline-danger';
 
@@ -89,6 +90,8 @@ function getVariantClass(varint: Variant | undefined) {
       return styles.Primary;
     case 'outline-primary':
       return styles.OutlinePrimary;
+    case 'outline-secondary':
+      return styles.OutlineSecondary;
     case 'danger':
       return styles.Danger;
     case 'outline-danger':

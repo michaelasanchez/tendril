@@ -53,6 +53,8 @@
   --accent: rgba(119, 112, 245, 1);
   /* The default color for text or elements that appear on top of accent colored elements. */
   --accent-foreground: rgba(255, 255, 255, 1);
+  /*  The accent color used for secondary highlights, links and other interactive elements. */
+  --accent-secondary: rgba(208, 208, 208, 1);
   /* The color used for background in destructive actions, such as delete buttons or error messages. */
   --destructive: rgba(252, 157, 54, 1);
   /* The default color for text or elements that appear on top of destructive colored elements. */

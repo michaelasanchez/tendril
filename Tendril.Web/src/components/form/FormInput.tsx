@@ -1,5 +1,9 @@
+import cn from 'classnames';
 import React, { useEffect, useRef, useState } from 'react';
 import { Form } from 'react-bootstrap';
+import { SquareButton } from '../button';
+import { Icon } from '../Icon';
+import styles from './Form.module.css';
 import type { FormInputProps } from './types';
 
 export const FormInput: React.FC<FormInputProps> = ({
@@ -9,6 +13,7 @@ export const FormInput: React.FC<FormInputProps> = ({
   onChange,
   type = 'text',
   placeholder,
+  clearable = false,
   disabled = false,
   autoFocus = false,
 }) => {
@@ -44,17 +49,24 @@ export const FormInput: React.FC<FormInputProps> = ({
   };
 
   return (
-    <Form.Group className={className}>
-      {label && <Form.Label>{label}</Form.Label>}
-      <Form.Control
-        type={type}
-        value={localValue}
-        onChange={(e) => setLocalValue(e.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder={placeholder}
-        disabled={disabled}
-        autoFocus={autoFocus}
-      />
+    <Form.Group className={cn(styles.Clearable, className)}>
+      <div>
+        {label && <Form.Label>{label}</Form.Label>}
+        <Form.Control
+          type={type}
+          value={localValue}
+          onChange={(e) => setLocalValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          disabled={disabled}
+          autoFocus={autoFocus}
+        />
+      </div>
+      {clearable && localValue && (
+        <SquareButton onClick={() => onChange('')}>
+          <Icon name="close" />
+        </SquareButton>
+      )}
     </Form.Group>
   );
 };

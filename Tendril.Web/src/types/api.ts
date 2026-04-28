@@ -26,13 +26,12 @@ export type ApiParameterSource = 'Static' | 'Parent';
 export type ApiParameterTarget = 'Query' | 'Header' | 'Body';
 
 export interface ApiParameter {
-  
-    id: Guid
-    key: string;
-    template: string;
-    source: ApiParameterSource;
-    target: ApiParameterTarget;
-    isRequired: boolean
+  id: Guid;
+  key: string;
+  template: string;
+  source: ApiParameterSource;
+  target: ApiParameterTarget;
+  isRequired: boolean;
 }
 
 export type ExecutionMode = 'Static' | 'Dynamic' | 'Api';
@@ -214,6 +213,11 @@ export interface PagedResponse {
   nextCursor: Guid | null;
   hasNextPage: boolean;
   totalCount: number;
+}
+
+export interface EventResponse extends PagedResponse {
+  categoryIds: Guid[];
+  venueIds: Guid[];
 }
 
 export type EventStatus = 'Pending' | 'Published' | 'Suppressed';

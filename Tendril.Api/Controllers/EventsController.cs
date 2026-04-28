@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Tendril.Api.Dtos;
-using Tendril.Core.Domain;
 using Tendril.Core.Domain.Enums;
 using Tendril.Core.Interfaces.Repositories;
 using Tendril.Data.Models;
@@ -14,7 +13,7 @@ namespace Tendril.Api.Controllers;
 public class EventsController(IEventRepository events, IMapper mapper) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<PagedResponse<EventDto>>> GetAll(
+    public async Task<ActionResult<EventResponse>> GetAll(
         [FromQuery] DateTimeOffset? startDate,
         [FromQuery] DateTimeOffset? endDate,
         [FromQuery] string? title,
@@ -35,9 +34,17 @@ public class EventsController(IEventRepository events, IMapper mapper) : Control
 
         var result = await events.GetAllAsync(filter, limit, cursor, cancellationToken);
 
-        return Ok(new PagedResponse<EventDto>
+        return Ok(new EventResponse
         {
             Items = mapper.Map<List<EventDto>>(result.Items),
+            CategoryIds = [.. result.Items
+                .Where(x => x.CategoryId is not null)
+                .Select(x => x.CategoryId!.Value)
+                .Distinct()],
+            VenueIds = [.. result.Items
+                .Where(x => x.VenueId is not null)
+                .Select(x => x.VenueId!.Value)
+                .Distinct()],
             NextCursor = result.NextCursor,
             HasNextPage = result.HasNextPage,
             TotalCount = result.TotalCount

@@ -85,26 +85,40 @@ export const EventModal: React.FC<Props> = ({ event, show, onHide }) => {
           {/* --- Footer --- */}
           {(!!event.ticketUrl || !!event.detailsUrl) && (
             <Modal.Footer className={styles.Footer}>
-              {event.detailsUrl && (
-                <SquareButton
-                  variant="outline-primary"
-                  href={event.detailsUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Event Details <Icon name="external" />
-                </SquareButton>
-              )}
-              {event.ticketUrl && (
-                <SquareButton
-                  variant="primary"
-                  href={event.ticketUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Get Tickets <Icon name="external" />
-                </SquareButton>
-              )}
+              <div>
+                {event.detailsUrl && (
+                  <SquareButton
+                    variant="outline-primary"
+                    href={event.detailsUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Event Details <Icon name="external" />
+                  </SquareButton>
+                )}
+                {event.ticketUrl && (
+                  <SquareButton
+                    variant="primary"
+                    href={event.ticketUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Get Tickets <Icon name="external" />
+                  </SquareButton>
+                )}
+              </div>
+
+              <SquareButton
+                variant="outline-secondary"
+                onClick={() =>
+                  navigator.share({
+                    title: event.title,
+                    url: window.location.href,
+                  })
+                }
+              >
+                <Icon name="share" />
+              </SquareButton>
             </Modal.Footer>
           )}
         </>
