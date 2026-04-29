@@ -1,11 +1,11 @@
 import cn from 'classnames';
 import { useState } from 'react';
-import { Card } from 'react-bootstrap';
 import type { EventFilter } from '../api/events';
 import { Button } from '../components/button';
 import { FormDate, FormInput } from '../components/form';
 import { Icon } from '../components/Icon';
-import cardStyles from '../styles/Card.module.css';
+import { useBreakpoint } from '../hooks';
+import { cardStyles } from '../styles';
 import type { Category, Venue } from '../types/api';
 import styles from './FiltersCard.module.css';
 
@@ -38,10 +38,20 @@ export const FiltersCard: React.FC<Props> = ({
   const [showMoreCategories, setMoreCategories] = useState<boolean>(false);
   const [showMoreVenues, setShowMoreVenues] = useState<boolean>(false);
 
+  const isLarge = useBreakpoint();
+
   return (
-    <Card className={cn(cardStyles.BgCard, styles.FiltersCard, className)}>
-      <Card.Body className={cardStyles.CardBody}>
-        <h4>
+    // <Card className={cn(cardStyles.BgCard, styles.FiltersCard, className)}>
+    //   <Card.Body className={cardStyles.CardBody}>
+    <div
+      className={cn(
+        isLarge && cardStyles.BgCard,
+        styles.FiltersCard,
+        className,
+      )}
+    >
+      <div className={cn(isLarge && cardStyles.CardBody)}>
+        <h4 className={styles.Heading}>
           <Icon name="filter" />
           Filters
         </h4>
@@ -168,7 +178,9 @@ export const FiltersCard: React.FC<Props> = ({
             </Button>
           )}
         </div>
-      </Card.Body>
-    </Card>
+      </div>
+    </div>
+    //   </Card.Body>
+    // </Card>
   );
 };

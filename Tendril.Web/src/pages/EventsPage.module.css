@@ -1,3 +1,13 @@
+.Heading {
+  display: flex;
+  gap: 0.25em;
+  align-items: center;
+
+  svg {
+    margin-right: 0.5em;
+  }
+}
+
 .EventsColumn {
   &:has(.Loading:only-child) {
     padding-top: 100px;
@@ -15,6 +25,13 @@
     }
   }
 }
+
+.EventsFound {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
 .EventList {
   margin-bottom: calc(var(--spacing) * 20);
 }
@@ -29,12 +46,6 @@
   justify-content: space-between;
 
   margin: calc(var(--spacing) * 2) 0;
-
-  .EventsFound {
-    display: flex;
-    align-items: center;
-    gap: 1em;
-  }
 }
 
 .PageControls {

@@ -1,10 +1,8 @@
 .FiltersCard {
   --card-body-padding: calc(var(--spacing) * 6);
 
-  h4 {
-    svg {
-      margin-right: 0.5em;
-    }
+  h4 svg {
+    margin-right: 0.5em;
   }
 
   label {
@@ -60,5 +58,13 @@
     display: flex;
     flex-wrap: wrap;
     gap: 0.5em;
+  }
+}
+
+@media (max-width: 991px) {
+  .FiltersCard {
+    .Heading {
+      display: none;
+    }
   }
 }

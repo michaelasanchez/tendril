@@ -7,7 +7,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Col, Row, Spinner } from 'react-bootstrap';
+import { Col, Offcanvas, Row, Spinner } from 'react-bootstrap';
 import { useMatch, useNavigate } from 'react-router';
 import { CategoriesApi } from '../api/categories';
 import { EventsApi, type EventFilter } from '../api/events';
@@ -33,7 +33,6 @@ type Result = Omit<EventResponse, 'items'>;
 
 export const EventsPage: React.FC = () => {
   const [view] = useState<View>('list');
-  const [showFilters, setShowFilters] = useState<boolean>(false);
   const [events, setEvents] = useState<Event[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [venues, setVenues] = useState<Venue[]>([]);
@@ -265,8 +264,9 @@ export const EventsPage: React.FC = () => {
   //   [events]
   // );
 
-  console.log(loading);
-  console.log(events?.length);
+  const [show, setShow] = useState(false);
+
+  const handleClose = () => setShow(false);
 
   return (
     <>
@@ -274,14 +274,18 @@ export const EventsPage: React.FC = () => {
         <h1 className={styles.PageTitle}>Upcoming Events</h1>
         <div className={styles.SubHeaderRow}>
           <div className={cn(pageStyles.SubHeader, styles.EventsFound)}>
-            {showFavoritesOnly ? filteredEvents.length : result.totalCount}{' '}
-            events found
-            {loading.events && <Spinner animation="border" size="sm" />}
+            {filteredEvents.length > 0 && (
+              <>
+                {showFavoritesOnly ? filteredEvents.length : result.totalCount}{' '}
+                events found
+                {loading.events && <Spinner animation="border" size="sm" />}
+              </>
+            )}
           </div>
           <div className={cn('d-lg-none', styles.PageControls)}>
             <SquareButton
-              variant={showFilters ? 'primary' : undefined}
-              onClick={() => setShowFilters(!showFilters)}
+              variant="outline-primary"
+              onClick={() => setShow(true)}
             >
               <Icon name="sliders" /> Filters
             </SquareButton>
@@ -291,7 +295,48 @@ export const EventsPage: React.FC = () => {
         {view === 'list' && (
           <Row>
             <Col lg={4}>
-              <div
+              <Offcanvas
+                show={show}
+                onHide={handleClose}
+                responsive="lg"
+                placement="end"
+              >
+                <Offcanvas.Header closeButton style={{ paddingBottom: 0 }}>
+                  <Offcanvas.Title as="h3" className={styles.Heading}>
+                    <Icon name="filter" />
+                    Filters
+                  </Offcanvas.Title>
+                </Offcanvas.Header>
+                <Offcanvas.Body style={{ paddingTop: 0 }}>
+                  <div
+                    className={cn(
+                      'd-lg-none',
+                      pageStyles.SubHeader,
+                      styles.EventsFound,
+                    )}
+                  >
+                    {showFavoritesOnly
+                      ? filteredEvents.length
+                      : result.totalCount}{' '}
+                    events found
+                    {loading.events && <Spinner animation="border" size="sm" />}
+                  </div>
+                  <FiltersCard
+                    className={styles.FiltersCard}
+                    filter={filter}
+                    favoritesOnly={showFavoritesOnly}
+                    categories={categories}
+                    venues={venues}
+                    onChange={(update) =>
+                      setFilter((prev) => ({ ...prev, ...update }))
+                    }
+                    onToggleFavoritesOnly={() =>
+                      setShowFavoritesOnly((v) => !v)
+                    }
+                  />
+                </Offcanvas.Body>
+              </Offcanvas>
+              {/* <div
                 className={cn('d-lg-block', showFilters ? 'd-block' : 'd-none')}
               >
                 <FiltersCard
@@ -305,7 +350,7 @@ export const EventsPage: React.FC = () => {
                   }
                   onToggleFavoritesOnly={() => setShowFavoritesOnly((v) => !v)}
                 />
-              </div>
+              </div> */}
             </Col>
             <Col lg={8} className={cn(styles.EventsColumn)}>
               <EventList
