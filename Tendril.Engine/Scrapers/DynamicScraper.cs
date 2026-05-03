@@ -310,7 +310,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
             try
             {
                 await nextBtn.ClickAsync();
-                await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+                await page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
 
                 await PerformWait(page, nextBtnDef.Delay);
 

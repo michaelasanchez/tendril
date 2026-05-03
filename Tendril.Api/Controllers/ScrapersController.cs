@@ -50,6 +50,7 @@ public class ScrapersController(
             ExtractionStrategy = request.ExtractionStrategy ?? Core.Domain.Enums.ExtractionStrategy.Css,
             PaginationType = request.PaginationType ?? Core.Domain.Enums.PaginationType.None,
             UseYearTracking = request.UseYearTracking,
+            UseHeadlessBrowser = request.UseHeadlessBrowser,
             VenueId = request.VenueId,
             Method = request.Method,
             Parameters = request.Parameters?
@@ -90,6 +91,7 @@ public class ScrapersController(
         if (request.ExtractionStrategy is not null) scraper.ExtractionStrategy = request.ExtractionStrategy.Value;
         if (request.PaginationType is not null) scraper.PaginationType = request.PaginationType.Value;
         if (request.UseYearTracking is not null) scraper.UseYearTracking = request.UseYearTracking.Value;
+        if (request.UseHeadlessBrowser is not null) scraper.UseHeadlessBrowser = request.UseHeadlessBrowser.Value;
         if (request.VenueId is not null) scraper.VenueId = request.VenueId;
         if (request.Method is not null) scraper.Method = request.Method;
 

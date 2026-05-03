@@ -64,6 +64,7 @@ export interface ScraperDefinition {
   extractionStrategy: ExtractionStrategy;
   paginationType: PaginationType;
   useYearTracking: boolean;
+  useHeadlessBrowser: boolean;
   state: ScraperState;
   lastSuccessUtc?: string | null;
   lastFailureUtc?: string | null;

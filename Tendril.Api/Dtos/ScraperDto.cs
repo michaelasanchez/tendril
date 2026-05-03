@@ -15,6 +15,7 @@ public record ScraperDto
     public ExtractionStrategy ExtractionStrategy { get; set; }
     public PaginationType PaginationType { get; set; }
     public bool UseYearTracking { get; set; }
+    public bool UseHeadlessBrowser { get; set; }
     public string State { get; set; }
     public string? LastSuccessUtc { get; set; }
     public string? LastFailureUtc { get; set; }

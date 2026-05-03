@@ -27,6 +27,7 @@ export interface CreateScraperRequest {
   extractionStrategy: ExtractionStrategy;
   paginationType: PaginationType;
   useYearTracking: boolean;
+  useHeadlessBrowser: boolean;
   venueId?: Guid | null;
   method?: HttpMethod | null;
   parameters?: ApiParameter[] | null;

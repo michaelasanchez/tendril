@@ -63,12 +63,13 @@ export const FiltersCard: React.FC<Props> = ({
           onChange={(title) => onChange({ title })}
         />
         <FormDate
-          label="Date Range"
+          label="From"
           value={filter.startDate ?? ''}
           onChange={(startDate) => onChange({ startDate })}
         />
         <FormDate
-          className={styles.NoLabel}
+        className={styles.LessTopMargin}
+          label="To"
           value={filter.endDate ?? ''}
           onChange={(endDate) => onChange({ endDate })}
         />

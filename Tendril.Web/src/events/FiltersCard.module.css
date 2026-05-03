@@ -9,6 +9,12 @@
     margin: 2em 0 0;
   }
 
+  .DateRange {
+    display: flex;
+    gap: 1em;
+    justify-content: space-between;
+  }
+
   .Checkbox {
     display: flex;
     align-items: center;
@@ -39,8 +45,8 @@
     }
   }
 
-  .NoLabel {
-    margin-top: 0.5em;
+  .LessTopMargin {
+    margin-top: -1em;
   }
 
   input:focus {

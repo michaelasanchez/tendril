@@ -122,7 +122,9 @@ export const GeneralTab: React.FC<Props> = ({
             <FormCheck
               label="Needs Review"
               checked={scraper.isReviewRequired}
-              onChange={(isReviewRequired) => onUpdate({ ...scraper, isReviewRequired })}
+              onChange={(isReviewRequired) =>
+                onUpdate({ ...scraper, isReviewRequired })
+              }
             />
 
             <hr />
@@ -176,16 +178,28 @@ export const GeneralTab: React.FC<Props> = ({
               }
               options={paginationTypeOptions}
             />
-            <FormCheck
-              label="Use Year Tracking"
-              checked={scraper.useYearTracking}
-              onChange={(useYearTracking) =>
-                onUpdate({
-                  ...scraper,
-                  useYearTracking,
-                })
-              }
-            />
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <FormCheck
+                label="Use Year Tracking"
+                checked={scraper.useYearTracking}
+                onChange={(useYearTracking) =>
+                  onUpdate({
+                    ...scraper,
+                    useYearTracking,
+                  })
+                }
+              />
+              <FormCheck
+                label="Use Headless Browser"
+                checked={scraper.useHeadlessBrowser}
+                onChange={(useHeadlessBrowser) =>
+                  onUpdate({
+                    ...scraper,
+                    useHeadlessBrowser,
+                  })
+                }
+              />
+            </div>
           </Form>
         </Card.Body>
       </Card>

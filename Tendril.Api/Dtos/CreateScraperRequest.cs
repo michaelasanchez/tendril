@@ -14,6 +14,7 @@ public class CreateScraperRequest
     public ExtractionStrategy? ExtractionStrategy { get; set; }
     public PaginationType? PaginationType { get; set; }
     public bool UseYearTracking { get; set; } = true;
+    public bool UseHeadlessBrowser { get; set; } = false;
     public Guid? VenueId { get; set; }
     public Core.Domain.Enums.HttpMethod? Method { get; set; }
     public List<CreateApiParameterRequest>? Parameters { get; set; }

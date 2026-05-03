@@ -146,7 +146,8 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({}) => {
             executionMode: 'Static',
             extractionStrategy: 'Css',
             paginationType: 'None',
-            useYearTracking: false,
+            useYearTracking: true,
+            useHeadlessBrowser: false,
             state: 'Unknown',
             lastSuccessUtc: null,
             lastFailureUtc: null,
@@ -196,6 +197,7 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({}) => {
           extractionStrategy: scraper.extractionStrategy,
           paginationType: scraper.paginationType,
           useYearTracking: scraper.useYearTracking,
+          useHeadlessBrowser: scraper.useHeadlessBrowser,
           venueId: scraper.venueId,
           method: scraper.method,
           parameters: scraper.parameters?.map(
@@ -219,6 +221,7 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({}) => {
           extractionStrategy: scraper.extractionStrategy,
           paginationType: scraper.paginationType,
           useYearTracking: scraper.useYearTracking,
+          useHeadlessBrowser: scraper.useHeadlessBrowser,
           venueId: scraper.venueId,
           method: scraper.method,
           parameters: scraper.parameters?.map(
