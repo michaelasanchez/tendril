@@ -10,6 +10,7 @@ public record ScraperDto
     public bool IsEventFeed { get; set; }
     public bool Disabled { get; set; }
     public string Notes { get; set; }
+    public bool HasSuggestions { get; set; }
     public bool RequiresReview { get; set; }
     public ExecutionMode ExecutionMode { get; set; }
     public ExtractionStrategy ExtractionStrategy { get; set; }

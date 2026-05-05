@@ -218,6 +218,7 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({}) => {
           isEventFeed: scraper.isEventFeed,
           disabled: scraper.disabled,
           notes: scraper.notes,
+          hasSuggestions: scraper.hasSuggestions,
           requiresReview: scraper.requiresReview,
           executionMode: scraper.executionMode,
           extractionStrategy: scraper.extractionStrategy,
