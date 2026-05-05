@@ -85,10 +85,10 @@ public class EventsController(IEventRepository events, IMapper mapper) : Control
                 @event.StatusAtUtc = DateTimeOffset.UtcNow;
             }
 
-            if (request.IsReviewRequired is not null)
+            if (request.RequiresReview is not null)
             {
-                @event.IsReviewRequired = request.IsReviewRequired.Value;
-                @event.ReviewRequiredAtUtc = DateTimeOffset.UtcNow;
+                @event.RequiresReview = request.RequiresReview.Value;
+                @event.RequiresReviewAtUtc = DateTimeOffset.UtcNow;
             }
 
             await events.UpdateAsync(@event, ct);

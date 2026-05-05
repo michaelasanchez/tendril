@@ -9,7 +9,7 @@ import { SquareButton as Button } from '../components/button';
 import { Icon } from '../components/Icon';
 import {
   ActionsTab,
-  GeneralTab,
+  EditTab,
   MappingRulesTab,
   RunsTab,
   SummaryTab,
@@ -142,7 +142,8 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({}) => {
             isEventFeed: false,
             disabled: false,
             notes: '',
-            isReviewRequired: true,
+            hasSuggestions: true,
+            requiresReview: true,
             executionMode: 'Static',
             extractionStrategy: 'Css',
             paginationType: 'None',
@@ -192,7 +193,8 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({}) => {
           isEventFeed: scraper.isEventFeed,
           disabled: scraper.disabled,
           notes: scraper.notes,
-          isReviewRequired: scraper.isReviewRequired,
+          hasSuggestions: scraper.hasSuggestions,
+          requiresReview: scraper.requiresReview,
           executionMode: scraper.executionMode,
           extractionStrategy: scraper.extractionStrategy,
           paginationType: scraper.paginationType,
@@ -216,7 +218,7 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({}) => {
           isEventFeed: scraper.isEventFeed,
           disabled: scraper.disabled,
           notes: scraper.notes,
-          isReviewRequired: scraper.isReviewRequired,
+          requiresReview: scraper.requiresReview,
           executionMode: scraper.executionMode,
           extractionStrategy: scraper.extractionStrategy,
           paginationType: scraper.paginationType,
@@ -257,7 +259,7 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({}) => {
               variant={activeTab == 'general' ? 'active' : 'default'}
               onClick={() => handleTabChange('general')}
             >
-              General
+              Edit
             </Button>
             <Button
               variant={activeTab == 'actions' ? 'active' : 'default'}
@@ -338,7 +340,7 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({}) => {
 
         <Tab.Content>
           <Tab.Pane eventKey="general">
-            <GeneralTab
+            <EditTab
               scraper={scraper}
               venues={venues}
               onSave={handleSaveGeneral}

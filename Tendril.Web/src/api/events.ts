@@ -4,7 +4,7 @@ import { apiGet, apiPatch } from './client';
 export interface PatchEventRequest {
   categoryId?: Guid;
   status?: EventStatus;
-  isReviewRequired?: boolean;
+  requiresReview?: boolean;
 }
 
 export interface EventFilter {

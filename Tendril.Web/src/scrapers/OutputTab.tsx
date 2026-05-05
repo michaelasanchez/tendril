@@ -371,7 +371,7 @@ export const OutputTab: React.FC<Props> = ({
               <Button
                 onClick={() =>
                   EventsApi.patch(e.id, {
-                    isReviewRequired: !e.isReviewRequired,
+                    requiresReview: !e.isReviewRequired,
                   }).then(() => loadEvents())
                 }
               >

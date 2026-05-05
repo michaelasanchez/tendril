@@ -34,10 +34,10 @@ public class Event
     public string? TicketUrl { get; set; }
 
     public EventStatus Status { get; set; }
-    public bool IsReviewRequired { get; set; }
+    public bool RequiresReview { get; set; }
 
     public DateTimeOffset ScrapedAtUtc { get; set; }
     public DateTimeOffset? UpdatedAtUtc { get; set; }
     public DateTimeOffset? StatusAtUtc { get; set; }
-    public DateTimeOffset? ReviewRequiredAtUtc { get; set; }
+    public DateTimeOffset? RequiresReviewAtUtc { get; set; }
 }

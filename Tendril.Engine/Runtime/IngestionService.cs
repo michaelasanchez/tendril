@@ -95,7 +95,7 @@ public class IngestionService(
 
                     if (mappedEvent is not null)
                     {
-                        if (scraper.IsReviewRequired)
+                        if (scraper.RequiresReview)
                         {
                             mappedEvent.Status = EventStatus.Pending;
                         }

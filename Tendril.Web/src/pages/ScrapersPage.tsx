@@ -237,7 +237,19 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({}) => {
                   </td>
                   <td>
                     {s.isEventFeed ? s.state : '-'}
-                    {s.isReviewRequired && <>&nbsp;🚩</>}
+                    
+                    {s.hasSuggestions && (
+                      <>
+                        &nbsp;
+                        <Icon name="suggestions" />
+                      </>
+                    )}
+                    {s.requiresReview && (
+                      <>
+                        &nbsp;
+                        <Icon name="flag" />
+                      </>
+                    )}
                   </td>
                   <td>
                     {s.lastSuccessUtc ? formatDate(s.lastSuccessUtc) : '-'}

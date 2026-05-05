@@ -45,7 +45,8 @@ public class ScrapersController(
             IsEventFeed = request.IsEventFeed,
             Disabled = request.Disabled,
             Notes = request.Notes ?? string.Empty,
-            IsReviewRequired = request.IsReviewRequired,
+            HasSuggestions = request.HasSuggestions,
+            RequiresReview = request.RequiresReview,
             ExecutionMode = request.ExecutionMode ?? Core.Domain.Enums.ExecutionMode.Dynamic,
             ExtractionStrategy = request.ExtractionStrategy ?? Core.Domain.Enums.ExtractionStrategy.Css,
             PaginationType = request.PaginationType ?? Core.Domain.Enums.PaginationType.None,
@@ -86,7 +87,8 @@ public class ScrapersController(
         if (request.IsEventFeed is not null) scraper.IsEventFeed = request.IsEventFeed.Value;
         if (request.Disabled is not null) scraper.Disabled = request.Disabled.Value;
         if (request.Notes is not null) scraper.Notes = request.Notes;
-        if (request.IsReviewRequired is not null) scraper.IsReviewRequired = request.IsReviewRequired.Value;
+        if (request.HasSuggestions is not null) scraper.HasSuggestions = request.HasSuggestions.Value;
+        if (request.RequiresReview is not null) scraper.RequiresReview = request.RequiresReview.Value;
         if (request.ExecutionMode is not null) scraper.ExecutionMode = request.ExecutionMode.Value;
         if (request.ExtractionStrategy is not null) scraper.ExtractionStrategy = request.ExtractionStrategy.Value;
         if (request.PaginationType is not null) scraper.PaginationType = request.PaginationType.Value;

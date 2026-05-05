@@ -80,14 +80,14 @@ export const RunsTab: React.FC<Props> = ({
             <Button disabled={loading} onClick={() => run('actions')}>
               Test Actions
             </Button>
-            <Button disabled={loading} onClick={() => run('mapping')}>
+            {/* <Button disabled={loading} onClick={() => run('mapping')}>
               Test Mapping
-            </Button>
+            </Button> */}
             <Button disabled={loading} onClick={() => run('test')}>
-              Test Run (no DB write)
+              Test Actions + Mapping
             </Button>
             <Button disabled={loading} onClick={() => run('now')}>
-              Run Now (persist)
+              Run Now
             </Button>
           </div>
 
@@ -174,9 +174,9 @@ function formatElapsed(from: Date) {
 
   if (seconds < 60) return `${seconds}s`;
   const minutes = differenceInMinutes(now, from);
-  if (minutes < 60) return `${minutes}m`;
+  if (minutes < 60) return `${minutes}m${seconds}s`;
   const hours = differenceInHours(now, from);
-  if (hours < 24) return `${hours}h`;
+  if (hours < 24) return `${hours}h${minutes}m${seconds}s`;
   const days = differenceInDays(now, from);
-  return `${days}d`;
+  return `${days}d${hours}h${minutes}m${seconds}s`;
 }

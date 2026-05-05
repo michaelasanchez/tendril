@@ -22,7 +22,8 @@ export interface CreateScraperRequest {
   isEventFeed: boolean;
   disabled: boolean;
   notes: string;
-  isReviewRequired: boolean;
+  hasSuggestions: boolean;
+  requiresReview: boolean;
   executionMode: ExecutionMode;
   extractionStrategy: ExtractionStrategy;
   paginationType: PaginationType;

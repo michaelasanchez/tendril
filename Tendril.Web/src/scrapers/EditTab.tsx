@@ -51,7 +51,7 @@ interface Props {
   onSave: () => void;
 }
 
-export const GeneralTab: React.FC<Props> = ({
+export const EditTab: React.FC<Props> = ({
   scraper,
   venues,
   onUpdate,
@@ -119,13 +119,23 @@ export const GeneralTab: React.FC<Props> = ({
               onChange={(notes) => onUpdate({ ...scraper, notes })}
             />
 
-            <FormCheck
-              label="Needs Review"
-              checked={scraper.isReviewRequired}
-              onChange={(isReviewRequired) =>
-                onUpdate({ ...scraper, isReviewRequired })
-              }
-            />
+            <div className={formStyles.formGroup}>
+              <FormCheck
+                label="Needs Review"
+                checked={scraper.requiresReview}
+                onChange={(requiresReview) =>
+                  onUpdate({ ...scraper, requiresReview: requiresReview })
+                }
+              />
+
+              <FormCheck
+                label="Has Suggestions"
+                checked={scraper.hasSuggestions}
+                onChange={(hasSuggestions) =>
+                  onUpdate({ ...scraper, hasSuggestions: hasSuggestions })
+                }
+              />
+            </div>
 
             <hr />
 

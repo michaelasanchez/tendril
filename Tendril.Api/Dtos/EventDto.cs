@@ -25,7 +25,7 @@ public record EventDto
     public string? TicketUrl { get; set; }
 
     public string Status { get; set; } = string.Empty;
-    public bool IsReviewRequired { get; set; }
+    public bool RequiresReview { get; set; }
 
     public DateTimeOffset? UpdatedAtUtc { get; set; }
     public DateTimeOffset? ReviewRequiredAtUtc { get; set; }

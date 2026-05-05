@@ -113,13 +113,13 @@ public class ScraperRunsController(
             return NotFound();
 
         var mappedEvents = new List<object>();
-        var rawCount = 0;
+        var rawEvents = new List<object>();
 
         try
         {
             await foreach (var raw in executor.RunScraperAsync(scraper, ct))
             {
-                rawCount++;
+                rawEvents.Add(raw);
 
                 // Simulate the Entity wrapper required by the Mapper
                 var rawEntity = new ScrapedEventRaw
@@ -158,7 +158,7 @@ public class ScraperRunsController(
             {
                 success = true,
                 error = (string?)null,
-                rawCount,
+                raw = rawEvents,
                 mappedCount = mappedEvents.Count,
                 mapped = mappedEvents
             });
@@ -169,7 +169,7 @@ public class ScraperRunsController(
             {
                 success = false,
                 error = ex.Message,
-                rawCount,
+                raw = rawEvents,
                 mappedCount = mappedEvents.Count,
                 mapped = mappedEvents
             });

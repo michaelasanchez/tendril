@@ -20,6 +20,7 @@ import {
   LogIn,
   LogOut,
   MapPin,
+  MessageCircleCheck,
   Moon,
   Play,
   Plus,
@@ -30,7 +31,7 @@ import {
   Trash,
   X,
   Zap,
-  ZapOff
+  ZapOff,
 } from 'lucide-react';
 
 const Icons = {
@@ -61,6 +62,7 @@ const Icons = {
   run: Play,
   share: Share2,
   sliders: SlidersHorizontal,
+  suggestions: MessageCircleCheck,
   ticket: Ticket,
   unarchive: ArchiveRestore,
   unpublish: CloudDownload,
