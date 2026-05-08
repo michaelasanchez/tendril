@@ -264,9 +264,9 @@ export const EventsPage: React.FC = () => {
   //   [events]
   // );
 
-  const [show, setShow] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
-  const handleClose = () => setShow(false);
+  const handleCloseFilters = () => setShowFilters(false);
 
   return (
     <>
@@ -274,7 +274,7 @@ export const EventsPage: React.FC = () => {
         <h1 className={styles.PageTitle}>Upcoming Events</h1>
         <div className={styles.SubHeaderRow}>
           <div className={cn(pageStyles.SubHeader, styles.EventsFound)}>
-            {filteredEvents.length > 0 && (
+            {!loading.events && (
               <>
                 {showFavoritesOnly ? filteredEvents.length : result.totalCount}{' '}
                 events found
@@ -283,12 +283,14 @@ export const EventsPage: React.FC = () => {
             )}
           </div>
           <div className={cn('d-lg-none', styles.PageControls)}>
-            <SquareButton
-              variant="outline-primary"
-              onClick={() => setShow(true)}
-            >
-              <Icon name="sliders" /> Filters
-            </SquareButton>
+            {!loading.events && (
+              <SquareButton
+                variant="outline-primary"
+                onClick={() => setShowFilters(true)}
+              >
+                <Icon name="sliders" /> Filters
+              </SquareButton>
+            )}
           </div>
         </div>
 
@@ -296,8 +298,8 @@ export const EventsPage: React.FC = () => {
           <Row>
             <Col lg={4}>
               <Offcanvas
-                show={show}
-                onHide={handleClose}
+                show={showFilters}
+                onHide={handleCloseFilters}
                 responsive="lg"
                 placement="end"
               >
@@ -336,21 +338,6 @@ export const EventsPage: React.FC = () => {
                   />
                 </Offcanvas.Body>
               </Offcanvas>
-              {/* <div
-                className={cn('d-lg-block', showFilters ? 'd-block' : 'd-none')}
-              >
-                <FiltersCard
-                  className={styles.FiltersCard}
-                  filter={filter}
-                  favoritesOnly={showFavoritesOnly}
-                  categories={categories}
-                  venues={venues}
-                  onChange={(update) =>
-                    setFilter((prev) => ({ ...prev, ...update }))
-                  }
-                  onToggleFavoritesOnly={() => setShowFavoritesOnly((v) => !v)}
-                />
-              </div> */}
             </Col>
             <Col lg={8} className={cn(styles.EventsColumn)}>
               <EventList

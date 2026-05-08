@@ -4,6 +4,7 @@ import NoImage from '../../assets/no-image.svg';
 import type { Event } from '../../types/api';
 import { Badge } from '../badge';
 import { IconButton, SquareButton } from '../button';
+import ExpandableText from '../ExpandableText';
 import { Icon, type IconName } from '../Icon';
 import styles from './Modal.module.css';
 
@@ -59,7 +60,10 @@ export const EventModal: React.FC<Props> = ({ event, show, onHide }) => {
           <Modal.Body className={styles.Body}>
             <div className={styles.Content}>
               <h2>{event.title}</h2>
-              <p>{event.description}</p>
+              {/* <p>{event.description}</p> */}
+              <ExpandableText>
+                <p>{event.description}</p>
+              </ExpandableText>
             </div>
             <EventRow icon="calendar" label="Date & Time">
               <p>

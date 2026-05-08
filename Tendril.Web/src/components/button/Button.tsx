@@ -17,6 +17,7 @@ export interface ButtonProps {
   disabled?: boolean;
   href?: string;
   rel?: string;
+  size?: 'sm' | 'md' | 'lg';
   target?: string;
   type?: 'button' | 'submit' | 'reset';
   variant?: Variant;
@@ -56,6 +57,7 @@ export const Button: React.FC<ButtonProps> = ({
   disabled,
   href,
   rel,
+  size = 'md',
   target,
   type = 'button',
   variant = 'default',
@@ -73,7 +75,12 @@ export const Button: React.FC<ButtonProps> = ({
     </a>
   ) : (
     <button
-      className={cn(styles.Button, getVariantClass(variant), className)}
+      className={cn(
+        styles.Button,
+        getVariantClass(variant),
+        getSizeClass(size),
+        className,
+      )}
       disabled={disabled}
       type={type}
       onClick={onClick}
@@ -82,6 +89,17 @@ export const Button: React.FC<ButtonProps> = ({
     </button>
   );
 };
+
+function getSizeClass(size: ButtonProps['size']) {
+  switch (size) {
+    case 'sm':
+      return styles.Small;
+    case 'lg':
+      return styles.Large;
+    default:
+      return '';
+  }
+}
 
 function getVariantClass(varint: Variant | undefined) {
   switch (varint) {

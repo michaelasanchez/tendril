@@ -16,7 +16,9 @@
 
   padding: calc(var(--spacing) * 2) calc(var(--spacing) * 4);
 
-  transition: color var(--button-delay), background-color var(--button-delay),
+  transition:
+    color var(--button-delay),
+    background-color var(--button-delay),
     border-color var(--button-delay);
 
   &:has(svg:only-child) {
@@ -27,6 +29,16 @@
     background-color: var(--button-hover-background);
     border-color: var(--button-hover-border);
     color: var(--button-hover-color);
+  }
+
+  &.Small {
+  padding: calc(var(--spacing) * 1.5) calc(var(--spacing) * 3);
+    font-size: 0.75rem;
+  }
+
+  &.Large {
+  padding: calc(var(--spacing) * 3) calc(var(--spacing) * 6);
+    font-size: 1.25rem;
   }
 
   &.Active {
@@ -61,7 +73,6 @@
   &.OutlineSecondary {
     --button-color: var(--accent-secondary);
 
-    
     &:hover {
       --button-hover-background: var(--accent);
       --button-hover-border: var(--accent);
@@ -109,7 +120,9 @@
     fill-opacity: 0;
     stroke: var(--foreground);
 
-    transition: fill calc(var(--delay) * 2), fill-opacity calc(var(--delay) * 2),
+    transition:
+      fill calc(var(--delay) * 2),
+      fill-opacity calc(var(--delay) * 2),
       stroke calc(var(--delay) * 2);
   }
 
