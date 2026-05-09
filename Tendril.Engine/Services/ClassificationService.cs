@@ -24,12 +24,27 @@ public class ClassificationService(TendrilDbContext context) : IClassificationSe
         foreach (var rule in rules)
         {
             var valueToCompare = string.Empty;
+            bool found = true;
 
-            if (root.TryGetProperty(rule.SourceJsonPath, out var jsonElement))
+            // Split the path by dots and traverse
+            foreach (var part in rule.SourceJsonPath.Split('.'))
             {
-                valueToCompare = jsonElement.ValueKind == JsonValueKind.String
-                    ? jsonElement.GetString()
-                    : jsonElement.GetRawText();
+                if (root.TryGetProperty(part, out var nextElement))
+                {
+                    root = nextElement;
+                }
+                else
+                {
+                    found = false;
+                    break;
+                }
+            }
+
+            if (found)
+            {
+                valueToCompare = root.ValueKind == JsonValueKind.String
+                    ? root.GetString()
+                    : root.GetRawText();
             }
 
             if (IsMatch(rule, valueToCompare))
