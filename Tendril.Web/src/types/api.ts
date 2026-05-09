@@ -120,7 +120,6 @@ export type TransformType =
   | 'ParseDate'
   | 'ParseTime'
   | 'ParseExact'
-  | 'ParseLoose'
   | 'ToLower'
   | 'ToUpper'
   | 'Currency'
@@ -230,7 +229,9 @@ export interface Event {
   location: string;
   description: string;
   startUtc: string;
+  showStartTime: boolean;
   endUtc: string | null;
+  showEndTime: boolean | null;
   minPrice: number | null;
   maxPrice: number | null;
   imageUrl: string | null;

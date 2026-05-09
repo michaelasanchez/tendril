@@ -17,7 +17,7 @@ public class IngestionService(
     IEventRevisionRepository eventRevisions,
     IRawEventRepository rawEvents,
     IScraperRepository scrapers,
-    IMapperService mapper,
+    IMappingService mapper,
     IClassificationService classifier,
     IScrapeExecutor executor) : IIngestionService
 {
@@ -72,7 +72,7 @@ public class IngestionService(
                 // B. Map & Upsert Event
                 try
                 {
-                    var (mappedEvent, status, summary) = await ProcessSingleEventAsync(
+                    var (mappedEvent, status, summary) = await ProcessSingleEvent(
                         scraper,
                         attempt.Id,
                         rawEntity,
@@ -164,7 +164,7 @@ public class IngestionService(
         };
     }
 
-    private async Task<(Event? mappedEvent, string result, string message)> ProcessSingleEventAsync(
+    private async Task<(Event? mappedEvent, string result, string message)> ProcessSingleEvent(
         ScraperDefinition scraper,
         Guid attemptId,
         ScrapedEventRaw rawEvent,
@@ -226,7 +226,9 @@ public class IngestionService(
         current.Description = Update("Description", current.Description, incoming.Description, changes);
 
         current.StartUtc = Update("StartUtc", current.StartUtc, incoming.StartUtc, changes);
+        current.StartPrecision = Update("StartPrecision", current.StartPrecision, incoming.StartPrecision, changes);
         current.EndUtc = Update("EndUtc", current.EndUtc, incoming.EndUtc, changes);
+        current.EndPrecision = Update("EndPrecision", current.EndPrecision, incoming.EndPrecision, changes);
 
         current.MinPrice = Update("MinPrice", current.MinPrice, incoming.MinPrice, changes);
         current.MaxPrice = Update("MaxPrice", current.MaxPrice, incoming.MaxPrice, changes);
@@ -244,14 +246,19 @@ public class IngestionService(
         T incoming,
         List<RevisionResult> changes)
     {
-        if (!EqualityComparer<T>.Default.Equals(current, incoming) &&
-            !EqualityComparer<T>.Default.Equals(incoming, default))
+        var type = typeof(T);
+        bool isDifferent = !EqualityComparer<T>.Default.Equals(current, incoming);
+
+        bool isNotDefault = !EqualityComparer<T>.Default.Equals(incoming, default);
+        bool shouldTrustDefault = type.IsEnum || (type.IsValueType && Nullable.GetUnderlyingType(type) == null);
+
+        if (isDifferent && (isNotDefault || shouldTrustDefault))
         {
             changes.Add(new RevisionResult(
                 Updated: true,
                 Field: field,
-                OldValue: current?.ToString(),
-                NewValue: incoming?.ToString()
+                OldValue: current?.ToString() ?? "(null)",
+                NewValue: incoming?.ToString() ?? "(null)"
             ));
 
             return incoming;

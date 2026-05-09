@@ -41,8 +41,6 @@ export const FiltersCard: React.FC<Props> = ({
   const isLarge = useBreakpoint();
 
   return (
-    // <Card className={cn(cardStyles.BgCard, styles.FiltersCard, className)}>
-    //   <Card.Body className={cardStyles.CardBody}>
     <div
       className={cn(
         isLarge && cardStyles.BgCard,
@@ -68,7 +66,7 @@ export const FiltersCard: React.FC<Props> = ({
           onChange={(startDate) => onChange({ startDate })}
         />
         <FormDate
-        className={styles.LessTopMargin}
+          className={styles.LessTopMargin}
           label="To"
           value={filter.endDate ?? ''}
           onChange={(endDate) => onChange({ endDate })}
@@ -100,10 +98,6 @@ export const FiltersCard: React.FC<Props> = ({
                 i < categoryShowCount ||
                 filter.categoryIds?.includes(c.id),
             )
-            // .slice(
-            //   0,
-            //   showMoreCategories ? categories.length : categoryShowCount,
-            // )
             .map((c, i) => {
               const active = filter.categoryIds?.includes(c.id);
 
@@ -181,7 +175,5 @@ export const FiltersCard: React.FC<Props> = ({
         </div>
       </div>
     </div>
-    //   </Card.Body>
-    // </Card>
   );
 };

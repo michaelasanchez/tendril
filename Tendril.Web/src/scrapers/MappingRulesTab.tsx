@@ -36,7 +36,6 @@ const transformTypeOptions: SelectOption[] = [
   'ParseDate',
   'ParseTime',
   'ParseExact',
-  'ParseLoose',
   'ToLower',
   'ToUpper',
   'Currency',

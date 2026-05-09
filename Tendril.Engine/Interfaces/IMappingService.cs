@@ -2,7 +2,7 @@
 
 namespace Tendril.Engine.Abstractions;
 
-public interface IMapperService
+public interface IMappingService
 {
     Event MapEvent(ScraperDefinition scraper, ScrapedEventRaw raw, int? referenceYear);
 }

@@ -76,7 +76,7 @@ export const EventCard: React.FC<Props> = ({
           {/* Date & Time */}
           <div className={styles.CardRow}>
             <Icon name="calendar" /> {formatDate(event.startUtc, 'date')} •{' '}
-            {formatDate(event.startUtc, 'time')}
+            {event.showStartTime && formatDate(event.startUtc, 'time')}
           </div>
 
           {/* Cost */}

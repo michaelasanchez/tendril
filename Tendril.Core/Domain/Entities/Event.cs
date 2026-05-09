@@ -24,7 +24,9 @@ public class Event
     public string? Description { get; set; }
 
     public DateTimeOffset StartUtc { get; set; }
+    public DatePrecision StartPrecision { get; set; }
     public DateTimeOffset? EndUtc { get; set; }
+    public DatePrecision? EndPrecision { get; set; }
 
     public decimal? MinPrice { get; set; }
     public decimal? MaxPrice { get; set; }

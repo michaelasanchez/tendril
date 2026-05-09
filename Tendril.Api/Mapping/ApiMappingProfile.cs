@@ -28,7 +28,9 @@ public class ApiMappingProfile : Profile
             .ForMember(d => d.CategoryId, opt => opt.MapFrom(s => s.Category!.Id))
             .ForMember(d => d.CategoryName, opt => opt.MapFrom(s => s.Category!.Name))
             .ForMember(d => d.VenueName, opt => opt.MapFrom(s => s.Venue!.Name))
-            .ForMember(d => d.VenueUrl, opt => opt.MapFrom(s => s.Venue!.Website));
+            .ForMember(d => d.VenueUrl, opt => opt.MapFrom(s => s.Venue!.Website))
+            .ForMember(d => d.ShowStartTime, opt => opt.MapFrom(s => s.StartPrecision == Core.Domain.Enums.DatePrecision.Minute))
+            .ForMember(d => d.ShowEndTime, opt => opt.MapFrom(s => s.EndPrecision == Core.Domain.Enums.DatePrecision.Minute));
 
         CreateMap<Category, CategoryDto>();
 

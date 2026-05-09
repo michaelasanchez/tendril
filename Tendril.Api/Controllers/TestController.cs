@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json.Nodes;
 using Tendril.Api.Dtos;
 using Tendril.Core.Domain.Entities;
 using Tendril.Core.Interfaces.Repositories;
@@ -16,7 +17,7 @@ public class ScraperRunsController(
     IScraperRepository scrapers,
     IRawEventRepository rawEvents,
     IScrapeExecutor executor,
-    IMapperService mapper,
+    IMappingService mapper,
     IIngestionService ingestionService) : ControllerBase
 {
     // 1) Test selectors only (Stream -> List in memory)
@@ -113,14 +114,12 @@ public class ScraperRunsController(
             return NotFound();
 
         var mappedEvents = new List<object>();
-        var rawEvents = new List<object>();
+        var rawEvents = new List<JsonNode>();
 
         try
         {
             await foreach (var raw in executor.RunScraperAsync(scraper, ct))
             {
-                rawEvents.Add(raw);
-
                 // Simulate the Entity wrapper required by the Mapper
                 var rawEntity = new ScrapedEventRaw
                 {
@@ -147,6 +146,8 @@ public class ScraperRunsController(
                             mapped.EndUtc = mapped.EndUtc.Value.AddYears(diff);
                     }
                 }
+
+                rawEvents.Add(JsonNode.Parse(rawEntity.RawDataJson));
 
                 if (mapped is not null)
                 {

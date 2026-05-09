@@ -12,7 +12,6 @@ public enum TransformType
     ParseDate,
     ParseTime,
     ParseExact,
-    ParseLoose,
     ToLower,
     ToUpper,
     Currency,

@@ -12,6 +12,5 @@ public interface IEventRepository
     Task AddAsync(Event ev, CancellationToken ct = default);
     Task UpdateAsync(Event ev, CancellationToken ct = default);
     Task DeleteAsync(Event ev, CancellationToken ct = default);
-    Task<bool> Exists(Event mappedEvent, CancellationToken ct = default);
     Task<Event?> Find(Event mappedEvent, CancellationToken ct = default);
 }

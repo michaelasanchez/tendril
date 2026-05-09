@@ -43,6 +43,8 @@ export const Navbar: React.FC<Props> = ({
         </div>
         <BootstrapNavbar.Collapse>
           <Nav className={styles.NavRight}>
+            <Nav.Link href="/">Events</Nav.Link>
+            <hr />
             <Nav.Link href="/admin/scrapers">Scrapers</Nav.Link>
             <Nav.Link href="/admin/categories">Categories</Nav.Link>
             <Nav.Link href="/admin/tags">Tags</Nav.Link>

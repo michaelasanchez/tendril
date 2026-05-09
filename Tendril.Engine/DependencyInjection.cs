@@ -15,7 +15,7 @@ public static class DependencyInjection
         services.AddTransient<ScrapeResourceManager>();
 
         services.AddScoped<IClassificationService, ClassificationService>();
-        services.AddScoped<IMapperService, MapperService>();
+        services.AddScoped<IMappingService, MappingService>();
         services.AddScoped<IJsonLdProcessor, JsonLdProcessor>();
         services.AddScoped<ITemplateService, TemplateService>();
 

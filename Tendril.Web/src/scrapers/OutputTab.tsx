@@ -304,7 +304,7 @@ export const OutputTab: React.FC<Props> = ({
                   </p>
                   <label>
                     <h4>{format(new Date(e.startUtc), 'MMM dd yyy')}</h4>
-                    {format(new Date(e.startUtc), 'hh:mm aa')}
+                    {e.showStartTime && format(new Date(e.startUtc), 'hh:mm aa')}
                   </label>
                   <div>
                     {e.detailsUrl && (

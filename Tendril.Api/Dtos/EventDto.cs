@@ -15,7 +15,9 @@ public record EventDto
     public string? CategoryName { get; set; }
 
     public DateTimeOffset StartUtc { get; set; }
+    public bool ShowStartTime { get; set; }
     public DateTimeOffset? EndUtc { get; set; }
+    public bool? ShowEndTime { get; set; }
 
     public decimal? MinPrice { get; set; }
     public decimal? MaxPrice { get; set; }

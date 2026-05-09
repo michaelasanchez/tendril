@@ -27,8 +27,8 @@ const sortScraper = (scrapers: ScraperDefinition[], sort: Sort | null) =>
   scrapers.sort((a, b) => {
     if (!sort) return 0;
 
-    const aValue = a[sort.key];
-    const bValue = b[sort.key];
+    let aValue = a[sort.key];
+    let bValue = b[sort.key];
 
     // 3. Handle checking for null/undefined values (optional but recommended)
     if (aValue == null) return 1;
@@ -46,6 +46,11 @@ const sortScraper = (scrapers: ScraperDefinition[], sort: Sort | null) =>
       if (isNaN(bTime)) return -1;
 
       return sort.direction === 'asc' ? aTime - bTime : bTime - aTime;
+    }
+
+    if (sort.key === 'name') {
+      aValue = aValue.replace(/^The /, '');
+      bValue = bValue.replace(/^The /, '');
     }
 
     if (typeof aValue === 'string' && typeof bValue === 'string') {
@@ -199,7 +204,7 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({}) => {
         </div>
         {loading && <p>Loading…</p>}
         {error && <p className="error">{error}</p>}
-        <Table className="data-table" hover responsive>
+        <Table className={tableStyles.Table} hover responsive>
           <thead>
             <tr>
               <th onClick={() => onSort('name')}>
@@ -211,13 +216,14 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({}) => {
               <th onClick={() => onSort('state')}>
                 State{sortIndicator('state')}
               </th>
+              <th />
               <th onClick={() => onSort('lastSuccessUtc')}>
                 Last Success{sortIndicator('lastSuccessUtc')}
               </th>
               <th onClick={() => onSort('lastFailureUtc')}>
                 Last Failure{sortIndicator('lastFailureUtc')}
               </th>
-              <th />
+              {/* <th /> */}
             </tr>
           </thead>
 
@@ -228,16 +234,19 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({}) => {
               </tr>
 
               {scrapers.map((s) => (
-                <tr key={s.id}>
+                <tr
+                  key={s.id}
+                  className={tableStyles.Clickable}
+                  onClick={() => navigate(`/admin/scrapers/${s.id}`)}
+                >
                   <td>{s.name}</td>
                   <td>
                     <a href={s.baseUrl} target="_blank">
                       {s.baseUrl}
                     </a>
                   </td>
+                  <td>{s.isEventFeed ? s.state : '-'}</td>
                   <td>
-                    {s.isEventFeed ? s.state : '-'}
-                    
                     {s.hasSuggestions && (
                       <>
                         &nbsp;
@@ -257,7 +266,7 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({}) => {
                   <td>
                     {s.lastFailureUtc ? formatDate(s.lastFailureUtc) : '-'}
                   </td>
-                  <td className={tableStyles.TableActions}>
+                  {/* <td className={tableStyles.TableActions}>
                     <div>
                       <Button
                         onClick={() => navigate(`/admin/scrapers/${s.id}`)}
@@ -273,7 +282,7 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({}) => {
                         </Button>
                       )}
                     </div>
-                  </td>
+                  </td> */}
                 </tr>
               ))}
               {scrapers.length === 0 && !loading && (

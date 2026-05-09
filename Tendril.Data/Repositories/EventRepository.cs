@@ -142,24 +142,15 @@ public class EventRepository(TendrilDbContext _context) : IEventRepository
         await _context.SaveChangesAsync(ct);
     }
 
-    public Task<bool> Exists(Event mappedEvent, CancellationToken ct = default)
-    {
-        return _context.Events
-            .AsNoTracking()
-            .AnyAsync(x =>
-                x.ScraperDefinitionId == mappedEvent.ScraperDefinitionId &&
-                x.Title == mappedEvent.Title &&
-                x.StartUtc == mappedEvent.StartUtc &&
-                x.Status != EventStatus.Suppressed, ct);
-    }
-
     public Task<Event?> Find(Event mappedEvent, CancellationToken ct = default)
     {
         return _context.Events
             .SingleOrDefaultAsync(x =>
                 x.ScraperDefinitionId == mappedEvent.ScraperDefinitionId &&
                 x.Title == mappedEvent.Title &&
-                x.StartUtc == mappedEvent.StartUtc &&
+                ((x.StartPrecision == DatePrecision.Day || mappedEvent.StartPrecision == DatePrecision.Day)
+                    ? x.StartUtc.Date == mappedEvent.StartUtc.Date
+                    : x.StartUtc == mappedEvent.StartUtc) &&
                 x.Status != EventStatus.Suppressed, ct);
     }
 }

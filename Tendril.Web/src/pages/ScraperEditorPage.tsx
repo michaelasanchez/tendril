@@ -260,7 +260,7 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({}) => {
               variant={activeTab == 'general' ? 'active' : 'default'}
               onClick={() => handleTabChange('general')}
             >
-              Edit
+              Info
             </Button>
             <Button
               variant={activeTab == 'actions' ? 'active' : 'default'}

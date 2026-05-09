@@ -1,7 +1,7 @@
 import { format } from 'date-fns';
 import { Modal } from 'react-bootstrap';
 import NoImage from '../../assets/no-image.svg';
-import type { Event } from '../../types/api';
+import type { Event, Venue } from '../../types/api';
 import { Badge } from '../badge';
 import { IconButton, SquareButton } from '../button';
 import ExpandableText from '../ExpandableText';
@@ -11,6 +11,7 @@ import styles from './Modal.module.css';
 interface Props {
   event: Event | null;
   show: boolean;
+  venues: Venue[] | null;
   onHide?: () => void;
 }
 
@@ -32,7 +33,7 @@ const EventRow: React.FC<{
   </div>
 );
 
-export const EventModal: React.FC<Props> = ({ event, show, onHide }) => {
+export const EventModal: React.FC<Props> = ({ event, show, venues, onHide }) => {
   return (
     <Modal
       className={styles.Modal}
