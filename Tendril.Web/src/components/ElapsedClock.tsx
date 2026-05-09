@@ -1,15 +1,20 @@
+import {
+  differenceInDays,
+  differenceInHours,
+  differenceInMinutes,
+  differenceInSeconds,
+} from 'date-fns';
 import { useEffect, useState } from 'react';
 import Spinner from 'react-bootstrap/Spinner';
 
 type ElapsedClockProps = {
   runStart?: Date | string | null;
   // Adjusted to take the current time so it can calculate the difference
-  formatElapsed: (start: Date, now: Date) => string;
+  // formatElapsed: (start: Date, now: Date) => string;
 };
 
 export const ElapsedClock: React.FC<ElapsedClockProps> = ({
   runStart,
-  formatElapsed,
 }) => {
   const [now, setNow] = useState<Date>(new Date());
 
@@ -43,3 +48,16 @@ export const ElapsedClock: React.FC<ElapsedClockProps> = ({
     </div>
   );
 };
+
+
+function formatElapsed(from: Date, now: Date) {
+  const seconds = differenceInSeconds(now, from);
+
+  if (seconds < 60) return `${seconds}s`;
+  const minutes = differenceInMinutes(now, from);
+  if (minutes < 60) return `${minutes}m${seconds}s`;
+  const hours = differenceInHours(now, from);
+  if (hours < 24) return `${hours}h${minutes}m${seconds}s`;
+  const days = differenceInDays(now, from);
+  return `${days}d${hours}h${minutes}m${seconds}s`;
+}

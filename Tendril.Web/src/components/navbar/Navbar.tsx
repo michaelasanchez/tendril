@@ -51,7 +51,6 @@ export const Navbar: React.FC<Props> = ({
             <Nav.Link href="/admin/venues">Venues</Nav.Link>
             <Nav.Link href="/admin/summary">Summary</Nav.Link>
             <hr />
-            <Nav.Link href="/">Events</Nav.Link>
             <Nav.Link onClick={onLogout}>
               Logout
             </Nav.Link>

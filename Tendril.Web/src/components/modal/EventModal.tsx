@@ -1,7 +1,7 @@
 import { format } from 'date-fns';
 import { Modal } from 'react-bootstrap';
 import NoImage from '../../assets/no-image.svg';
-import type { Event, Venue } from '../../types/api';
+import type { Event } from '../../types/api';
 import { Badge } from '../badge';
 import { IconButton, SquareButton } from '../button';
 import ExpandableText from '../ExpandableText';
@@ -11,7 +11,6 @@ import styles from './Modal.module.css';
 interface Props {
   event: Event | null;
   show: boolean;
-  venues: Venue[] | null;
   onHide?: () => void;
 }
 
@@ -33,7 +32,7 @@ const EventRow: React.FC<{
   </div>
 );
 
-export const EventModal: React.FC<Props> = ({ event, show, venues, onHide }) => {
+export const EventModal: React.FC<Props> = ({ event, show, onHide }) => {
   return (
     <Modal
       className={styles.Modal}
@@ -61,7 +60,6 @@ export const EventModal: React.FC<Props> = ({ event, show, venues, onHide }) => 
           <Modal.Body className={styles.Body}>
             <div className={styles.Content}>
               <h2>{event.title}</h2>
-              {/* <p>{event.description}</p> */}
               <ExpandableText>
                 <p>{event.description}</p>
               </ExpandableText>
@@ -73,7 +71,23 @@ export const EventModal: React.FC<Props> = ({ event, show, venues, onHide }) => 
               <p>{format(new Date(event.startUtc ?? ''), 'h:mm a')}</p>
             </EventRow>
             <EventRow icon="location" label="Venue">
-              <p>{event.location ?? event.venueName}</p>
+              <p>
+                {event.venueUrl ? (
+                  <>
+                    <a
+                      className={styles.VenueLink}
+                      href={event.venueUrl}
+                      target="_blank"
+                    >
+                      {event.venueName}
+                    </a>{' '}
+                    <Icon name="external" />
+                  </>
+                ) : (
+                  event.venueName
+                )}
+              </p>
+              <small className="text-muted">{event.location}</small>
             </EventRow>
             {!!event.minPrice && (
               <EventRow icon="ticket" label="Tickets">

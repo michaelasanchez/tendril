@@ -361,6 +361,7 @@ export const EventsPage: React.FC = () => {
 
       <EventModal
         event={activeIndex >= 0 ? filteredEvents[activeIndex] : null}
+        venues={venues}
         show={activeIndex >= 0}
         onHide={handleModalClose}
         // onNext={handleOnNext}

@@ -1,11 +1,4 @@
-import {
-  differenceInDays,
-  differenceInHours,
-  differenceInMinutes,
-  differenceInSeconds,
-  intervalToDuration,
-  parseISO,
-} from 'date-fns';
+import { format, intervalToDuration, parseISO } from 'date-fns';
 import { useState } from 'react';
 import { Card, Table } from 'react-bootstrap';
 
@@ -91,9 +84,7 @@ export const RunsTab: React.FC<Props> = ({
             </Button>
           </div>
 
-          {loading && (
-            <ElapsedClock runStart={runStart} formatElapsed={formatElapsed} />
-          )}
+          {loading && <ElapsedClock runStart={runStart} />}
 
           {result && (
             <div className="run-result">
@@ -138,7 +129,14 @@ export const RunsTab: React.FC<Props> = ({
             <tbody>
               {attempts.map((a) => (
                 <tr key={a.id}>
-                  <td>{new Date(a.startTimeUtc).toLocaleString()}</td>
+                  <td>
+                    <code>
+                      {format(new Date(a.startTimeUtc ?? ''), 'yyyy-MM-dd')}{' '}
+                      <small className="text-muted">
+                        {format(new Date(a.startTimeUtc ?? ''), 'hh:mm')}
+                      </small>
+                    </code>
+                  </td>
                   {/* <td>
                     {!!a.endTimeUtc && new Date(a.endTimeUtc).toLocaleString()}
                   </td> */}
@@ -167,16 +165,3 @@ export const RunsTab: React.FC<Props> = ({
     </>
   );
 };
-
-function formatElapsed(from: Date) {
-  const now = new Date();
-  const seconds = differenceInSeconds(now, from);
-
-  if (seconds < 60) return `${seconds}s`;
-  const minutes = differenceInMinutes(now, from);
-  if (minutes < 60) return `${minutes}m${seconds}s`;
-  const hours = differenceInHours(now, from);
-  if (hours < 24) return `${hours}h${minutes}m${seconds}s`;
-  const days = differenceInDays(now, from);
-  return `${days}d${hours}h${minutes}m${seconds}s`;
-}

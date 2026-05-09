@@ -25,6 +25,10 @@
     padding: calc(var(--spacing) * 2) calc(var(--spacing) * 2.6);
   }
 
+  &:disabled {
+    
+  }
+
   &:hover {
     background-color: var(--button-hover-background);
     border-color: var(--button-hover-border);

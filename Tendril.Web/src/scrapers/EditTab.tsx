@@ -200,12 +200,12 @@ export const EditTab: React.FC<Props> = ({
                 }
               />
               <FormCheck
-                label="Use Headless Browser"
-                checked={scraper.useHeadlessBrowser}
+                label="Use CDP"
+                checked={!scraper.useHeadlessBrowser}
                 onChange={(useHeadlessBrowser) =>
                   onUpdate({
                     ...scraper,
-                    useHeadlessBrowser,
+                    useHeadlessBrowser: !useHeadlessBrowser,
                   })
                 }
               />

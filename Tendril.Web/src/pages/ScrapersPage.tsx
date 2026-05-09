@@ -230,7 +230,7 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({}) => {
           {scraperGroups.map(({ key, scrapers }) => (
             <tbody key={key}>
               <tr className={tableStyles.GroupHeader}>
-                <td colSpan={7}>{key}</td>
+                <td colSpan={7}>{key} ({scrapers?.length})</td>
               </tr>
 
               {scrapers.map((s) => (

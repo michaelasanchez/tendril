@@ -1,4 +1,5 @@
 using Auth;
+using System.Net;
 using System.Text.Json.Serialization;
 using Tendril.Api.Mapping;
 using Tendril.Data;
@@ -6,20 +7,30 @@ using Tendril.Engine;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddHttpClient("ScraperClient", client =>
-{
-    // 1. Set a modern Browser User-Agent (Chrome on Windows)
-    client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+var cookieContainer = new CookieContainer();
+builder.Services.AddSingleton(cookieContainer);
 
-    // 2. Set the Accept header to standard HTML navigation
-    client.DefaultRequestHeaders.Accept.ParseAdd("text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8");
+builder.Services.AddHttpClient("ScraperClient")
+    .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler()
+    {
+        // TicketWeb/Akamai often requires these for modern bot detection bypass
+        //AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli,
+        PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+        CookieContainer = cookieContainer, // This is crucial for session persistence
+        AutomaticDecompression = DecompressionMethods.All
+    })
+    .ConfigureHttpClient(client =>
+    {
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+        client.DefaultRequestHeaders.Accept.ParseAdd("text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8");
+        client.DefaultRequestHeaders.AcceptLanguage.ParseAdd("en-US,en;q=0.9");
 
-    // 3. Set Accept-Language (Sometimes required by negotiation logic)
-    client.DefaultRequestHeaders.AcceptLanguage.ParseAdd("en-US,en;q=0.9");
-
-    // 4. (Optional but recommended) Set Accept-Encoding to handle gzip/br automatically
-    // Note: If you do this, ensure your HttpClientHandler has AutomaticDecompression enabled.
-});
+        // Add these additional "Sec-CH" headers to look like a real Chromium browser
+        client.DefaultRequestHeaders.Add("sec-ch-ua", "\"Not_A Brand\";v=\"8\", \"Chromium\";v=\"120\", \"Google Chrome\";v=\"120\"");
+        client.DefaultRequestHeaders.Add("sec-ch-ua-mobile", "?0");
+        client.DefaultRequestHeaders.Add("sec-ch-ua-platform", "\"Windows\"");
+        client.DefaultRequestHeaders.Add("Upgrade-Insecure-Requests", "1");
+    });
 
 builder.Services.AddDataServices(builder.Configuration);
 builder.Services.AddEngineServices();

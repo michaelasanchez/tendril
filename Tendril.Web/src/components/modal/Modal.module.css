@@ -82,7 +82,6 @@
 
     .VenueLink {
       color: var(--muted-foreground);
-      text-decoration: none;
     }
   }
 

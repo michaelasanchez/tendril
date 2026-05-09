@@ -28,6 +28,7 @@ import type {
   Venue,
 } from '../types/api';
 import styles from './ScraperEditorPage.module.css';
+import cn from 'classnames';
 
 type TabKey =
   | 'general'
@@ -255,7 +256,7 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({}) => {
 
       <Tab.Container activeKey={activeTab}>
         <div className={styles.Header}>
-          <div className={styles.ButtonContainer}>
+          <div className={cn(styles.ButtonContainer, styles.ScrollX)}>
             <Button
               variant={activeTab == 'general' ? 'active' : 'default'}
               onClick={() => handleTabChange('general')}
