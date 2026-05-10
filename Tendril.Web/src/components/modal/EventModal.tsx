@@ -1,3 +1,5 @@
+import cn from 'classnames';
+import buttonStyles from '../button/Button.module.css';
 import { format, parseISO } from 'date-fns';
 import type { EventAttributes } from 'ics';
 import * as ics from 'ics';
@@ -137,7 +139,10 @@ export const EventModal: React.FC<Props> = ({
 
               <div className={styles.ButtonGroup}>
                 <Dropdown drop="up">
-                  <Dropdown.Toggle variant="outline-secondary">
+                  <Dropdown.Toggle
+                    variant="none"
+                    className={cn(buttonStyles.SquareButton, buttonStyles.OutlineSecondary)}
+                  >
                     <Icon name="ics" />
                   </Dropdown.Toggle>
 
@@ -220,29 +225,9 @@ function handleDownloadIcs(event: Event, venue: Venue | null = null) {
     description: event.description,
     location: venue?.address ?? event.location,
     url: `https://www.hello-local.app/event/${event.id}`,
-    // geo: { lat: 40.0095, lon: 105.2669 },
     categories: [event.categoryName ?? 'Event'],
     status: 'CONFIRMED',
     busyStatus: 'BUSY',
-    // organizer: {
-    //   name: 'Admin',
-    //   email: 'Race@BolderBOULDER.com',
-    // },
-    // attendees: [
-    //   {
-    //     name: 'Adam Gibbons',
-    //     email: 'adam@example.com',
-    //     rsvp: true,
-    //     partstat: 'ACCEPTED',
-    //     role: 'REQ-PARTICIPANT',
-    //   },
-    //   {
-    //     name: 'Brittany Seaton',
-    //     email: 'brittany@example2.org',
-    //     dir: 'https://linkedin.com/in/brittanyseaton',
-    //     role: 'OPT-PARTICIPANT',
-    //   },
-    // ],
   };
 
   ics.createEvent(icsEvent, (error, value) => {
