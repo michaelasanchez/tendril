@@ -1,7 +1,9 @@
-import { format } from 'date-fns';
-import { Modal } from 'react-bootstrap';
+import { format, parseISO } from 'date-fns';
+import type { EventAttributes } from 'ics';
+import * as ics from 'ics';
+import { Dropdown, Modal } from 'react-bootstrap';
 import NoImage from '../../assets/no-image.svg';
-import type { Event } from '../../types/api';
+import type { Event, Venue } from '../../types/api';
 import { Badge } from '../badge';
 import { IconButton, SquareButton } from '../button';
 import ExpandableText from '../ExpandableText';
@@ -10,6 +12,7 @@ import styles from './Modal.module.css';
 
 interface Props {
   event: Event | null;
+  venues: Venue[] | null;
   show: boolean;
   onHide?: () => void;
 }
@@ -32,7 +35,12 @@ const EventRow: React.FC<{
   </div>
 );
 
-export const EventModal: React.FC<Props> = ({ event, show, onHide }) => {
+export const EventModal: React.FC<Props> = ({
+  event,
+  venues,
+  show,
+  onHide,
+}) => {
   return (
     <Modal
       className={styles.Modal}
@@ -104,7 +112,7 @@ export const EventModal: React.FC<Props> = ({ event, show, onHide }) => {
           {/* --- Footer --- */}
           {(!!event.ticketUrl || !!event.detailsUrl) && (
             <Modal.Footer className={styles.Footer}>
-              <div>
+              <div className={styles.ButtonGroup}>
                 {event.detailsUrl && (
                   <SquareButton
                     variant="outline-primary"
@@ -127,17 +135,56 @@ export const EventModal: React.FC<Props> = ({ event, show, onHide }) => {
                 )}
               </div>
 
-              <SquareButton
-                variant="outline-secondary"
-                onClick={() =>
-                  navigator.share({
-                    title: event.title,
-                    url: window.location.href,
-                  })
-                }
-              >
-                <Icon name="share" />
-              </SquareButton>
+              <div className={styles.ButtonGroup}>
+                <Dropdown drop="up">
+                  <Dropdown.Toggle variant="outline-secondary">
+                    <Icon name="ics" />
+                  </Dropdown.Toggle>
+
+                  <Dropdown.Menu>
+                    <Dropdown.Item
+                      onClick={() =>
+                        handleGoogleCalendar(
+                          event,
+                          venues?.find((v) => v.name === event.venueName) ??
+                            null,
+                        )
+                      }
+                    >
+                      Gmail
+                    </Dropdown.Item>
+                    <Dropdown.Item
+                      onClick={() =>
+                        handleDownloadIcs(
+                          event,
+                          venues?.find((v) => v.name === event.venueName) ??
+                            null,
+                        )
+                      }
+                    >
+                      ICS
+                    </Dropdown.Item>
+                  </Dropdown.Menu>
+                </Dropdown>
+
+                {/* <SquareButton
+                  variant="outline-secondary"
+                  onClick={() => handleDownloadIcs(event)}
+                >
+                  <Icon name="ics" />
+                </SquareButton> */}
+                <SquareButton
+                  variant="outline-secondary"
+                  onClick={() =>
+                    navigator.share({
+                      title: event.title,
+                      url: window.location.href,
+                    })
+                  }
+                >
+                  <Icon name="share" />
+                </SquareButton>
+              </div>
             </Modal.Footer>
           )}
         </>
@@ -145,3 +192,81 @@ export const EventModal: React.FC<Props> = ({ event, show, onHide }) => {
     </Modal>
   );
 };
+
+const formatForGoogleLocal = (isoString: string) => {
+  const date = parseISO(isoString);
+  // This produces "20260509T193000" (no Z, no offsets)
+  return format(date, "yyyyMMdd'T'HHmmss");
+};
+
+function handleGoogleCalendar(event: Event, venue: Venue | null = null) {
+  const root = 'https://calendar.google.com/calendar/render?action=TEMPLATE';
+  const params = new URLSearchParams({
+    text: `${event.title} at ${event.venueName}`,
+    dates: `${formatForGoogleLocal(event.startUtc)}${event.endUtc ? `/${formatForGoogleLocal(event.endUtc)}` : ''}`,
+    details: event.description,
+    location: venue?.address ?? event.location,
+  });
+  const url = `${root}&${params.toString()}`;
+  console.log(url);
+  window.open(url, '_blank', 'noreferrer');
+}
+
+function handleDownloadIcs(event: Event, venue: Venue | null = null) {
+  const icsEvent: EventAttributes = {
+    start: [2018, 5, 30, 6, 30],
+    duration: { hours: 6, minutes: 30 },
+    title: `${event.title} at ${event.venueName}`,
+    description: event.description,
+    location: venue?.address ?? event.location,
+    url: `https://www.hello-local.app/event/${event.id}`,
+    // geo: { lat: 40.0095, lon: 105.2669 },
+    categories: [event.categoryName ?? 'Event'],
+    status: 'CONFIRMED',
+    busyStatus: 'BUSY',
+    // organizer: {
+    //   name: 'Admin',
+    //   email: 'Race@BolderBOULDER.com',
+    // },
+    // attendees: [
+    //   {
+    //     name: 'Adam Gibbons',
+    //     email: 'adam@example.com',
+    //     rsvp: true,
+    //     partstat: 'ACCEPTED',
+    //     role: 'REQ-PARTICIPANT',
+    //   },
+    //   {
+    //     name: 'Brittany Seaton',
+    //     email: 'brittany@example2.org',
+    //     dir: 'https://linkedin.com/in/brittanyseaton',
+    //     role: 'OPT-PARTICIPANT',
+    //   },
+    // ],
+  };
+
+  ics.createEvent(icsEvent, (error, value) => {
+    if (error) {
+      console.log(error);
+      return;
+    }
+    // 1. Create a "Blob" from the ICS string
+    const blob = new Blob([value], {
+      type: 'text/calendar;charset=utf-8',
+    });
+
+    // 2. Create a temporary URL for that blob
+    const url = window.URL.createObjectURL(blob);
+
+    // 3. Create a hidden <a> tag to trigger the download
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'event.ics'); // This names the file
+
+    // 4. Append to body, click it, and clean up
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  });
+}

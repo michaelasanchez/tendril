@@ -87,6 +87,15 @@
 
   .Footer {
     justify-content: space-between;
+
+    .ButtonGroup {
+      display: flex;
+      gap: 0.5em;
+    }
+
+    button::after {
+      display: none;
+    }
   }
 }
 
