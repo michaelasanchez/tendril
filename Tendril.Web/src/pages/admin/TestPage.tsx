@@ -175,3 +175,5 @@ export const TestPage: React.FC = () => {
     </section>
   );
 };
+
+export default TestPage;

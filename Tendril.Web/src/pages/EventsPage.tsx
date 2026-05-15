@@ -1,6 +1,6 @@
 import cn from 'classnames';
 import { format } from 'date-fns';
-import React, {
+import {
   useCallback,
   useEffect,
   useMemo,

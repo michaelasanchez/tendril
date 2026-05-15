@@ -1,7 +1,7 @@
 import cn from 'classnames';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ScrapersApi } from '../api/scrapers';
-import type { ScraperSummary } from '../types/api';
+import { ScrapersApi } from '../../api/scrapers';
+import type { ScraperSummary } from '../../types/api';
 import styles from './SummaryPage.module.css';
 
 interface Props {}
@@ -85,3 +85,5 @@ export const SummaryPage: React.FC<Props> = () => {
     </div>
   );
 };
+
+export default SummaryPage;

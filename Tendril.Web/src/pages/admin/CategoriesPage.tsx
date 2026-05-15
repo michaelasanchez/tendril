@@ -1,24 +1,24 @@
-// src/pages/VenuesPage.tsx
+// src/pages/CategoriesPage.tsx
 import React, { useEffect, useState } from 'react';
 import { Card, Form, Table } from 'react-bootstrap';
-import { VenuesApi } from '../api/venues';
-import { SquareButton as Button } from '../components/button';
-import { FormInput } from '../components/form';
-import { Icon } from '../components/Icon';
-import { cardStyles, formStyles, pageStyles, tableStyles } from '../styles';
-import type { Venue } from '../types/api';
+import { CategoriesApi } from '../../api/categories';
+import { SquareButton as Button } from '../../components/button';
+import { FormInput } from '../../components/form';
+import { Icon } from '../../components/Icon';
+import { cardStyles, formStyles, pageStyles, tableStyles } from '../../styles';
+import type { Category } from '../../types/api';
 
-export const VenuesPage: React.FC = () => {
-  const [venues, setVenues] = useState<Venue[]>([]);
-  const [editing, setEditing] = useState<Partial<Venue>>({});
+export const CategoriesPage: React.FC = () => {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [editing, setEditing] = useState<Partial<Category>>({});
   const [isNew, setIsNew] = useState(false);
 
   const load = async () => {
-    const data = await VenuesApi.getAll();
-    setVenues(
+    const data = await CategoriesApi.getAll();
+    setCategories(
       data.sort((a, b) =>
-        a.name.replace('The ', '').localeCompare(b.name.replace('The ', ''))
-      )
+        a.name.replace('The ', '').localeCompare(b.name.replace('The ', '')),
+      ),
     );
   };
 
@@ -28,10 +28,10 @@ export const VenuesPage: React.FC = () => {
 
   const startNew = () => {
     setIsNew(true);
-    setEditing({ name: '', address: '', website: '' });
+    setEditing({ name: '', description: '' });
   };
 
-  const startEdit = (v: Venue) => {
+  const startEdit = (v: Category) => {
     setIsNew(false);
     setEditing({ ...v });
   };
@@ -42,60 +42,48 @@ export const VenuesPage: React.FC = () => {
   };
 
   const save = async () => {
-    if (!editing.name || !editing.address) return;
+    if (!editing.name || editing.description) return;
     if (isNew) {
-      await VenuesApi.create({
+      await CategoriesApi.create({
         name: editing.name,
-        address: editing.address,
-        website: editing.website,
+        description: editing.description ?? '',
       });
     } else if (editing.id) {
-      await VenuesApi.update(editing.id, {
+      await CategoriesApi.update(editing.id, {
         name: editing.name,
-        address: editing.address,
-        website: editing.website,
+        description: editing.description,
       });
     }
     await load();
     cancel();
   };
 
-  const remove = async (v: Venue) => {
-    if (!window.confirm(`Delete venue "${v.name}"?`)) return;
-    await VenuesApi.delete(v.id);
+  const remove = async (v: Category) => {
+    if (!window.confirm(`Delete category "${v.name}"?`)) return;
+    await CategoriesApi.delete(v.id);
     await load();
   };
 
   return (
     <section>
       <div className={pageStyles.pageHeader}>
-        <h2>Venues</h2>
-        <Button onClick={startNew}>New Venue</Button>
+        <h2>Categories</h2>
+        <Button onClick={startNew}>New Category</Button>
       </div>
 
       <Table className={tableStyles.Table} hover responsive>
         <thead>
           <tr>
             <th>Name</th>
-            <th>Address</th>
-            <th>Website</th>
+            <th>Description</th>
             <th />
           </tr>
         </thead>
         <tbody>
-          {venues.map((v) => (
+          {categories.map((v) => (
             <tr key={v.id}>
               <td>{v.name}</td>
-              <td>{v.address}</td>
-              <td>
-                {v.website ? (
-                  <a href={v.website} target="_blank" rel="noreferrer">
-                    {v.website}
-                  </a>
-                ) : (
-                  '-'
-                )}
-              </td>
+              <td>{v.description}</td>
               <td className={tableStyles.TableActions}>
                 <div>
                   <Button onClick={() => startEdit(v)}>
@@ -108,9 +96,9 @@ export const VenuesPage: React.FC = () => {
               </td>
             </tr>
           ))}
-          {venues.length === 0 && (
+          {categories.length === 0 && (
             <tr>
-              <td colSpan={4}>No venues yet.</td>
+              <td colSpan={4}>No categories yet.</td>
             </tr>
           )}
         </tbody>
@@ -119,7 +107,7 @@ export const VenuesPage: React.FC = () => {
       {editing.name !== undefined && (
         <Card className={cardStyles.BgCard}>
           <Card.Body>
-            <h3>{isNew ? 'New Venue' : 'Edit Venue'}</h3>
+            <h3>{isNew ? 'New Category' : 'Edit Category'}</h3>
             <Form className={formStyles.form}>
               <FormInput
                 label="Name"
@@ -128,20 +116,17 @@ export const VenuesPage: React.FC = () => {
                 onChange={(name) => setEditing({ ...editing, name })}
               />
               <FormInput
-                label="Address"
-                value={editing.address ?? ''}
-                onChange={(address) => setEditing({ ...editing, address })}
-              />
-              <FormInput
-                label="Website"
-                value={editing.website ?? ''}
-                onChange={(website) => setEditing({ ...editing, website })}
+                label="Description"
+                value={editing.description ?? ''}
+                onChange={(description) =>
+                  setEditing({ ...editing, description })
+                }
               />
               <div className={formStyles.buttonRow}>
                 <Button variant="primary" onClick={save}>
                   Save
                 </Button>
-                <Button onClick={cancel}>Cancel</Button>
+                C<Button onClick={cancel}>Cancel</Button>
               </div>
             </Form>
           </Card.Body>
@@ -150,3 +135,5 @@ export const VenuesPage: React.FC = () => {
     </section>
   );
 };
+
+export default CategoriesPage;

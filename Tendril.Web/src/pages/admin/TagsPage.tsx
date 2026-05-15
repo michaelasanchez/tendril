@@ -1,12 +1,12 @@
 // src/pages/TagsPage.tsx
 import React, { useEffect, useState } from 'react';
 import { Card, Form, Table } from 'react-bootstrap';
-import { TagApi } from '../api/tags';
-import { SquareButton as Button } from '../components/button';
-import { FormInput } from '../components/form';
-import { Icon } from '../components/Icon';
-import { cardStyles, formStyles, pageStyles, tableStyles } from '../styles';
-import type { Tag } from '../types/api';
+import { TagApi } from '../../api/tags';
+import { SquareButton as Button } from '../../components/button';
+import { FormInput } from '../../components/form';
+import { Icon } from '../../components/Icon';
+import { cardStyles, formStyles, pageStyles, tableStyles } from '../../styles';
+import type { Tag } from '../../types/api';
 
 export const TagsPage: React.FC = () => {
   const [Tags, setTags] = useState<Tag[]>([]);
@@ -124,3 +124,5 @@ export const TagsPage: React.FC = () => {
     </section>
   );
 };
+
+export default TagsPage;

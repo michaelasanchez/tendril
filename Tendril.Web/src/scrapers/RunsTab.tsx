@@ -5,7 +5,7 @@ import { Card, Table } from 'react-bootstrap';
 import { ScrapersApi } from '../api/scrapers';
 import { SquareButton as Button } from '../components/button';
 import { ElapsedClock } from '../components/ElapsedClock';
-import styles from '../pages/ScraperEditorPage.module.css';
+import styles from '../pages/admin/ScraperEditorPage.module.css';
 import { cardStyles, pageStyles, tableStyles } from '../styles';
 
 import type {

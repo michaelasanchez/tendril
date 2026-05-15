@@ -1,22 +1,23 @@
+import cn from 'classnames';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ButtonGroup, Dropdown, DropdownButton, Tab } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router';
-import { CategoriesApi } from '../api/categories';
-import { EventsApi } from '../api/events';
-import { ScrapersApi } from '../api/scrapers';
-import { VenuesApi } from '../api/venues';
-import { SquareButton as Button } from '../components/button';
-import { Icon } from '../components/Icon';
+import { CategoriesApi } from '../../api/categories';
+import { EventsApi } from '../../api/events';
+import { ScrapersApi } from '../../api/scrapers';
+import { VenuesApi } from '../../api/venues';
+import { SquareButton as Button } from '../../components/button';
+import { Icon } from '../../components/Icon';
 import {
   ActionsTab,
   EditTab,
   MappingRulesTab,
   RunsTab,
   SummaryTab,
-} from '../scrapers';
-import { ClassificationRulesTab } from '../scrapers/ClassificationRulesTab';
-import { OutputTab } from '../scrapers/OutputTab';
-import { pageStyles } from '../styles';
+} from '../../scrapers';
+import { ClassificationRulesTab } from '../../scrapers/ClassificationRulesTab';
+import { OutputTab } from '../../scrapers/OutputTab';
+import { pageStyles } from '../../styles';
 import type {
   ApiParameter,
   Category,
@@ -26,9 +27,8 @@ import type {
   ScraperAttemptHistory,
   ScraperDefinition,
   Venue,
-} from '../types/api';
+} from '../../types/api';
 import styles from './ScraperEditorPage.module.css';
-import cn from 'classnames';
 
 type TabKey =
   | 'general'
@@ -162,7 +162,7 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({}) => {
       }
     };
 
-      void load();
+    void load();
   }, [scraperId, isNew]);
 
   // Keep parent actions up-to-date
@@ -399,3 +399,5 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({}) => {
     </section>
   );
 };
+
+export default ScraperEditorPage;

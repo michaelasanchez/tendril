@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Table } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
-import { ScrapersApi } from '../api/scrapers';
-import { SquareButton as Button, SquareButton } from '../components/button';
-import { Icon } from '../components/Icon';
-import { pageStyles, tableStyles } from '../styles';
-import type { ScraperDefinition } from '../types/api';
+import { ScrapersApi } from '../../api/scrapers';
+import { SquareButton } from '../../components/button';
+import { Icon } from '../../components/Icon';
+import { pageStyles, tableStyles } from '../../styles';
+import type { ScraperDefinition } from '../../types/api';
 
 type SortKey =
   | 'name'
@@ -141,15 +141,15 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({}) => {
     });
   }, [sort]);
 
-  const handleRunNow = async (id: string) => {
-    if (!window.confirm('Run this scraper now?')) return;
-    try {
-      await ScrapersApi.runNow(id);
-      await load();
-    } catch (e: any) {
-      alert(e.message ?? 'Run failed.');
-    }
-  };
+  // const handleRunNow = async (id: string) => {
+  //   if (!window.confirm('Run this scraper now?')) return;
+  //   try {
+  //     await ScrapersApi.runNow(id);
+  //     await load();
+  //   } catch (e: any) {
+  //     alert(e.message ?? 'Run failed.');
+  //   }
+  // };
 
   const scraperGroups = useMemo(() => {
     // 1. Create temporary buckets
@@ -230,7 +230,9 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({}) => {
           {scraperGroups.map(({ key, scrapers }) => (
             <tbody key={key}>
               <tr className={tableStyles.GroupHeader}>
-                <td colSpan={7}>{key} ({scrapers?.length})</td>
+                <td colSpan={7}>
+                  {key} ({scrapers?.length})
+                </td>
               </tr>
 
               {scrapers.map((s) => (
@@ -302,3 +304,5 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({}) => {
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
   }
 };
+
+export default ScrapersPage;

@@ -1,20 +1,21 @@
 const CLIENT_ID = import.meta.env.VITE_AUTH_CLIENT_ID;
 
-import { Container } from 'react-bootstrap';
+import { lazy, Suspense } from 'react';
+import { Container, Spinner } from 'react-bootstrap';
 import { Navigate, Outlet, Route, Routes, useNavigate } from 'react-router';
 import { SquareButton } from './components/button';
 import { Navbar } from './components/navbar';
 import { useBootstrapTheme } from './hooks';
 import { useAuth } from './hooks/useAuth';
-import {
-  CategoriesPage,
-  EventsPage,
-  ScraperEditorPage,
-  ScrapersPage,
-  SummaryPage,
-  TagsPage,
-  VenuesPage,
-} from './pages';
+import { EventsPage } from './pages';
+
+const AutomatePage = lazy(() => import('./pages/admin/AutomatePage'));
+const CategoriesPage = lazy(() => import('./pages/admin/CategoriesPage'));
+const ReviewPage = lazy(() => import('./pages/admin/ReviewPage'));
+const ScraperEditorPage = lazy(() => import('./pages/admin/ScraperEditorPage'));
+const ScrapersPage = lazy(() => import('./pages/admin/ScrapersPage'));
+const TagsPage = lazy(() => import('./pages/admin/TagsPage'));
+const VenuesPage = lazy(() => import('./pages/admin/VenuesPage'));
 
 function AdminLayout({
   authorized,
@@ -23,7 +24,7 @@ function AdminLayout({
   authorized: boolean;
   loading: boolean;
 }) {
-  if (loading) return null; // or a spinner
+  if (loading) return <Spinner animation="border" />;
   if (!authorized) return <Navigate to="/" replace />;
 
   return <Outlet />;
@@ -55,6 +56,24 @@ function LoginLayout({
   );
 }
 
+// analytics.ts?
+export const trackEvent = async (eventId: string, metadata = {}) => {
+  try {
+    await fetch('/api/track-click', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        event_id: eventId,
+        path: window.location.pathname,
+        metadata: metadata,
+        timestamp: new Date().toISOString(),
+      }),
+    });
+  } catch (err) {
+    console.error('Tracking failed', err); // Fail silently so you don't break the UI
+  }
+};
+
 export default function App() {
   const { theme, toggleTheme } = useBootstrapTheme();
   const { user, loading, login, logout } = useAuth(CLIENT_ID);
@@ -66,6 +85,14 @@ export default function App() {
     navigate('/');
   };
 
+  // const handleCapture = (e) => {
+  //   const trackTarget = e.target.closest('[data-track]');
+  //   if (trackTarget) {
+  //     const { track, ...metadata } = trackTarget.dataset;
+  //     trackEvent(track, metadata);
+  //   }
+  // };
+
   return (
     <>
       <Navbar
@@ -74,32 +101,41 @@ export default function App() {
         onThemeToggle={toggleTheme}
         authorized={!!user}
       />
-      <Container>
-        <Routes>
-          <Route
-            path="/login"
-            element={
-              <LoginLayout loading={loading} user={user} login={login} />
-            }
-          />
-          <Route
-            path="/admin"
-            element={<AdminLayout authorized={!!user} loading={loading} />}
-          >
-            <Route index element={<Navigate to="/admin/scrapers" replace />} />
-            <Route path="scrapers" element={<ScrapersPage />} />
+      <Container
+      //onClickCapture={handleCapture}
+      >
+        <Suspense fallback={<Spinner animation="border" />}>
+          <Routes>
             <Route
-              path="scrapers/:scraperId/:tabId?"
-              element={<ScraperEditorPage />}
+              path="/login"
+              element={
+                <LoginLayout loading={loading} user={user} login={login} />
+              }
             />
-            <Route path="categories" element={<CategoriesPage />} />
-            <Route path="tags" element={<TagsPage />} />
-            <Route path="venues" element={<VenuesPage />} />
-            <Route path="summary" element={<SummaryPage />} />
-          </Route>
+            <Route
+              path="/admin"
+              element={<AdminLayout authorized={!!user} loading={loading} />}
+            >
+              <Route
+                index
+                element={<Navigate to="/admin/scrapers" replace />}
+              />
+              <Route path="scrapers" element={<ScrapersPage />} />
+              <Route
+                path="scrapers/:scraperId/:tabId?"
+                element={<ScraperEditorPage />}
+              />
+              <Route path="categories" element={<CategoriesPage />} />
+              <Route path="tags" element={<TagsPage />} />
+              <Route path="venues" element={<VenuesPage />} />
+              <Route path="automate" element={<AutomatePage />} />
+              <Route path="review" element={<ReviewPage />} />
+              {/* <Route path="summary" element={<SummaryPage />} /> */}
+            </Route>
 
-          <Route path="*" element={<EventsPage />} />
-        </Routes>
+            <Route path="*" element={<EventsPage />} />
+          </Routes>
+        </Suspense>
       </Container>
     </>
   );
