@@ -29,6 +29,7 @@ import type {
   Venue,
 } from '../../types/api';
 import styles from './ScraperEditorPage.module.css';
+import AttemptHistoryPage from './AttemptHistoryPage';
 
 type TabKey =
   | 'general'
@@ -376,14 +377,15 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({}) => {
           </Tab.Pane>
 
           <Tab.Pane eventKey="runs">
-            <RunsTab
+            <AttemptHistoryPage />
+            {/* <RunsTab
               scraperId={scraperId as Guid}
               attempts={attempts}
               onComplete={() => {
                 loadEvents();
                 loadAttemptHistories();
               }}
-            />
+            /> */}
           </Tab.Pane>
 
           <Tab.Pane eventKey="output">

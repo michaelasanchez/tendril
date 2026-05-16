@@ -1,11 +1,14 @@
 // src/scrapers.ts
 import type {
   ApiParameter,
+  EventRevision,
   ExecutionMode,
   ExtractionStrategy,
   Guid,
   HttpMethod,
+  PagedResponse,
   PaginationType,
+  ScrapedEventRaw,
   ScraperAction,
   ScraperAttemptHistory,
   ScraperClassificationRule,
@@ -111,7 +114,11 @@ export const ScrapersApi = {
     return apiDelete(`/scrapers/${scraperId}/actions/${actionId}`);
   },
 
-  reorderAction(scraperId: Guid, actionId: Guid, req: ReorderScraperRequest): Promise<void> {
+  reorderAction(
+    scraperId: Guid,
+    actionId: Guid,
+    req: ReorderScraperRequest,
+  ): Promise<void> {
     return apiPost(`/scrapers/${scraperId}/actions/${actionId}/reorder`, req);
   },
 
@@ -169,6 +176,54 @@ export const ScrapersApi = {
   // Attempt Histories
   getAttemptHistories(scraperId: Guid): Promise<ScraperAttemptHistory[]> {
     return apiGet(`/scrapers/${scraperId}/attempt-histories`);
+  },
+
+  getPagedAttemptHistories(
+    scraperId: string,
+    limit?: number,
+    cursor?: string,
+  ): Promise<PagedResponse<ScraperAttemptHistory>> {
+    const params = new URLSearchParams();
+    if (limit) params.append('limit', limit.toString());
+    if (cursor) params.append('cursor', cursor);
+
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return apiGet(`/scrapers/${scraperId}/attempt-histories/paged${query}`);
+  },
+
+  // Gets a single attempt's metadata
+  getAttemptById(
+    scraperId: string,
+    attemptId: string,
+  ): Promise<ScraperAttemptHistory> {
+    return apiGet(`/scrapers/${scraperId}/attempt-histories/${attemptId}`);
+  },
+
+  // Gets the raw JSON data for a specific run (Paginated)
+  getRawEventsByAttempt(
+    scraperId: string,
+    attemptId: string,
+    limit?: number,
+    cursor?: string,
+  ): Promise<PagedResponse<ScrapedEventRaw>> {
+    const params = new URLSearchParams();
+    if (limit) params.append('limit', limit.toString());
+    if (cursor) params.append('cursor', cursor);
+
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return apiGet(
+      `/scrapers/${scraperId}/attempt-histories/${attemptId}/raw-events${query}`,
+    );
+  },
+
+  // Gets the list of actual changes made during a run
+  getRevisionsByAttempt(
+    scraperId: string,
+    attemptId: string,
+  ): Promise<EventRevision[]> {
+    return apiGet(
+      `/scrapers/${scraperId}/attempt-histories/${attemptId}/revisions`,
+    );
   },
 
   // Summaries

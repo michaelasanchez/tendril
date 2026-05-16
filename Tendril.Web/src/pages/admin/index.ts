@@ -1,3 +1,4 @@
+export * from './AttemptHistoryPage';
 export * from './AutomatePage';
 export * from './CategoriesPage';
 export * from './ReviewPage';

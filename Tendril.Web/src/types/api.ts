@@ -190,6 +190,31 @@ export interface ScraperAttemptHistory {
   errorMessage: string;
 }
 
+export interface ScrapedEventRaw {
+  id: Guid;
+  scraperDefinitionId: Guid | null;
+  scraperAttemptHistoryId: Guid | null;
+  eventId: Guid | null;
+  scrapedAtUtc: string;
+  rawDataJson: string | null;
+}
+
+export type EventRevisionReason =
+  | 'FieldUpdate'
+  | 'Superseded'
+  | 'Merge'
+  | 'Disable';
+
+export interface EventRevision {
+  id: Guid;
+  eventId: Guid;
+  eventTitle: string | null;
+  rawEventId: Guid;
+  changedAtUtc: string;
+  reason: EventRevisionReason;
+  changedFieldsJson: string | null;
+}
+
 export interface MappingSummary {
   title: boolean;
   description: boolean;
@@ -209,14 +234,14 @@ export interface ScraperSummary {
   mapping: MappingSummary;
 }
 
-export interface PagedResponse {
-  items: Event[];
+export interface PagedResponse<T> {
+  items: T[];
   nextCursor: Guid | null;
   hasNextPage: boolean;
   totalCount: number;
 }
 
-export interface EventResponse extends PagedResponse {
+export interface EventResponse extends PagedResponse<Event> {
   categoryIds: Guid[];
   venueIds: Guid[];
 }
