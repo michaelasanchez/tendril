@@ -7,8 +7,12 @@
 
   .Group {
     display: flex;
-    align-items: stretch;
+    align-items: center;
     gap: 1em;
+
+    .Toggle {
+      align-self: stretch;
+    }
   }
 
   .Logo {

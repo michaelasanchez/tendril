@@ -14,9 +14,11 @@ public record EventDto
     public Guid? CategoryId { get; set; }
     public string? CategoryName { get; set; }
 
-    public DateTimeOffset StartUtc { get; set; }
+    public DateTimeOffset? StartDateTime { get; set; }
+    public DateOnly? StartDate { get; set; }
     public bool ShowStartTime { get; set; }
-    public DateTimeOffset? EndUtc { get; set; }
+    public DateTimeOffset? EndDateTime { get; set; }
+    public DateOnly? EndDate { get; set; }
     public bool? ShowEndTime { get; set; }
 
     public decimal? MinPrice { get; set; }

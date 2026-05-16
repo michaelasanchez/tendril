@@ -1,12 +1,6 @@
 import cn from 'classnames';
 import { format } from 'date-fns';
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Col, Offcanvas, Row, Spinner } from 'react-bootstrap';
 import { useMatch, useNavigate } from 'react-router';
 import { CategoriesApi } from '../api/categories';
@@ -55,11 +49,16 @@ export const EventsPage: React.FC = () => {
     () => new Set(JSON.parse(favoritesStorage.fetch() || '[]')),
   );
 
+  const filtersStorage = useLocalStorage('filters');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState<boolean>(false);
-  const [filter, setFilter] = useState<EventFilter>({
-    startDate: format(new Date(), 'yyyy-MM-dd'),
-    endDate: '',
-  });
+  const [filter, setFilter] = useState<EventFilter>(
+    filtersStorage.exists()
+      ? JSON.parse(filtersStorage.fetch()!)
+      : {
+          startDate: format(new Date(), 'yyyy-MM-dd'),
+          endDate: '',
+        },
+  );
 
   const navigate = useNavigate();
   const eventMatch = useMatch('/event/:id');
@@ -201,12 +200,17 @@ export const EventsPage: React.FC = () => {
     };
   }, [activeIndex]);
 
+  // Keep filters in sync
+  useEffect(() => {
+    filtersStorage.commit(JSON.stringify(filter));
+  }, [filter]);
+
   // Keep favorites in sync
   useEffect(() => {
     favoritesStorage.commit(JSON.stringify([...favorites]));
   }, [favorites]);
 
-  //
+  // Reload events on filter change
   useEffect(() => {
     const controller = new AbortController();
 

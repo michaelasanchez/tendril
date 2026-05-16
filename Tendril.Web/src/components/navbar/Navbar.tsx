@@ -39,7 +39,7 @@ export const Navbar: React.FC<Props> = ({
               <Icon name={theme} />
             </SquareButton>
           </div>
-          {authorized && <BootstrapNavbar.Toggle />}
+          {authorized && <BootstrapNavbar.Toggle className={styles.Toggle} />}
         </div>
         <BootstrapNavbar.Collapse>
           <Nav className={styles.NavRight}>

@@ -75,8 +75,12 @@ export const EventCard: React.FC<Props> = ({
 
           {/* Date & Time */}
           <div className={styles.CardRow}>
-            <Icon name="calendar" /> {formatDate(event.startUtc, 'date')} •{' '}
-            {event.showStartTime && formatDate(event.startUtc, 'time')}
+            <Icon name="calendar" />{' '}
+            {formatDate(
+              (event.showStartTime ? event.startDateTime : event.startDate)!,
+              'date',
+            )}{' '}
+            • {event.showStartTime && formatDate(event.startDateTime!, 'time')}
           </div>
 
           {/* Cost */}
@@ -94,10 +98,39 @@ export const EventCard: React.FC<Props> = ({
   );
 
   function formatDate(dateStr: string, dateFormat: 'date' | 'time' = 'time') {
-    const date = new Date(dateStr);
+    if (!dateStr) return '';
+
+    const date =
+      dateFormat === 'date'
+        ? new Date(dateStr.slice(0, 10).replace(/-/g, '/'))
+        : new Date(dateStr);
 
     return dateFormat === 'date'
       ? format(date, 'MMM d, yyyy')
       : format(date, 'h:mm a');
   }
+
+  // function formatDate(
+  //   dateStr: string | null | undefined,
+  //   dateFormat: 'date' | 'time' = 'time',
+  // ): string {
+  //   if (!dateStr) return '';
+
+  //   if (dateFormat === 'date') {
+  //     const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  //     if (!match) return '';
+
+  //     const year = parseInt(match[1], 10);
+  //     const month = parseInt(match[2], 10) - 1; // JS months are 0-indexed
+  //     const day = parseInt(match[3], 10);
+
+  //     const localDate = new Date(year, month, day);
+  //     return format(localDate, 'MMM d, yyyy');
+  //   }
+
+  //   const date = new Date(dateStr);
+  //   if (isNaN(date.getTime())) return ''; // Fail-safe for bad data
+
+  //   return format(date, 'h:mm a');
+  // }
 };

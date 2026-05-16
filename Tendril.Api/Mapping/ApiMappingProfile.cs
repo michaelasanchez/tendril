@@ -29,7 +29,14 @@ public class ApiMappingProfile : Profile
             .ForMember(d => d.CategoryName, opt => opt.MapFrom(s => s.Category!.Name))
             .ForMember(d => d.VenueName, opt => opt.MapFrom(s => s.Venue!.Name))
             .ForMember(d => d.VenueUrl, opt => opt.MapFrom(s => s.Venue!.Website))
+            .ForMember(d => d.StartDateTime, opt => opt.MapFrom(s => s.StartPrecision == Core.Domain.Enums.DatePrecision.Minute ? s.StartUtc : (DateTimeOffset?)null))
+            .ForMember(d => d.StartDate, opt => opt.MapFrom(s => s.StartPrecision == Core.Domain.Enums.DatePrecision.Minute ? (DateOnly?)null : DateOnly.FromDateTime(s.StartUtc.DateTime)))
             .ForMember(d => d.ShowStartTime, opt => opt.MapFrom(s => s.StartPrecision == Core.Domain.Enums.DatePrecision.Minute))
+            .ForMember(d => d.EndDateTime, opt => opt.MapFrom(s => s.EndPrecision == Core.Domain.Enums.DatePrecision.Minute ? s.EndUtc : null))
+            .ForMember(d => d.EndDate, opt => opt.MapFrom(s =>
+                s.EndPrecision == Core.Domain.Enums.DatePrecision.Minute || s.EndUtc == null
+                    ? (DateOnly?)null
+                    : DateOnly.FromDateTime(s.EndUtc.Value.DateTime)))
             .ForMember(d => d.ShowEndTime, opt => opt.MapFrom(s => s.EndPrecision == Core.Domain.Enums.DatePrecision.Minute));
 
         CreateMap<Category, CategoryDto>();

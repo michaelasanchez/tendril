@@ -8,7 +8,7 @@ export interface EventGroup {
 
 function groupEventsByDay(events: Event[]): EventGroup[] {
   const grouped = events.reduce((groups, event) => {
-    const dateKey = event.startUtc.split('T')[0];
+    const dateKey = event.startDateTime?.split('T')[0] ?? event.startDate!;
     if (!groups[dateKey]) {
       groups[dateKey] = [];
     }

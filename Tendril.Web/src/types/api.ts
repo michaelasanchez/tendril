@@ -253,9 +253,11 @@ export interface Event {
   title: string;
   location: string;
   description: string;
-  startUtc: string;
+  startDateTime: string | null;
+  startDate: string | null;
   showStartTime: boolean;
-  endUtc: string | null;
+  endDateTime: string | null;
+  endDate: string | null;
   showEndTime: boolean | null;
   minPrice: number | null;
   maxPrice: number | null;

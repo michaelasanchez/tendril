@@ -258,12 +258,12 @@ export const EventMotionModal: React.FC<Props> = ({
                         <EventRow icon="calendar" label="Date & Time">
                           <p>
                             {format(
-                              new Date(event.startUtc ?? ''),
+                              new Date(event.startDateTime ?? ''),
                               'iiii, MMMM d, yyyy',
                             )}
                           </p>
                           <p>
-                            {format(new Date(event.startUtc ?? ''), 'h:mm a')}
+                            {format(new Date(event.startDateTime ?? ''), 'h:mm a')}
                           </p>
                         </EventRow>
                         <EventRow icon="location" label="Venue">

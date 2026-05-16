@@ -100,7 +100,7 @@ export const OutputTab: React.FC<Props> = ({
       }, defaultStats());
 
       stats.total.past = events.filter(
-        (e) => startOfDay(new Date(e.startUtc)) <= today,
+        (e) => startOfDay(new Date(e.startDateTime ?? e.startDate!)) <= today,
       ).length;
 
       // Default category show to true
@@ -124,7 +124,7 @@ export const OutputTab: React.FC<Props> = ({
 
     if (!show.status.past) {
       filtered = filtered.filter(
-        (e) => startOfDay(new Date(e.startUtc)) >= today,
+        (e) => startOfDay(new Date(e.startDateTime ?? e.startDate!)) >= today,
       );
     }
 
@@ -303,8 +303,16 @@ export const OutputTab: React.FC<Props> = ({
                     {e.description ?? 'No description available'}
                   </p>
                   <label>
-                    <h4>{format(new Date(e.startUtc), 'MMM dd yyy')}</h4>
-                    {e.showStartTime && format(new Date(e.startUtc), 'hh:mm aa')}
+                    <h4>
+                      {format(
+                        new Date(
+                          (e.showStartTime ? e.startDateTime : e.startDate)!,
+                        ),
+                        'MMM dd yyy',
+                      )}
+                    </h4>
+                    {e.showStartTime &&
+                      format(new Date(e.startDateTime!), 'hh:mm aa')}
                   </label>
                   <div>
                     {e.detailsUrl && (

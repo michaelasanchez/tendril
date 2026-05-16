@@ -76,9 +76,9 @@ export const EventModal: React.FC<Props> = ({
             </div>
             <EventRow icon="calendar" label="Date & Time">
               <p>
-                {format(new Date(event.startUtc ?? ''), 'iiii, MMMM d, yyyy')}
+                {format(new Date(event.startDateTime ?? event.startDate!), 'iiii, MMMM d, yyyy')}
               </p>
-              <p>{format(new Date(event.startUtc ?? ''), 'h:mm a')}</p>
+              <p>{format(new Date(event.startDateTime ?? event.startDate!), 'h:mm a')}</p>
             </EventRow>
             <EventRow icon="location" label="Venue">
               <p>
@@ -208,7 +208,7 @@ function handleGoogleCalendar(event: Event, venue: Venue | null = null) {
   const root = 'https://calendar.google.com/calendar/render?action=TEMPLATE';
   const params = new URLSearchParams({
     text: `${event.title} at ${event.venueName}`,
-    dates: `${formatForGoogleLocal(event.startUtc)}${event.endUtc ? `/${formatForGoogleLocal(event.endUtc)}` : ''}`,
+    dates: `${formatForGoogleLocal(event.startDateTime ?? event.startDate!)}${event.endDateTime ? `/${formatForGoogleLocal(event.endDateTime)}` : ''}`,
     details: event.description,
     location: venue?.address ?? event.location,
   });
