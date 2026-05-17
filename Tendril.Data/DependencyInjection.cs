@@ -25,6 +25,7 @@ public static class DependencyInjection
         services.AddScoped<IClassificationRuleRepository, ClassificationRuleRepository>();
         services.AddScoped<IMappingRuleRepository, MappingRuleRepository>();
         services.AddScoped<IRawEventRepository, RawEventRepository>();
+        services.AddScoped<IScheduledTaskRepository, ScheduledTaskRepository>();
         services.AddScoped<IScraperRepository, ScraperRepository>();
         services.AddScoped<IActionRepository, ActionRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();

@@ -7,6 +7,9 @@ public class ScraperAttemptHistory
     public Guid ScraperDefinitionId { get; set; }
     public ScraperDefinition ScraperDefinition { get; set; } = null!;
 
+    public Guid? ScheduledTaskId { get; set; }
+    public ScheduledTask? ScheduledTask { get; set; }
+
     public ICollection<ScrapedEventRaw> ScrapedEventRaws { get; set; } = [];
     public ICollection<EventRevision> Revisions { get; set; } = [];
 

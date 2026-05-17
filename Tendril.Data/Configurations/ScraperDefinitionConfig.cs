@@ -60,7 +60,7 @@ public class ScraperDefinitionConfig : IEntityTypeConfiguration<ScraperDefinitio
             .HasForeignKey(x => x.ScraperDefinitionId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(x => x.AttemptHistory)
+        builder.HasMany(x => x.AttemptHistories)
             .WithOne(x => x.ScraperDefinition)
             .HasForeignKey(x => x.ScraperDefinitionId)
             .OnDelete(DeleteBehavior.Cascade);

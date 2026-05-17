@@ -190,6 +190,20 @@ export interface ScraperAttemptHistory {
   errorMessage: string;
 }
 
+export interface ScheduledTask {
+    id: Guid ,
+    name: string ,
+    notes: string | null ,
+    isDisabled: boolean ,
+    cronExpression: string ,
+    nextRunAtUtc: string ,
+    selectionStrategy: string ,
+    status: string ,
+    lastRunStartedAtUtc: string | null ,
+    lastRunCompletedAtUtc: string | null ,
+    scraperIds: Guid[] ,
+}
+
 export interface ScrapedEventRaw {
   id: Guid;
   scraperDefinitionId: Guid | null;

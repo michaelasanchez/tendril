@@ -40,7 +40,9 @@ public class ScraperDefinition
     public List<ScraperAction> Actions { get; set; } = [];
     public List<ScraperMappingRule> MappingRules { get; set; } = [];
     public List<ScraperClassificationRule> ClassificationRules { get; set; } = [];
-    public List<ScraperAttemptHistory> AttemptHistory { get; set; } = [];
+
+    public ICollection<ScheduledTask> ScheduledTasks { get; set; } = [];
+    public List<ScraperAttemptHistory> AttemptHistories { get; set; } = [];
 
     public List<ScraperAction> ParentSelectors { get; set; } = [];
 }
