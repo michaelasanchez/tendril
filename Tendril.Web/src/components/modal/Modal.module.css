@@ -16,6 +16,13 @@
     margin: -10px;
   }
 
+  .TopRight {
+    position: fixed;
+    z-index: 1;
+    right: 2rem;
+    top: 2rem;
+  }
+
   .Header {
     padding: 0;
 
@@ -30,12 +37,6 @@
 
     .Uppercase {
       text-transform: uppercase;
-    }
-
-    .TopRight {
-      position: absolute;
-      top: var(--inset);
-      right: var(--inset);
     }
 
     .BottomLeft {

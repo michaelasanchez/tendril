@@ -307,26 +307,30 @@ export const EventsPage: React.FC = () => {
                 responsive="lg"
                 placement="end"
               >
-                <Offcanvas.Header closeButton style={{ paddingBottom: 0 }}>
-                  <Offcanvas.Title as="h3" className={styles.Heading}>
-                    <Icon name="filter" />
-                    Filters
-                  </Offcanvas.Title>
-                </Offcanvas.Header>
-                <Offcanvas.Body style={{ paddingTop: 0 }}>
-                  <div
-                    className={cn(
-                      'd-lg-none',
-                      pageStyles.SubHeader,
-                      styles.EventsFound,
-                    )}
-                  >
-                    {showFavoritesOnly
-                      ? filteredEvents.length
-                      : result.totalCount}{' '}
-                    events found
-                    {loading.events && <Spinner animation="border" size="sm" />}
+                <Offcanvas.Header closeButton className={styles.Header}>
+                  <div>
+                    <Offcanvas.Title className={styles.Heading} as="h3">
+                      <Icon name="filter" />
+                      Filters
+                    </Offcanvas.Title>
+                    <div
+                      className={cn(
+                        'd-lg-none',
+                        pageStyles.SubHeader,
+                        styles.EventsFound,
+                      )}
+                    >
+                      {showFavoritesOnly
+                        ? filteredEvents.length
+                        : result.totalCount}{' '}
+                      events found
+                      {loading.events && (
+                        <Spinner animation="border" size="sm" />
+                      )}
+                    </div>
                   </div>
+                </Offcanvas.Header>
+                <Offcanvas.Body className={styles.Body}>
                   <FiltersCard
                     className={styles.FiltersCard}
                     filter={filter}

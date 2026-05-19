@@ -54,7 +54,7 @@ export const FiltersCard: React.FC<Props> = ({
           Filters
         </h4>
         <FormInput
-          label="Search Events"
+          label="Search"
           value={filter.title ?? ''}
           placeholder="Search by event name..."
           clearable

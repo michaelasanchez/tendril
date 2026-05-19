@@ -1,5 +1,4 @@
 import cn from 'classnames';
-import buttonStyles from '../button/Button.module.css';
 import { format, parseISO } from 'date-fns';
 import type { EventAttributes } from 'ics';
 import * as ics from 'ics';
@@ -8,6 +7,7 @@ import NoImage from '../../assets/no-image.svg';
 import type { Event, Venue } from '../../types/api';
 import { Badge } from '../badge';
 import { IconButton, SquareButton } from '../button';
+import buttonStyles from '../button/Button.module.css';
 import ExpandableText from '../ExpandableText';
 import { Icon, type IconName } from '../Icon';
 import styles from './Modal.module.css';
@@ -51,14 +51,14 @@ export const EventModal: React.FC<Props> = ({
       animation={true}
       onHide={onHide}
     >
+      <div className={styles.TopRight}>
+        <IconButton name="close" onClick={onHide} />
+      </div>
       {event && (
         <>
           {/* --- Header --- */}
           <Modal.Header className={styles.Header}>
             <img src={event.imageUrl ?? NoImage} alt={event.title} />
-            <div className={styles.TopRight}>
-              <IconButton name="close" onClick={onHide} />
-            </div>
             <div className={styles.BottomLeft}>
               {event.categoryName && (
                 <Badge className={styles.Uppercase}>{event.categoryName}</Badge>
@@ -76,9 +76,17 @@ export const EventModal: React.FC<Props> = ({
             </div>
             <EventRow icon="calendar" label="Date & Time">
               <p>
-                {format(new Date(event.startDateTime ?? event.startDate!), 'iiii, MMMM d, yyyy')}
+                {format(
+                  new Date(event.startDateTime ?? event.startDate!),
+                  'iiii, MMMM d, yyyy',
+                )}
               </p>
-              <p>{format(new Date(event.startDateTime ?? event.startDate!), 'h:mm a')}</p>
+              <p>
+                {format(
+                  new Date(event.startDateTime ?? event.startDate!),
+                  'h:mm a',
+                )}
+              </p>
             </EventRow>
             <EventRow icon="location" label="Venue">
               <p>
@@ -141,7 +149,10 @@ export const EventModal: React.FC<Props> = ({
                 <Dropdown drop="up">
                   <Dropdown.Toggle
                     variant="none"
-                    className={cn(buttonStyles.SquareButton, buttonStyles.OutlineSecondary)}
+                    className={cn(
+                      buttonStyles.SquareButton,
+                      buttonStyles.OutlineSecondary,
+                    )}
                   >
                     <Icon name="ics" />
                   </Dropdown.Toggle>

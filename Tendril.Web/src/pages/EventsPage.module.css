@@ -1,7 +1,25 @@
+.Header {
+  display: flex;
+  justify-content: space-between;
+
+  margin-bottom: 0.5rem;
+  padding-bottom: 0;
+
+  button {
+    margin-top: 1em;
+  }
+}
+
+.Body {
+  padding-top: 0;
+}
+
 .Heading {
   display: flex;
   gap: 0.25em;
   align-items: center;
+
+  margin-bottom: 0;
 
   svg {
     margin-right: 0.5em;

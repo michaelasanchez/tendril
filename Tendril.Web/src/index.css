@@ -218,3 +218,8 @@ body {
   font-size: var(--font-size);
   font-family: var(--font-sans);
 }
+
+
+.offcanvas-header .btn-close {
+  margin-top: 0.25em;
+}
