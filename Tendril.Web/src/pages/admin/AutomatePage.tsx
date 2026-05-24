@@ -206,7 +206,7 @@ export const AutomatePage: React.FC = () => {
     <section>
       <div className={pageStyles.pageHeader}>
         <div>
-          <h2>Automated Task Schedules</h2>
+          <h2>Task Schedules</h2>
         </div>
         <div style={{ display: 'flex', gap: '1em' }}>
           {tasks.some((t) => t.isDisabled) && (

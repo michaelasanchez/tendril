@@ -51,14 +51,13 @@ export const EventsPage: React.FC = () => {
 
   const filtersStorage = useLocalStorage('filters');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState<boolean>(false);
-  const [filter, setFilter] = useState<EventFilter>(
-    filtersStorage.exists()
-      ? JSON.parse(filtersStorage.fetch()!)
-      : {
-          startDate: format(new Date(), 'yyyy-MM-dd'),
-          endDate: '',
-        },
-  );
+  const [filter, setFilter] = useState<EventFilter>({
+    ...(filtersStorage.exists() ? JSON.parse(filtersStorage.fetch()!) : {}),
+    startDate: format(new Date(), 'yyyy-MM-dd'),
+    endDate: '',
+  });
+
+  const [showFilters, setShowFilters] = useState(false);
 
   const navigate = useNavigate();
   const eventMatch = useMatch('/event/:id');
@@ -200,18 +199,10 @@ export const EventsPage: React.FC = () => {
     };
   }, [activeIndex]);
 
-  // Keep filters in sync
+  // Reload events on filter change (+ write to storage)
   useEffect(() => {
     filtersStorage.commit(JSON.stringify(filter));
-  }, [filter]);
 
-  // Keep favorites in sync
-  useEffect(() => {
-    favoritesStorage.commit(JSON.stringify([...favorites]));
-  }, [favorites]);
-
-  // Reload events on filter change
-  useEffect(() => {
     const controller = new AbortController();
 
     loadEvents(filter, null, controller.signal, false);
@@ -220,6 +211,19 @@ export const EventsPage: React.FC = () => {
       controller.abort();
     };
   }, [filter]);
+
+  // Write favorites to storage
+  useEffect(() => {
+    favoritesStorage.commit(JSON.stringify([...favorites]));
+  }, [favorites]);
+
+  const filteredEvents = useMemo(() => {
+    if (showFavoritesOnly) {
+      return events.filter((e) => favorites.has(e.id));
+    }
+
+    return events;
+  }, [events, favorites, showFavoritesOnly]);
 
   const observer = useRef<IntersectionObserver>(null);
 
@@ -245,14 +249,6 @@ export const EventsPage: React.FC = () => {
     [loading.events, result.nextCursor, loadEvents, filter],
   );
 
-  const filteredEvents = useMemo(() => {
-    if (showFavoritesOnly) {
-      return events.filter((e) => favorites.has(e.id));
-    }
-
-    return events;
-  }, [events, favorites, showFavoritesOnly]);
-
   // const calendarEvents = useMemo(
   //   () =>
   //     events?.map((e, i) => {
@@ -267,10 +263,6 @@ export const EventsPage: React.FC = () => {
   //     }) ?? [],
   //   [events]
   // );
-
-  const [showFilters, setShowFilters] = useState(false);
-
-  const handleCloseFilters = () => setShowFilters(false);
 
   return (
     <>
@@ -303,7 +295,7 @@ export const EventsPage: React.FC = () => {
             <Col lg={4}>
               <Offcanvas
                 show={showFilters}
-                onHide={handleCloseFilters}
+                onHide={() => setShowFilters(false)}
                 responsive="lg"
                 placement="end"
               >

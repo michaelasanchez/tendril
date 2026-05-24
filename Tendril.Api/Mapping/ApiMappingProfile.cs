@@ -44,5 +44,7 @@ public class ApiMappingProfile : Profile
         CreateMap<Tag, TagDto>();
 
         CreateMap<Venue, VenueDto>();
+
+        CreateMap<ScheduledTask, ScheduledTaskDto>();
     }
 }

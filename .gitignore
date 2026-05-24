@@ -432,4 +432,4 @@ FodyWeavers.xsd
 *.env.production
 
 # API Secrets
-appsettings.*.json
+**/appsettings.*.json
