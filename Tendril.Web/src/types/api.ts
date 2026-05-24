@@ -177,6 +177,7 @@ export interface ScraperClassificationRule {
 
 export interface ScraperAttemptHistory {
   id: Guid;
+  scraperName: string | null;
   startTimeUtc: string;
   endTimeUtc: string | null;
   groupKey: string;

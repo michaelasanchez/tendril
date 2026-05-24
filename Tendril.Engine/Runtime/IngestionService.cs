@@ -122,6 +122,7 @@ public class IngestionService(
             // 3. Success Completion
             scraper.State = ScraperState.Healthy;
             scraper.LastSuccessUtc = DateTimeOffset.UtcNow;
+
             attempt.Success = true;
             attempt.ErrorMessage = null;
         }

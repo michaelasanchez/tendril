@@ -77,6 +77,7 @@ public class AttemptHistoryRepository(TendrilDbContext db) : IAttemptHistoryRepo
     public Task<List<ScraperAttemptHistory>> GetAttemptHistories(Guid scraperId, CancellationToken ct = default)
     {
         return db.AttemptHistory
+            .Include(x => x.ScraperDefinition)
             .AsNoTracking()
             .Where(a => a.ScraperDefinitionId == scraperId)
             .OrderByDescending(a => a.StartTimeUtc)

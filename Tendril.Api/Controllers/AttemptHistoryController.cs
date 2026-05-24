@@ -7,14 +7,14 @@ using Tendril.Core.Domain;
 using Tendril.Core.Interfaces.Repositories;
 
 [ApiController]
-[Route("scrapers/{scraperId:guid}/attempt-histories")]
+[Route("attempt-histories")]
 [Authorize]
 public sealed class AttemptHistoryController(IAttemptHistoryRepository query) : ControllerBase
 {
-    [HttpGet]
+    [HttpGet("scraper/{scraperId}")]
     public async Task<ActionResult<IReadOnlyList<AttemptHistoryDto>>>
-        GetAttemptHistories(
-            Guid scraperId,
+        GetAttemptHistoriesByScraperId(
+            [FromRoute] Guid scraperId,
             CancellationToken ct)
     {
         var attempts = await query.GetAttemptHistories(scraperId, ct);
@@ -22,6 +22,7 @@ public sealed class AttemptHistoryController(IAttemptHistoryRepository query) : 
         var resources = attempts.Select(a => new AttemptHistoryDto
         {
             Id = a.Id,
+            ScraperName = a.ScraperDefinition.Name,
             StartTimeUtc = a.StartTimeUtc,
             EndTimeUtc = a.EndTimeUtc,
             Success = a.Success,
@@ -39,7 +40,7 @@ public sealed class AttemptHistoryController(IAttemptHistoryRepository query) : 
 
     [HttpGet("paged")]
     public async Task<ActionResult<PagedResponse<AttemptHistoryDto>>> GetAttemptHistories(
-        Guid scraperId,
+        Guid? scraperId,
         [FromQuery] int? limit,
         [FromQuery] Guid? cursor,
         CancellationToken ct)
@@ -54,6 +55,7 @@ public sealed class AttemptHistoryController(IAttemptHistoryRepository query) : 
             Items = pagedAttempts.Items.Select(a => new AttemptHistoryDto
             {
                 Id = a.Id,
+                ScraperName = a.ScraperDefinition.Name,
                 StartTimeUtc = a.StartTimeUtc,
                 EndTimeUtc = a.EndTimeUtc,
                 Success = a.Success,
@@ -79,6 +81,7 @@ public sealed class AttemptHistoryController(IAttemptHistoryRepository query) : 
         return Ok(new AttemptHistoryDto
         {
             Id = a.Id,
+            ScraperName = a.ScraperDefinition.Name,
             StartTimeUtc = a.StartTimeUtc,
             EndTimeUtc = a.EndTimeUtc,
             Success = a.Success,

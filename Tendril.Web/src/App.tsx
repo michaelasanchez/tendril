@@ -9,6 +9,7 @@ import { useBootstrapTheme } from './hooks';
 import { useAuth } from './hooks/useAuth';
 import { EventsPage } from './pages';
 
+const AttemptHistoryPage = lazy(() => import('./pages/admin/AttemptHistoryPage'));
 const AutomatePage = lazy(() => import('./pages/admin/AutomatePage'));
 const CategoriesPage = lazy(() => import('./pages/admin/CategoriesPage'));
 const ReviewPage = lazy(() => import('./pages/admin/ReviewPage'));
@@ -130,7 +131,8 @@ export default function App() {
               <Route path="venues" element={<VenuesPage />} />
               <Route path="automate" element={<AutomatePage />} />
               <Route path="review" element={<ReviewPage />} />
-              {/* <Route path="summary" element={<SummaryPage />} /> */}
+              <Route path="summary" element={
+            <AttemptHistoryPage />} />
             </Route>
 
             <Route path="*" element={<EventsPage />} />

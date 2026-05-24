@@ -19,6 +19,7 @@ import type {
   ScrapedEventRaw,
   ScraperAttemptHistory,
 } from '../../types/api';
+import { TagApi } from '../../api/tags';
 // import {
 //   EventRevision,
 //   ScrapedEventRaw,
@@ -44,17 +45,20 @@ export const AttemptHistoryPage: React.FC = () => {
   const [detailLoading, setDetailLoading] = useState(false);
 
   useEffect(() => {
+    console.log('scraper id changed');
     loadInitialAttempts();
   }, [scraperId]);
 
   const loadInitialAttempts = async () => {
-    if (!scraperId) return;
+    // if (!scraperId) return;
     setLoading(true);
     try {
+      console.log('SCRAPER ID', scraperId);
       const response = await ScrapersApi.getPagedAttemptHistories(
         scraperId,
         15,
       );
+      console.log('RESPONSE', response);
       setAttempts(response.items);
       setNextCursor(response.nextCursor);
       // Automatically select the most recent attempt
@@ -67,15 +71,14 @@ export const AttemptHistoryPage: React.FC = () => {
   };
 
   const handleSelectAttempt = async (attempt: ScraperAttemptHistory) => {
-    if (!scraperId) return;
     setSelectedAttempt(attempt);
     setDetailLoading(true);
 
     try {
       // Fetch both Raw data and Revisions in parallel
       const [rawRes, revRes] = await Promise.all([
-        ScrapersApi.getRawEventsByAttempt(scraperId, attempt.id, 50),
-        ScrapersApi.getRevisionsByAttempt(scraperId, attempt.id),
+        ScrapersApi.getRawEventsByAttempt(attempt.id, 50),
+        ScrapersApi.getRevisionsByAttempt(attempt.id),
       ]);
 
       setRawEvents(rawRes.items);
@@ -122,6 +125,7 @@ export const AttemptHistoryPage: React.FC = () => {
                   className="d-flex justify-content-between align-items-center"
                 >
                   <div>
+                    <em>{a.scraperName}</em>
                     <small className="d-block text-muted">
                       {new Date(a.startTimeUtc).toLocaleString()}
                     </small>
@@ -226,7 +230,7 @@ export const AttemptHistoryPage: React.FC = () => {
                                 </td>
                                 <td>
                                   <pre
-                                    className="m-0 p-1 bg-light border rounded"
+                                    className="m-0 p-1 border rounded"
                                     style={{ fontSize: '10px' }}
                                   >
                                     {JSON.stringify(

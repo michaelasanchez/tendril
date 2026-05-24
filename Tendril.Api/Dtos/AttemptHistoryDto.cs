@@ -3,6 +3,7 @@
 public class AttemptHistoryDto
 {
     public Guid Id { get; init; }
+    public string? ScraperName { get; init; }
 
     public DateTimeOffset StartTimeUtc { get; init; }
     public DateTimeOffset? EndTimeUtc { get; init; }

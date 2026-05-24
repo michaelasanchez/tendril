@@ -12,6 +12,7 @@ import {
   ActionsTab,
   EditTab,
   MappingRulesTab,
+  RunsTab,
   // RunsTab,
   SummaryTab,
 } from '../../scrapers';
@@ -24,7 +25,7 @@ import type {
   Event,
   Guid,
   ScraperAction,
-  // ScraperAttemptHistory,
+  ScraperAttemptHistory,
   ScraperDefinition,
   Venue,
 } from '../../types/api';
@@ -82,13 +83,13 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({}) => {
   /* Actions */
 
   /* Attempts */
-  // const [attempts, setAttempts] = useState<ScraperAttemptHistory[]>([]);
+  const [attempts, setAttempts] = useState<ScraperAttemptHistory[]>([]);
 
-  // const loadAttemptHistories = async () => {
-  //   if (!scraperId) return;
-  //   const attempts = await ScrapersApi.getAttemptHistories(scraperId);
-  //   setAttempts(attempts);
-  // };
+  const loadAttemptHistories = async () => {
+    if (!scraperId) return;
+    const attempts = await ScrapersApi.getAttemptHistoriesByScraperId(scraperId);
+    setAttempts(attempts);
+  };
   /* Attempts */
 
   /* Categories */
@@ -118,7 +119,7 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({}) => {
 
       void loadEvents();
       void loadActions();
-      // void loadAttemptHistories();
+      void loadAttemptHistories();
       void loadCategories(abortController.signal);
     }
   }, [scraperId]);
@@ -377,15 +378,14 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({}) => {
           </Tab.Pane>
 
           <Tab.Pane eventKey="runs">
-            <AttemptHistoryPage />
-            {/* <RunsTab
+            <RunsTab
               scraperId={scraperId as Guid}
               attempts={attempts}
               onComplete={() => {
                 loadEvents();
                 loadAttemptHistories();
               }}
-            /> */}
+            />
           </Tab.Pane>
 
           <Tab.Pane eventKey="output">

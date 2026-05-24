@@ -174,34 +174,36 @@ export const ScrapersApi = {
   },
 
   // Attempt Histories
-  getAttemptHistories(scraperId: Guid): Promise<ScraperAttemptHistory[]> {
-    return apiGet(`/scrapers/${scraperId}/attempt-histories`);
+  getAttemptHistoriesByScraperId(scraperId: Guid): Promise<ScraperAttemptHistory[]> {
+    return apiGet(`/attempt-histories/scrapers/${scraperId}`);
   },
 
   getPagedAttemptHistories(
-    scraperId: string,
+    scraperId?: Guid,
     limit?: number,
     cursor?: string,
   ): Promise<PagedResponse<ScraperAttemptHistory>> {
+    console.log('called');
     const params = new URLSearchParams();
+    if (scraperId) params.append('scraperId', scraperId);
     if (limit) params.append('limit', limit.toString());
     if (cursor) params.append('cursor', cursor);
 
     const query = params.toString() ? `?${params.toString()}` : '';
-    return apiGet(`/scrapers/${scraperId}/attempt-histories/paged${query}`);
+
+    console.log('QUERY', query);
+    return apiGet(`/attempt-histories/paged${query}`);
   },
 
   // Gets a single attempt's metadata
   getAttemptById(
-    scraperId: string,
     attemptId: string,
   ): Promise<ScraperAttemptHistory> {
-    return apiGet(`/scrapers/${scraperId}/attempt-histories/${attemptId}`);
+    return apiGet(`/attempt-histories/${attemptId}`);
   },
 
   // Gets the raw JSON data for a specific run (Paginated)
   getRawEventsByAttempt(
-    scraperId: string,
     attemptId: string,
     limit?: number,
     cursor?: string,
@@ -212,17 +214,16 @@ export const ScrapersApi = {
 
     const query = params.toString() ? `?${params.toString()}` : '';
     return apiGet(
-      `/scrapers/${scraperId}/attempt-histories/${attemptId}/raw-events${query}`,
+      `/attempt-histories/${attemptId}/raw-events${query}`,
     );
   },
 
   // Gets the list of actual changes made during a run
   getRevisionsByAttempt(
-    scraperId: string,
     attemptId: string,
   ): Promise<EventRevision[]> {
     return apiGet(
-      `/scrapers/${scraperId}/attempt-histories/${attemptId}/revisions`,
+      `/attempt-histories/${attemptId}/revisions`,
     );
   },
 

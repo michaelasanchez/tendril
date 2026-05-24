@@ -49,8 +49,6 @@ public sealed class Worker(
 
         var now = DateTimeOffset.UtcNow;
 
-        // 1. Fetch only enabled tasks that are due (or overdue)
-        // Add a method to your repository interface if needed, e.g., GetPendingTasksAsync(now, ct)
         var allTasks = await taskRepository.GetAllAsync(ct);
         var pendingTasks = allTasks.Where(t => !t.IsDisabled && t.NextRunAtUtc <= now).ToList();
 
@@ -75,7 +73,7 @@ public sealed class Worker(
                 {
                     // If "All", fetch everything available
                     var allScrapers = await scraperRepository.GetAllWithDetailsAsync(ct);
-                    scrapersToRun = allScrapers.Where(s => s.IsEventFeed).ToList();
+                    scrapersToRun = [.. allScrapers.Where(s => s.IsEventFeed)];
                 }
                 else if (task.SelectionStrategy == SelectionStrategy.Selected)
                 {
@@ -84,7 +82,7 @@ public sealed class Worker(
                     var fullTask = await taskRepository.GetByIdWithScrapersAsync(task.Id, ct);
                     if (fullTask != null)
                     {
-                        scrapersToRun = fullTask.ScraperDefinitions.Where(s => s.IsEventFeed).ToList();
+                        scrapersToRun = [.. fullTask.ScraperDefinitions.Where(s => s.IsEventFeed)];
                     }
                 }
 
@@ -121,12 +119,12 @@ public sealed class Worker(
         try
         {
             // Parses standard CRON (e.g., "0 * * * *" for hourly)
-            var cron = CronExpression.Parse(task.CronExpression);
-            var nextUtc = cron.GetNextOccurrence(fromTime.UtcDateTime);
+            var expression = CronExpression.Parse(task.CronExpression);
+            var nextOccurrence = expression.GetNextOccurrence(fromTime.UtcDateTime);
 
-            if (nextUtc.HasValue)
+            if (nextOccurrence.HasValue)
             {
-                task.NextRunAtUtc = new DateTimeOffset(nextUtc.Value, TimeSpan.Zero);
+                task.NextRunAtUtc = new DateTimeOffset(nextOccurrence.Value, TimeSpan.Zero);
                 logger.LogInformation("Task '{Name}' rescheduled for {NextRun}", task.Name, task.NextRunAtUtc);
             }
             else
