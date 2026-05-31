@@ -17,6 +17,7 @@ public class TendrilDbContext(DbContextOptions<TendrilDbContext> options) : DbCo
     public DbSet<ScraperClassificationRule> ClassificationRules => Set<ScraperClassificationRule>();
     public DbSet<ScraperMappingRule> MappingRules => Set<ScraperMappingRule>();
     public DbSet<ScheduledTask> ScheduledTasks => Set<ScheduledTask>();
+    public DbSet<ScheduledTaskRun> ScheduledTaskRuns => Set<ScheduledTaskRun>();
     public DbSet<ScraperDefinition> Scrapers => Set<ScraperDefinition>();
     public DbSet<ScraperAction> Actions => Set<ScraperAction>();
     public DbSet<Tag> Tags => Set<Tag>();

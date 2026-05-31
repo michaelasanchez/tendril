@@ -187,7 +187,7 @@ public class ScraperRunsController(
             return NotFound();
 
         // The IngestionService now internally handles the Stream loop and DB saving
-        var result = await ingestionService.Ingest(scraper, ct);
+        var result = await ingestionService.Ingest(scraper, null, ct);
 
         return Ok(new IngestResultDto
         {

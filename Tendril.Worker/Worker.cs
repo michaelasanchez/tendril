@@ -10,27 +10,20 @@ public sealed class Worker(
     ILogger<Worker> logger,
     IServiceProvider serviceProvider) : BackgroundService
 {
-    // A 30-second heartbeat ensures high precision without overloading your database
     private static readonly TimeSpan HeartbeatInterval = TimeSpan.FromSeconds(30);
 
     protected override async Task ExecuteAsync(CancellationToken ct)
     {
         logger.LogInformation("Scheduled Task Worker started.");
-
         using var periodicTimer = new PeriodicTimer(HeartbeatInterval);
 
-        // periodicTimer.WaitForNextTickAsync respects cancellation tokens cleanly
         while (await periodicTimer.WaitForNextTickAsync(ct))
         {
             try
             {
                 await PollAndExecuteTasksAsync(ct);
             }
-            catch (OperationCanceledException)
-            {
-                // Clean exit when the worker is shutting down
-                break;
-            }
+            catch (OperationCanceledException) { break; }
             catch (Exception ex)
             {
                 logger.LogError(ex, "An error occurred during the scheduled task polling cycle.");
@@ -40,21 +33,20 @@ public sealed class Worker(
 
     private async Task PollAndExecuteTasksAsync(CancellationToken ct)
     {
-        // Create a scope to safely resolve your DbContext-backed repositories
         using var scope = serviceProvider.CreateScope();
 
-        var taskRepository = scope.ServiceProvider.GetRequiredService<IScheduledTaskRepository>();
-        var scraperRepository = scope.ServiceProvider.GetRequiredService<IScraperRepository>();
+        var taskRepo = scope.ServiceProvider.GetRequiredService<IScheduledTaskRepository>();
+        var taskRunRepo = scope.ServiceProvider.GetRequiredService<IScheduledTaskRunRepository>();
+        var scraperRepo = scope.ServiceProvider.GetRequiredService<IScraperRepository>();
         var ingestionService = scope.ServiceProvider.GetRequiredService<IIngestionService>();
 
         var now = DateTimeOffset.UtcNow;
+        var allTasks = await taskRepo.GetAllAsync(ct);
 
-        var allTasks = await taskRepository.GetAllAsync(ct);
-        var pendingTasks = allTasks.Where(t => !t.IsDisabled && t.NextRunAtUtc <= now).ToList();
+        // We pick up tasks where NextRun is due OR tasks that are currently "Running" but crashed/failed previously
+        var pendingTasks = allTasks.Where(t => !t.IsDisabled && (t.NextRunAtUtc <= now || t.Status == ScheduledTaskStatus.Running || t.Status == ScheduledTaskStatus.Retrying)).ToList();
 
         if (pendingTasks.Count == 0) return;
-
-        logger.LogInformation("Found {Count} tasks ready for execution.", pendingTasks.Count);
 
         foreach (var task in pendingTasks)
         {
@@ -62,54 +54,120 @@ public sealed class Worker(
 
             try
             {
-                // 2. Transition status to prevent double-execution in concurrent environments
-                task.Status = "Running";
-                await taskRepository.UpdateAsync(task, ct);
+                task.Status = ScheduledTaskStatus.Running;
+                await taskRepo.UpdateAsync(task, ct);
 
-                // 3. Resolve Scrapers based on SelectionStrategy
-                List<ScraperDefinition> scrapersToRun = [];
+                // 1. Get or Create the current Task Run
+                var currentRun = await taskRunRepo.GetIncompleteRunAsync(task.Id, ct);
+                if (currentRun == null)
+                {
+                    currentRun = new ScheduledTaskRun
+                    {
+                        Id = Guid.NewGuid(),
+                        ScheduledTaskId = task.Id,
+                        StartTimeUtc = now,
+                        Status = RunStatus.Running, // Assuming string based on your DB config, adjust to RunStatus.Running if you strictly use the Enum
+                        RetryCount = 0      // Tracks how many times this specific run has retried
+                    };
+                    await taskRunRepo.AddAsync(currentRun, ct);
+                }
+
+                // 2. Resolve Scrapers
+                var scrapersToRun = new List<ScraperDefinition>();
 
                 if (task.SelectionStrategy == SelectionStrategy.All)
                 {
-                    // If "All", fetch everything available
-                    var allScrapers = await scraperRepository.GetAllWithDetailsAsync(ct);
-                    scrapersToRun = [.. allScrapers.Where(s => s.IsEventFeed)];
+                    var allScrapers = await scraperRepo.GetAllWithDetailsAsync(ct);
+                    scrapersToRun = allScrapers.Where(s => s.IsEventFeed).ToList();
                 }
                 else if (task.SelectionStrategy == SelectionStrategy.Selected)
                 {
-                    // Ensure your repository populated ScraperDefinitions during retrieval
-                    // If taskRepository.GetAllAsync doesn't include them, fetch this specific task explicitly
-                    var fullTask = await taskRepository.GetByIdWithScrapersAsync(task.Id, ct);
-                    if (fullTask != null)
+                    var fullTaskScrapers = await taskRepo.GetScrapersForTaskAsync(task, ct);
+                    if (fullTaskScrapers != null)
                     {
-                        scrapersToRun = [.. fullTask.ScraperDefinitions.Where(s => s.IsEventFeed)];
+                        scrapersToRun = fullTaskScrapers.Where(sa => sa.IsEventFeed).ToList();
                     }
                 }
 
-                // 4. Execute Ingestion
-                logger.LogInformation("Executing task '{TaskName}' spanning {Count} scrapers.", task.Name, scrapersToRun.Count);
+                // 3. Filter out scrapers that ALREADY succeeded in this specific run
+                var successfulScraperIdsInRun = currentRun.AttemptHistories
+                    .Where(a => a.Success)
+                    .Select(a => a.ScraperDefinitionId)
+                    .ToHashSet();
 
-                foreach (var scraper in scrapersToRun)
+                var scrapersNeedingExecution = scrapersToRun
+                    .Where(s => !successfulScraperIdsInRun.Contains(s.Id))
+                    .ToList();
+
+                logger.LogInformation("Task '{TaskName}': {Count} scrapers total, {Pending} pending execution.",
+                    task.Name, scrapersToRun.Count, scrapersNeedingExecution.Count);
+
+                // 4. Execute Pending Scrapers
+                foreach (var scraper in scrapersNeedingExecution)
                 {
-                    await ingestionService.Ingest(scraper, ct);
+                    await ingestionService.Ingest(scraper, currentRun.Id, ct);
                 }
 
-                // 5. Success Tracking & Schedule Next Run
-                task.Status = "Idle";
-                CalculateNextRun(task, now);
+                // 5. Evaluate overall Run Success
+                var refreshedRun = await taskRunRepo.GetByIdWithAttemptsAsync(currentRun.Id, ct) ?? currentRun;
+
+                // Did EVERY scraper mapped to this task succeed?
+                bool allSucceeded = true;
+                foreach (var mappedScraper in scrapersToRun)
+                {
+                    bool succeeded = refreshedRun.AttemptHistories.Any(a => a.ScraperDefinitionId == mappedScraper.Id && a.Success);
+                    if (!succeeded)
+                    {
+                        allSucceeded = false;
+                        break;
+                    }
+                }
+
+                if (allSucceeded)
+                {
+                    // SUCCESS! Close out the run and calculate next cron.
+                    refreshedRun.Status = RunStatus.Completed;
+                    refreshedRun.EndTimeUtc = DateTimeOffset.UtcNow;
+                    await taskRunRepo.UpdateAsync(refreshedRun, ct);
+
+                    task.Status = ScheduledTaskStatus.Idle;
+                    CalculateNextRun(task, now);
+                }
+                else
+                {
+                    // FAILURE (One or more scrapers failed)
+                    if (refreshedRun.RetryCount >= task.MaxRetries)
+                    {
+                        // Exhausted retries. Mark as failed and move on to the next schedule.
+                        logger.LogWarning("Task '{TaskName}' exhausted all {Max} retries. Marking run as Failed.", task.Name, task.MaxRetries);
+
+                        refreshedRun.Status = RunStatus.Failed;
+                        refreshedRun.EndTimeUtc = DateTimeOffset.UtcNow;
+                        await taskRunRepo.UpdateAsync(refreshedRun, ct);
+
+                        task.Status = ScheduledTaskStatus.Idle;
+                        CalculateNextRun(task, now); // Move on so we don't get stuck forever
+                    }
+                    else
+                    {
+                        // Leave the run open, increment retry count. Do NOT bump NextRunAtUtc!
+                        refreshedRun.Status = RunStatus.Retrying;
+                        refreshedRun.RetryCount++;
+                        await taskRunRepo.UpdateAsync(refreshedRun, ct);
+
+                        task.Status = ScheduledTaskStatus.Retrying;
+                        logger.LogInformation("Task '{TaskName}' failed to process all scrapers. Retrying (Attempt {RetryCount}/{MaxRetries}) on next heartbeat.", task.Name, refreshedRun.RetryCount, task.MaxRetries);
+                    }
+                }
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to complete execution for task {TaskId} ({TaskName})", task.Id, task.Name);
-                task.Status = "Failed";
-
-                // Still calculate next run so a single crash doesn't permanently stall the task
-                CalculateNextRun(task, now);
+                logger.LogError(ex, "Fatal error executing task {TaskId}", task.Id);
+                task.Status = ScheduledTaskStatus.Error; // Put task in an error state to be picked up next loop
             }
             finally
             {
-                // Save the status and updated NextRunAtUtc changes back to the database
-                await taskRepository.UpdateAsync(task, ct);
+                await taskRepo.UpdateAsync(task, ct);
             }
         }
     }
@@ -118,7 +176,6 @@ public sealed class Worker(
     {
         try
         {
-            // Parses standard CRON (e.g., "0 * * * *" for hourly)
             var expression = CronExpression.Parse(task.CronExpression);
             var nextOccurrence = expression.GetNextOccurrence(fromTime.UtcDateTime);
 
@@ -129,7 +186,6 @@ public sealed class Worker(
             }
             else
             {
-                // Fallback protection if CRON won't fire again
                 task.IsDisabled = true;
                 logger.LogWarning("Task '{Name}' has a CRON expression that yields no future occurrences. Disabling task.", task.Name);
             }
@@ -137,7 +193,7 @@ public sealed class Worker(
         catch (CronFormatException ex)
         {
             task.IsDisabled = true;
-            task.Status = "InvalidCron";
+            task.Status = ScheduledTaskStatus.InvalidCron;
             logger.LogError(ex, "Task '{Name}' has a malformed CRON expression. Disabling task.", task.Name);
         }
     }

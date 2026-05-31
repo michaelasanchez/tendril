@@ -30,5 +30,5 @@ public record UpdateScheduledTaskRequest(
     string? CronExpression,
     DateTimeOffset? NextRunAtUtc,
     string? SelectionStrategy,
-    string? Status,
+    Core.Domain.Entities.ScheduledTaskStatus? Status,
     List<Guid>? ScraperIds);
