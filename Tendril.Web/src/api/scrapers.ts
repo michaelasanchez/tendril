@@ -46,8 +46,8 @@ export interface ReorderScraperRequest {
 }
 
 export const ScrapersApi = {
-  getAll(): Promise<ScraperDefinition[]> {
-    return apiGet('/scrapers');
+  getAll(signal?: AbortSignal): Promise<ScraperDefinition[]> {
+    return apiGet('/scrapers', signal);
   },
 
   getById(id: Guid): Promise<ScraperDefinition> {
@@ -182,8 +182,8 @@ export const ScrapersApi = {
     scraperId?: Guid,
     limit?: number,
     cursor?: string,
+    signal?: AbortSignal,
   ): Promise<PagedResponse<ScraperAttemptHistory>> {
-    console.log('called');
     const params = new URLSearchParams();
     if (scraperId) params.append('scraperId', scraperId);
     if (limit) params.append('limit', limit.toString());
@@ -192,7 +192,7 @@ export const ScrapersApi = {
     const query = params.toString() ? `?${params.toString()}` : '';
 
     console.log('QUERY', query);
-    return apiGet(`/attempt-histories/paged${query}`);
+    return apiGet(`/attempt-histories/paged${query}`, signal);
   },
 
   // Gets a single attempt's metadata

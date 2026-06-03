@@ -26,7 +26,7 @@ public class IngestionService(
         logger.LogInformation("Starting ingestion for {Scraper}", scraper.Name);
 
         var start = DateTimeOffset.UtcNow;
-        int created = 0, updated = 0, extracted = 0, errored = 0, skipped = 0;
+        int created = 0, updated = 0, mapped = 0, extracted = 0, errored = 0, skipped = 0;
 
         var yearTracker = new YearTracker(DateTimeOffset.UtcNow);
 
@@ -78,23 +78,25 @@ public class IngestionService(
                         rawEntity,
                         yearTracker.CurrentYear);
 
-                    if (mappedEvent?.StartUtc is not null && mappedEvent.StartUtc != default)
-                    {
-                        int assignedYear = yearTracker.ProcessMonth(mappedEvent.StartUtc.Month);
-
-                        if (scraper.UseYearTracking && assignedYear != mappedEvent.StartUtc.Year)
-                        {
-                            // If the tracker bumped the year, update the event objects
-                            int diff = assignedYear - mappedEvent.StartUtc.Year;
-                            mappedEvent.StartUtc = mappedEvent.StartUtc.AddYears(diff);
-
-                            if (mappedEvent.EndUtc is not null && mappedEvent.EndUtc != default)
-                                mappedEvent.EndUtc = mappedEvent.EndUtc.Value.AddYears(diff);
-                        }
-                    }
-
                     if (mappedEvent is not null)
                     {
+                        mapped++;
+
+                        if (mappedEvent.StartUtc != default)
+                        {
+                            int assignedYear = yearTracker.ProcessMonth(mappedEvent.StartUtc.Month);
+
+                            if (scraper.UseYearTracking && assignedYear != mappedEvent.StartUtc.Year)
+                            {
+                                // If the tracker bumped the year, update the event objects
+                                int diff = assignedYear - mappedEvent.StartUtc.Year;
+                                mappedEvent.StartUtc = mappedEvent.StartUtc.AddYears(diff);
+
+                                if (mappedEvent.EndUtc is not null && mappedEvent.EndUtc != default)
+                                    mappedEvent.EndUtc = mappedEvent.EndUtc.Value.AddYears(diff);
+                            }
+                        }
+
                         if (scraper.RequiresReview)
                         {
                             mappedEvent.Status = EventStatus.Pending;
@@ -141,8 +143,10 @@ public class IngestionService(
         {
             // 5. Finalize Stats
             attempt.EndTimeUtc = DateTimeOffset.UtcNow;
+
             attempt.Extracted = extracted;
             attempt.Created = created;
+            attempt.Mapped = mapped;
             attempt.Updated = updated;
             attempt.Skipped = skipped;
             attempt.Errored = errored;

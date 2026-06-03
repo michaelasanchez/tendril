@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Badge,
   Button,
@@ -11,64 +11,105 @@ import {
   Table,
   Tabs,
 } from 'react-bootstrap';
-import { useParams } from 'react-router';
 
+import cn from 'classnames';
 import { ScrapersApi } from '../../api/scrapers';
 import type {
   EventRevision,
+  Guid,
   ScrapedEventRaw,
   ScraperAttemptHistory,
+  ScraperDefinition,
 } from '../../types/api';
-import { TagApi } from '../../api/tags';
-// import {
-//   EventRevision,
-//   ScrapedEventRaw,
-//   ScraperAttemptHistory,
-//   ScraperService,
-// } from '../../types/api';
+import styles from './AttemptHistoryPage.module.css';
+
+interface Loading {
+  scrapers: boolean;
+  attempts: boolean;
+}
 
 export const AttemptHistoryPage: React.FC = () => {
-  const { scraperId } = useParams<{ scraperId: string }>();
+  const [scrapers, setScrapers] = useState<ScraperDefinition[]>([]);
 
   // State for Attempts List
   const [attempts, setAttempts] = useState<ScraperAttemptHistory[]>([]);
+  const [scraperId, setScraperId] = useState<Guid | null>(null);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
 
   // State for Selection & Details
   const [selectedAttempt, setSelectedAttempt] =
     useState<ScraperAttemptHistory | null>(null);
+  const [selectedRow, setSelectedRow] = useState<string | null>(null);
   const [rawEvents, setRawEvents] = useState<ScrapedEventRaw[]>([]);
+  const [creations, setCreations] = useState<ScrapedEventRaw[]>([]);
   const [revisions, setRevisions] = useState<EventRevision[]>([]);
 
   // UI State
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<Loading>({
+    scrapers: true,
+    attempts: true,
+  });
   const [detailLoading, setDetailLoading] = useState(false);
 
   useEffect(() => {
-    console.log('scraper id changed');
-    loadInitialAttempts();
+    var abortController = new AbortController();
+
+    loadScrapers(abortController.signal);
+    loadInitialAttempts(abortController.signal);
   }, [scraperId]);
 
-  const loadInitialAttempts = async () => {
-    // if (!scraperId) return;
-    setLoading(true);
+  const loadScrapers = useCallback(async (signal?: AbortSignal) => {
+    setLoading((prev) => ({ ...prev, scrapers: true }));
     try {
-      console.log('SCRAPER ID', scraperId);
+      const data = await ScrapersApi.getAll(signal);
+
+      setScrapers(data);
+    } catch (error) {
+      console.error('Failed to fetch scrapers', error);
+    } finally {
+      setLoading((prev) => ({ ...prev, scrapers: false }));
+    }
+  }, []);
+
+  const loadInitialAttempts = useCallback(async (signal?: AbortSignal) => {
+    setLoading((prev) => ({ ...prev, attempts: true }));
+    try {
       const response = await ScrapersApi.getPagedAttemptHistories(
-        scraperId,
+        scraperId ?? undefined,
         15,
+        undefined,
+        signal,
       );
-      console.log('RESPONSE', response);
+
       setAttempts(response.items);
       setNextCursor(response.nextCursor);
+
       // Automatically select the most recent attempt
       if (response.items.length > 0) {
         handleSelectAttempt(response.items[0]);
       }
     } finally {
-      setLoading(false);
+      setLoading((prev) => ({ ...prev, attempts: false }));
     }
-  };
+  }, []);
+
+  const loadMore = useCallback(async (signal?: AbortSignal) => {
+    if (!nextCursor) return;
+
+    setLoading((prev) => ({ ...prev, attempts: true }));
+    try {
+      const response = await ScrapersApi.getPagedAttemptHistories(
+        scraperId ?? undefined,
+        15,
+        nextCursor,
+        signal,
+      );
+      setAttempts((prev) => [...prev, ...response.items]);
+      setNextCursor(response.nextCursor);
+    } finally {
+      setLoading((prev) => ({ ...prev, attempts: false }));
+    }
+  }, []);
 
   const handleSelectAttempt = async (attempt: ScraperAttemptHistory) => {
     setSelectedAttempt(attempt);
@@ -76,13 +117,20 @@ export const AttemptHistoryPage: React.FC = () => {
 
     try {
       // Fetch both Raw data and Revisions in parallel
-      const [rawRes, revRes] = await Promise.all([
+      const [rawEventsResult, revisionsResult] = await Promise.all([
         ScrapersApi.getRawEventsByAttempt(attempt.id, 50),
         ScrapersApi.getRevisionsByAttempt(attempt.id),
       ]);
 
-      setRawEvents(rawRes.items);
-      setRevisions(revRes);
+      const updateRawEventIds = revisionsResult.map((r) => r.rawEventId);
+
+      setRawEvents(rawEventsResult.items);
+      setCreations(
+        rawEventsResult.items.filter(
+          (r) => r.eventId && !updateRawEventIds.includes(r.id),
+        ),
+      );
+      setRevisions(revisionsResult);
     } finally {
       setDetailLoading(false);
     }
@@ -94,13 +142,6 @@ export const AttemptHistoryPage: React.FC = () => {
     </Badge>
   );
 
-  if (loading)
-    return (
-      <div className="p-5 text-center">
-        <Spinner animation="border" />
-      </div>
-    );
-
   return (
     <div className="p-4">
       <h2 className="mb-4">Scraper Run History</h2>
@@ -109,12 +150,12 @@ export const AttemptHistoryPage: React.FC = () => {
         {/* LEFT COLUMN: HISTORY LIST */}
         <Col md={4}>
           <Card className="shadow-sm">
-            <Card.Header className="bg-white font-weight-bold">
+            <Card.Header className="font-weight-bold">
               Recent Attempts
             </Card.Header>
             <ListGroup
               variant="flush"
-              style={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}
+              style={{ maxHeight: 'calc(100vh - 220px)', overflowY: 'auto' }}
             >
               {attempts.map((a) => (
                 <ListGroup.Item
@@ -134,11 +175,17 @@ export const AttemptHistoryPage: React.FC = () => {
                   {renderStatusBadge(a.success)}
                 </ListGroup.Item>
               ))}
+              {loading.attempts && (
+                <div className="p-5 text-center">
+                  <Spinner animation="border" />
+                </div>
+              )}
               {nextCursor && (
                 <Button
                   variant="link"
                   size="sm"
                   className="text-center w-100 py-3"
+                  onClick={() => loadMore()}
                 >
                   Load Older...
                 </Button>
@@ -160,9 +207,14 @@ export const AttemptHistoryPage: React.FC = () => {
                     color: 'primary',
                   },
                   {
-                    label: 'Mapped',
-                    val: selectedAttempt.mapped,
+                    label: 'Skipped',
+                    val: selectedAttempt.skipped,
                     color: 'info',
+                  },
+                  {
+                    label: 'Created',
+                    val: selectedAttempt.created,
+                    color: 'success',
                   },
                   {
                     label: 'Updated',
@@ -203,6 +255,55 @@ export const AttemptHistoryPage: React.FC = () => {
                     id="attempt-detail-tabs"
                     className="mb-3"
                   >
+                    {/* TAB 0: CREATIONS */}
+                    <Tab
+                      eventKey="creations"
+                      title={`Creations (${creations.length})`}
+                    >
+                      <Table responsive hover size="sm" className="small">
+                        <thead>
+                          <tr>
+                            <th>Scraped Time</th>
+                            <th>Raw JSON Snapshot</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {creations.map((raw) => (
+                            <tr
+                              key={raw.id}
+                              onClick={() =>
+                                setSelectedRow(
+                                  raw.id == selectedRow ? null : raw.id,
+                                )
+                              }
+                            >
+                              <td className="text-nowrap">
+                                {new Date(
+                                  raw.scrapedAtUtc,
+                                ).toLocaleTimeString()}
+                              </td>
+                              <td>
+                                <pre
+                                  className={cn(
+                                    'border',
+                                    'rounded',
+                                    styles.Code,
+                                    raw.id == selectedRow && styles.FullHeight,
+                                  )}
+                                >
+                                  {JSON.stringify(
+                                    JSON.parse(raw?.rawDataJson ?? '{}'),
+                                    null,
+                                    2,
+                                  )}
+                                </pre>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </Table>
+                    </Tab>
+
                     {/* TAB 1: REVISIONS (THE DIFFS) */}
                     <Tab
                       eventKey="revisions"
@@ -265,7 +366,7 @@ export const AttemptHistoryPage: React.FC = () => {
                       title={`Raw Scraped (${rawEvents.length})`}
                     >
                       <Table responsive hover size="sm" className="small">
-                        <thead className="bg-light">
+                        <thead>
                           <tr>
                             <th>Scraped Time</th>
                             <th>Raw JSON Snapshot</th>
@@ -273,22 +374,34 @@ export const AttemptHistoryPage: React.FC = () => {
                         </thead>
                         <tbody>
                           {rawEvents.map((raw) => (
-                            <tr key={raw.id}>
+                            <tr
+                              key={raw.id}
+                              onClick={() =>
+                                setSelectedRow(
+                                  raw.id == selectedRow ? null : raw.id,
+                                )
+                              }
+                            >
                               <td className="text-nowrap">
                                 {new Date(
                                   raw.scrapedAtUtc,
                                 ).toLocaleTimeString()}
                               </td>
                               <td>
-                                <code
-                                  className="d-block p-2 bg-dark text-success rounded overflow-hidden"
-                                  style={{
-                                    maxHeight: '100px',
-                                    fontSize: '11px',
-                                  }}
+                                <pre
+                                  className={cn(
+                                    'border',
+                                    'rounded',
+                                    styles.Code,
+                                    raw.id == selectedRow && styles.FullHeight,
+                                  )}
                                 >
-                                  {raw.rawDataJson}
-                                </code>
+                                  {JSON.stringify(
+                                    JSON.parse(raw?.rawDataJson ?? '{}'),
+                                    null,
+                                    2,
+                                  )}
+                                </pre>
                               </td>
                             </tr>
                           ))}
