@@ -5,5 +5,5 @@ namespace Tendril.Engine.Abstractions;
 
 public interface IIngestionService
 {
-    public Task<IngestResult> Ingest(ScraperDefinition scraper, CancellationToken cancellationToken = default);
+    public Task<IngestResult> Ingest(ScraperDefinition scraper, Guid? scheduledTaskRunId = null, CancellationToken cancellationToken = default);
 }

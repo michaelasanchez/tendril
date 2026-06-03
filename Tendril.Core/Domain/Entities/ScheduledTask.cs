@@ -2,6 +2,15 @@
 
 namespace Tendril.Core.Domain.Entities;
 
+public enum ScheduledTaskStatus
+{
+    Idle,
+    Running,
+    Retrying,
+    Error,
+    InvalidCron
+}
+
 public class ScheduledTask
 {
     public Guid Id { get; set; }
@@ -15,9 +24,10 @@ public class ScheduledTask
 
     // Control flag for your "All" vs "Selected" logic
     public SelectionStrategy SelectionStrategy { get; set; }
+    public int MaxRetries { get; set; } = 3;
 
     // State Tracking & Concurrency
-    public string Status { get; set; } = "Idle"; // Idle, Queued, Running
+    public ScheduledTaskStatus Status { get; set; } = ScheduledTaskStatus.Idle; // Idle, Queued, Running
     public DateTimeOffset? LastRunStartedAtUtc { get; set; }
     public DateTimeOffset? LastRunCompletedAtUtc { get; set; }
 
@@ -25,9 +35,7 @@ public class ScheduledTask
     public byte[] RowVersion { get; set; } = [];
 
     // Relationships
-    // One-to-Many: The specific scrapers explicitly assigned to this task
     public ICollection<ScraperDefinition> ScraperDefinitions { get; set; } = [];
 
-    // One-to-Many: History tracking for every time this automated task executes
-    public ICollection<ScraperAttemptHistory> AttemptHistories { get; set; } = [];
+    public ICollection<ScheduledTaskRun> Runs { get; set; } = [];
 }

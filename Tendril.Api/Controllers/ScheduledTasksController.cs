@@ -48,7 +48,7 @@ public class ScheduledTasksController(
             IsDisabled = request.IsDisabled,
             CronExpression = request.CronExpression,
             SelectionStrategy = strategy,
-            Status = "Idle",
+            Status = Core.Domain.Entities.ScheduledTaskStatus.Idle,
             // Worker or a backing service can evaluate the initial NextRunAtUtc based on the CronExpression,
             // default it to immediate execution check for now.
             NextRunAtUtc = DateTimeOffset.UtcNow
@@ -86,7 +86,7 @@ public class ScheduledTasksController(
         if (request.IsDisabled is not null) task.IsDisabled = request.IsDisabled.Value;
         if (request.CronExpression is not null) task.CronExpression = request.CronExpression;
         if (request.NextRunAtUtc is not null) task.NextRunAtUtc = request.NextRunAtUtc.Value;
-        if (request.Status is not null) task.Status = request.Status;
+        if (request.Status is not null) task.Status = request.Status.Value;
 
         if (request.SelectionStrategy is not null &&
             Enum.TryParse<SelectionStrategy>(request.SelectionStrategy, true, out var strategy))

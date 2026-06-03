@@ -21,7 +21,10 @@ public class IngestionService(
     IClassificationService classifier,
     IScrapeExecutor executor) : IIngestionService
 {
-    public async Task<IngestResult> Ingest(ScraperDefinition scraper, CancellationToken cancellationToken = default)
+    public async Task<IngestResult> Ingest(
+        ScraperDefinition scraper,
+        Guid? scheduledTaskRunId = null,
+        CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Starting ingestion for {Scraper}", scraper.Name);
 
@@ -35,6 +38,7 @@ public class IngestionService(
         {
             Id = Guid.NewGuid(),
             ScraperDefinitionId = scraper.Id,
+            ScheduledTaskRunId = scheduledTaskRunId,
             StartTimeUtc = start,
             Success = false,
             ErrorMessage = "Running..."

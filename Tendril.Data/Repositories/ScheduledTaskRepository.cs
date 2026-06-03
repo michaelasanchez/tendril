@@ -61,7 +61,7 @@ public class ScheduledTaskRepository(TendrilDbContext db) : IScheduledTaskReposi
     public async Task<ScheduledTask?> GetNextDueTaskAsync(DateTimeOffset now, CancellationToken ct = default)
     {
         return await db.ScheduledTasks
-            .Where(t => !t.IsDisabled && t.Status == "Idle" && t.NextRunAtUtc <= now)
+            .Where(t => !t.IsDisabled && t.Status == Core.Domain.Entities.ScheduledTaskStatus.Idle && t.NextRunAtUtc <= now)
             .OrderBy(t => t.NextRunAtUtc)
             .FirstOrDefaultAsync(ct);
     }
