@@ -1,8 +1,8 @@
-using Cronos;
 using Tendril.Core.Domain.Entities;
 using Tendril.Core.Domain.Enums;
 using Tendril.Core.Interfaces.Repositories;
 using Tendril.Engine.Abstractions;
+using Tendril.Worker.Utils;
 
 namespace Tendril.Worker;
 
@@ -33,24 +33,34 @@ public sealed class Worker(
 
     private async Task PollAndExecuteTasksAsync(CancellationToken ct)
     {
-        using var scope = serviceProvider.CreateScope();
-
-        var taskRepo = scope.ServiceProvider.GetRequiredService<IScheduledTaskRepository>();
-        var taskRunRepo = scope.ServiceProvider.GetRequiredService<IScheduledTaskRunRepository>();
-        var scraperRepo = scope.ServiceProvider.GetRequiredService<IScraperRepository>();
-        var ingestionService = scope.ServiceProvider.GetRequiredService<IIngestionService>();
-
         var now = DateTimeOffset.UtcNow;
-        var allTasks = await taskRepo.GetAllAsync(ct);
+        List<ScheduledTask> pendingTasks;
 
-        // We pick up tasks where NextRun is due OR tasks that are currently "Running" but crashed/failed previously
-        var pendingTasks = allTasks.Where(t => !t.IsDisabled && (t.NextRunAtUtc <= now || t.Status == ScheduledTaskStatus.Running || t.Status == ScheduledTaskStatus.Retrying)).ToList();
+        // Create a short-lived scope just to look up what needs work
+        using (var scope = serviceProvider.CreateScope())
+        {
+            var taskRepo = scope.ServiceProvider.GetRequiredService<IScheduledTaskRepository>();
+            var allTasks = await taskRepo.GetAllAsync(ct);
+
+            pendingTasks = allTasks.Where(t => !t.IsDisabled &&
+                (t.NextRunAtUtc <= now ||
+                 t.Status == ScheduledTaskStatus.Running ||
+                 t.Status == ScheduledTaskStatus.Retrying)).ToList();
+        }
 
         if (pendingTasks.Count == 0) return;
 
-        foreach (var task in pendingTasks)
+        foreach (var pendingTask in pendingTasks)
         {
             ct.ThrowIfCancellationRequested();
+
+            using var scope = serviceProvider.CreateScope();
+
+            var (taskRepo, taskRunRepo, scraperRepo, ingestionService) = GetServices(scope);
+
+            // Re-fetch or attach the task to the fresh context
+            var task = await taskRepo.GetByIdAsync(pendingTask.Id, ct);
+            if (task == null) continue;
 
             try
             {
@@ -65,16 +75,15 @@ public sealed class Worker(
                     {
                         Id = Guid.NewGuid(),
                         ScheduledTaskId = task.Id,
-                        StartTimeUtc = now,
-                        Status = RunStatus.Running, // Assuming string based on your DB config, adjust to RunStatus.Running if you strictly use the Enum
-                        RetryCount = 0      // Tracks how many times this specific run has retried
+                        StartTimeUtc = DateTimeOffset.UtcNow,
+                        Status = RunStatus.Running,
+                        RetryCount = 0
                     };
                     await taskRunRepo.AddAsync(currentRun, ct);
                 }
 
                 // 2. Resolve Scrapers
                 var scrapersToRun = new List<ScraperDefinition>();
-
                 if (task.SelectionStrategy == SelectionStrategy.All)
                 {
                     var allScrapers = await scraperRepo.GetAllWithDetailsAsync(ct);
@@ -89,7 +98,7 @@ public sealed class Worker(
                     }
                 }
 
-                // 3. Filter out scrapers that ALREADY succeeded in this specific run
+                // 3. Filter out scrapers that ALREADY succeeded (Fresh read from fresh context)
                 var successfulScraperIdsInRun = currentRun.AttemptHistories
                     .Where(a => a.Success)
                     .Select(a => a.ScraperDefinitionId)
@@ -102,68 +111,68 @@ public sealed class Worker(
                 logger.LogInformation("Task '{TaskName}': {Count} scrapers total, {Pending} pending execution.",
                     task.Name, scrapersToRun.Count, scrapersNeedingExecution.Count);
 
-                // 4. Execute Pending Scrapers
+                // 4. Execute Pending Scrapers (Consider Task.WhenAll here if concurrency is safe)
                 foreach (var scraper in scrapersNeedingExecution)
                 {
-                    await ingestionService.Ingest(scraper, currentRun.Id, ct);
+                    try
+                    {
+                        await ingestionService.Ingest(scraper, currentRun.Id, ct);
+                    }
+                    catch (Exception scraperEx)
+                    {
+                        logger.LogError(scraperEx, "Scraper {ScraperId} failed during execution.", scraper.Id);
+                        // Catching locally so one broken scraper doesn't stop other pending ones in the same run
+                    }
                 }
 
                 // 5. Evaluate overall Run Success
                 var refreshedRun = await taskRunRepo.GetByIdWithAttemptsAsync(currentRun.Id, ct) ?? currentRun;
 
-                // Did EVERY scraper mapped to this task succeed?
-                bool allSucceeded = true;
-                foreach (var mappedScraper in scrapersToRun)
-                {
-                    bool succeeded = refreshedRun.AttemptHistories.Any(a => a.ScraperDefinitionId == mappedScraper.Id && a.Success);
-                    if (!succeeded)
-                    {
-                        allSucceeded = false;
-                        break;
-                    }
-                }
+                bool allSucceeded = scrapersToRun.All(mappedScraper =>
+                    refreshedRun.AttemptHistories.Any(a => a.ScraperDefinitionId == mappedScraper.Id && a.Success));
 
                 if (allSucceeded)
                 {
-                    // SUCCESS! Close out the run and calculate next cron.
                     refreshedRun.Status = RunStatus.Completed;
                     refreshedRun.EndTimeUtc = DateTimeOffset.UtcNow;
                     await taskRunRepo.UpdateAsync(refreshedRun, ct);
 
                     task.Status = ScheduledTaskStatus.Idle;
-                    CalculateNextRun(task, now);
+                    CronHelper.CalculateNextRun(task, DateTimeOffset.UtcNow);
                 }
                 else
                 {
-                    // FAILURE (One or more scrapers failed)
                     if (refreshedRun.RetryCount >= task.MaxRetries)
                     {
-                        // Exhausted retries. Mark as failed and move on to the next schedule.
-                        logger.LogWarning("Task '{TaskName}' exhausted all {Max} retries. Marking run as Failed.", task.Name, task.MaxRetries);
+                        logger.LogWarning("Task '{TaskName}' exhausted all {Max} retries.", task.Name, task.MaxRetries);
 
                         refreshedRun.Status = RunStatus.Failed;
                         refreshedRun.EndTimeUtc = DateTimeOffset.UtcNow;
                         await taskRunRepo.UpdateAsync(refreshedRun, ct);
 
                         task.Status = ScheduledTaskStatus.Idle;
-                        CalculateNextRun(task, now); // Move on so we don't get stuck forever
+                        CronHelper.CalculateNextRun(task, DateTimeOffset.UtcNow);
                     }
                     else
                     {
-                        // Leave the run open, increment retry count. Do NOT bump NextRunAtUtc!
                         refreshedRun.Status = RunStatus.Retrying;
                         refreshedRun.RetryCount++;
                         await taskRunRepo.UpdateAsync(refreshedRun, ct);
 
                         task.Status = ScheduledTaskStatus.Retrying;
-                        logger.LogInformation("Task '{TaskName}' failed to process all scrapers. Retrying (Attempt {RetryCount}/{MaxRetries}) on next heartbeat.", task.Name, refreshedRun.RetryCount, task.MaxRetries);
+
+                        // OPTIONAL: Back-off logic instead of instant 30s retry
+                        task.NextRunAtUtc = DateTimeOffset.UtcNow.AddMinutes(Math.Pow(2, refreshedRun.RetryCount));
+
+                        logger.LogInformation("Task '{TaskName}' failed to process all scrapers. Retrying ({RetryCount}/{MaxRetries}).",
+                            task.Name, refreshedRun.RetryCount, task.MaxRetries);
                     }
                 }
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Fatal error executing task {TaskId}", task.Id);
-                task.Status = ScheduledTaskStatus.Error; // Put task in an error state to be picked up next loop
+                task.Status = ScheduledTaskStatus.Error;
             }
             finally
             {
@@ -172,29 +181,21 @@ public sealed class Worker(
         }
     }
 
-    private void CalculateNextRun(ScheduledTask task, DateTimeOffset fromTime)
-    {
-        try
-        {
-            var expression = CronExpression.Parse(task.CronExpression);
-            var nextOccurrence = expression.GetNextOccurrence(fromTime.UtcDateTime);
+    private record Services
+    (
+        IScheduledTaskRepository TaskRepo,
+        IScheduledTaskRunRepository TaskRunRepo,
+        IScraperRepository ScraperRepo,
+        IIngestionService IngestionService
+    );
 
-            if (nextOccurrence.HasValue)
-            {
-                task.NextRunAtUtc = new DateTimeOffset(nextOccurrence.Value, TimeSpan.Zero);
-                logger.LogInformation("Task '{Name}' rescheduled for {NextRun}", task.Name, task.NextRunAtUtc);
-            }
-            else
-            {
-                task.IsDisabled = true;
-                logger.LogWarning("Task '{Name}' has a CRON expression that yields no future occurrences. Disabling task.", task.Name);
-            }
-        }
-        catch (CronFormatException ex)
-        {
-            task.IsDisabled = true;
-            task.Status = ScheduledTaskStatus.InvalidCron;
-            logger.LogError(ex, "Task '{Name}' has a malformed CRON expression. Disabling task.", task.Name);
-        }
+    private Services GetServices(IServiceScope? scope)
+    {
+        var taskRepo = scope.ServiceProvider.GetRequiredService<IScheduledTaskRepository>();
+        var taskRunRepo = scope.ServiceProvider.GetRequiredService<IScheduledTaskRunRepository>();
+        var scraperRepo = scope.ServiceProvider.GetRequiredService<IScraperRepository>();
+        var ingestionService = scope.ServiceProvider.GetRequiredService<IIngestionService>();
+
+        return new(taskRepo, taskRunRepo, scraperRepo, ingestionService);
     }
 }
