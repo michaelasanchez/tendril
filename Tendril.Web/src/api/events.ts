@@ -16,7 +16,7 @@ export interface EventFilter {
 }
 
 export const EventsApi = {
-  get(
+  search(
     filter: EventFilter | null,
     cursor: Guid | null,
     signal?: AbortSignal,
@@ -49,6 +49,10 @@ export const EventsApi = {
 
   getByScraperId(scraperId: Guid): Promise<Event[]> {
     return apiGet(`/events/${scraperId}`);
+  },
+
+  getPending(signal?: AbortSignal): Promise<Event[]> {
+    return apiGet('/events/pending', signal);
   },
 
   patch(eventId: Guid, request: PatchEventRequest): Promise<void> {

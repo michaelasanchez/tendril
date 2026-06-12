@@ -13,7 +13,7 @@ namespace Tendril.Api.Controllers;
 public class EventsController(IEventRepository events, IMapper mapper) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<EventResponse>> GetAll(
+    public async Task<ActionResult<EventResponse>> Search(
         [FromQuery] DateTimeOffset? startDate,
         [FromQuery] DateTimeOffset? endDate,
         [FromQuery] string? title,
@@ -59,6 +59,15 @@ public class EventsController(IEventRepository events, IMapper mapper) : Control
         CancellationToken cancellationToken)
     {
         var list = await events.GetByScraperIdAsync(scraperId, startDate, endDate, cancellationToken);
+
+        return Ok(mapper.Map<IEnumerable<EventDto>>(list));
+    }
+
+    [HttpGet("pending")]
+    public async Task<ActionResult> GetPending(
+        CancellationToken cancellationToken)
+    {
+        var list = await events.GetByStatus(EventStatus.Pending, cancellationToken);
 
         return Ok(mapper.Map<IEnumerable<EventDto>>(list));
     }

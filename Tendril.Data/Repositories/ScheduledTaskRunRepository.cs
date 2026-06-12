@@ -43,6 +43,7 @@ public class ScheduledTaskRunRepository(TendrilDbContext db) : IScheduledTaskRun
     public async Task<ScheduledTaskRun?> GetIncompleteRunAsync(Guid scheduledTaskId, CancellationToken ct = default)
     {
         return await db.ScheduledTaskRuns
+            .Include(r => r.AttemptHistories)
             // You can adjust the string literals to Enums later if you prefer
             .Where(r => r.ScheduledTaskId == scheduledTaskId && r.Status != RunStatus.Completed)
             .OrderByDescending(r => r.StartTimeUtc) // Grab the most recent incomplete one

@@ -123,6 +123,20 @@ public class EventRepository(TendrilDbContext _context) : IEventRepository
             .ToListAsync(ct);
     }
 
+    public async Task<List<Event>> GetByStatus(EventStatus status, CancellationToken ct = default)
+    {
+        var query = _context.Events
+            .Include(x => x.Category)
+            .Include(x => x.Venue)
+            .Where(x => x.Status == status)
+            .AsNoTracking();
+
+        return await query
+            .OrderBy(x => x.StartUtc)
+            .ThenBy(x => x.ScrapedAtUtc)
+            .ToListAsync(ct);
+    }
+
     public async Task AddAsync(Event ev, CancellationToken ct = default)
     {
         _context.Events.Add(ev);

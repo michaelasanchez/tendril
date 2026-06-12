@@ -116,7 +116,7 @@ export const EventsPage: React.FC = () => {
       setLoading((prev) => ({ ...prev, events: true }));
 
       try {
-        const { items, ...result } = await EventsApi.get(
+        const { items, ...result } = await EventsApi.search(
           filter,
           cursor,
           signal,
