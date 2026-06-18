@@ -125,16 +125,40 @@ public class EventRepository(TendrilDbContext _context) : IEventRepository
 
     public async Task<List<Event>> GetByStatus(EventStatus status, CancellationToken ct = default)
     {
-        var query = _context.Events
+        return await _context.Events
             .Include(x => x.Category)
             .Include(x => x.Venue)
             .Where(x => x.Status == status)
-            .AsNoTracking();
-
-        return await query
+            .AsNoTracking()
             .OrderBy(x => x.StartUtc)
             .ThenBy(x => x.ScrapedAtUtc)
             .ToListAsync(ct);
+    }
+
+    public async Task<List<Event>> GetPotentialMatches(
+        DateTime startWindow,
+        DateTime endWindow,
+        string pendingTitle,
+        CancellationToken ct = default)
+    {
+        // 1. Narrow down by date window first (critical for DB index utilization)
+        var query = _context.Events
+            .Include(x => x.Category)
+            .Include(x => x.Venue)
+            .Where(x => x.Status == EventStatus.Published &&
+                        x.StartUtc >= startWindow &&
+                        x.StartUtc <= endWindow);
+
+        var candidateEvents = await query.AsNoTracking().ToListAsync(ct);
+
+        // 2. Perform fuzzy string matching in memory to check for variations
+        // This protects DB performance while ensuring strings like "Rock Concert!" match "rock concert"
+        var normalizedPendingTitle = NormalizeTitle(pendingTitle);
+
+        return candidateEvents
+            .Where(x => NormalizeTitle(x.Title).Contains(normalizedPendingTitle) ||
+                        normalizedPendingTitle.Contains(NormalizeTitle(x.Title)))
+            .ToList();
     }
 
     public async Task AddAsync(Event ev, CancellationToken ct = default)
@@ -167,4 +191,15 @@ public class EventRepository(TendrilDbContext _context) : IEventRepository
                     : x.StartUtc == mappedEvent.StartUtc) &&
                 x.Status != EventStatus.Suppressed, ct);
     }
+
+    // Helper method to strip punctuation, spaces, and casing for cleaner soft-matching
+    private string NormalizeTitle(string title)
+    {
+        if (string.IsNullOrWhiteSpace(title)) return string.Empty;
+
+        return new string(title.ToLowerInvariant()
+            .Where(c => char.IsLetterOrDigit(c))
+            .ToArray());
+    }
+
 }

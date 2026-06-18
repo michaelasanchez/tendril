@@ -51,7 +51,17 @@ public class EventsController(IEventRepository events, IMapper mapper) : Control
         });
     }
 
-    [HttpGet("{scraperId:guid}")]
+    [HttpGet("{eventId:guid}")]
+    public async Task<ActionResult<VenueDto>> GetById(
+        [FromRoute] Guid eventId,
+        CancellationToken cancellationToken)
+    {
+        var @event = await events.GetById(eventId, cancellationToken);
+
+        return Ok(mapper.Map<EventDto>(@event));
+    }
+
+    [HttpGet("scraper/{scraperId:guid}")]
     public async Task<ActionResult<VenueDto>> GetByScraperId(
         [FromRoute] Guid scraperId,
         [FromQuery] DateTimeOffset? startDate,
@@ -64,12 +74,36 @@ public class EventsController(IEventRepository events, IMapper mapper) : Control
     }
 
     [HttpGet("pending")]
-    public async Task<ActionResult> GetPending(
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<IEnumerable<PendingEventReviewDto>>> GetPendingReview(
+    CancellationToken cancellationToken)
     {
-        var list = await events.GetByStatus(EventStatus.Pending, cancellationToken);
+        // Fetch the raw pending events
+        var pendingEvents = await events.GetByStatus(EventStatus.Pending, cancellationToken);
 
-        return Ok(mapper.Map<IEnumerable<EventDto>>(list));
+        var reviewList = new List<PendingEventReviewDto>();
+
+        foreach (var pending in pendingEvents)
+        {
+            // Define a window around the event date to check for updates/drift (e.g., +/- 1 day)
+            var eventDate = pending.StartUtc.Date;
+            var startDateWindow = eventDate.AddDays(-1);
+            var endDateWindow = eventDate.AddDays(1);
+
+            // Fetch matching published events within that timeframe
+            var matches = await events.GetPotentialMatches(
+                startDateWindow,
+                endDateWindow,
+                pending.Title,
+                cancellationToken);
+
+            reviewList.Add(new PendingEventReviewDto
+            {
+                PendingEvent = mapper.Map<EventDto>(pending),
+                PotentialMatches = mapper.Map<IEnumerable<EventDto>>(matches)
+            });
+        }
+
+        return Ok(reviewList);
     }
 
     [HttpPatch("{eventId:guid}")]

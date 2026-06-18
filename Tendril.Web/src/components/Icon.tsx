@@ -21,7 +21,9 @@ import {
   LogIn,
   LogOut,
   MapPin,
+  Merge,
   MessageCircleCheck,
+  MessageCircleWarning,
   Moon,
   Play,
   Plus,
@@ -57,6 +59,7 @@ const Icons = {
   location: MapPin,
   login: LogIn,
   logout: LogOut,
+  merge: Merge,
   next: ArrowRight,
   previous: ArrowLeft,
   publish: CloudUpload,
@@ -70,6 +73,7 @@ const Icons = {
   unpublish: CloudDownload,
   up: ChevronUp,
   visible: Eye,
+  warning: MessageCircleWarning
 };
 
 export type IconName = keyof typeof Icons;

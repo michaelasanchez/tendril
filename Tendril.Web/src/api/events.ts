@@ -1,4 +1,4 @@
-import type { Event, EventResponse, EventStatus, Guid } from '../types/api';
+import type { Event, EventResponse, EventStatus, Guid, PendingEventReviewDto } from '../types/api';
 import { apiGet, apiPatch } from './client';
 
 export interface PatchEventRequest {
@@ -47,11 +47,15 @@ export const EventsApi = {
     return apiGet(`/events${queryString}`, signal);
   },
 
-  getByScraperId(scraperId: Guid): Promise<Event[]> {
-    return apiGet(`/events/${scraperId}`);
+  getById(evendId: Guid): Promise<Event> {
+    return apiGet(`/events/${evendId}`);
   },
 
-  getPending(signal?: AbortSignal): Promise<Event[]> {
+  getByScraperId(scraperId: Guid): Promise<Event[]> {
+    return apiGet(`/events/scraper/${scraperId}`);
+  },
+
+  getPending(signal?: AbortSignal): Promise<PendingEventReviewDto[]> {
     return apiGet('/events/pending', signal);
   },
 

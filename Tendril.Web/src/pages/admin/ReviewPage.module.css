@@ -1,0 +1,26 @@
+.eventGroupContainer {
+  padding: 0.5rem;
+  border-radius: 6px;
+}
+
+.clusterGroup {
+  border: 2px solid #e67e22; /* Amber Warning Ring */
+  background: rgba(230, 126, 34, 0.04);
+}
+
+.clusterAlertHeader {
+  color: #e67e22;
+  font-weight: bold;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.scraperBadge {
+  position: absolute;
+  top: 6px;
+  right: 12px;
+  z-index: 10;
+  opacity: 0.85;
+}

@@ -11,6 +11,7 @@ public interface IEventRepository
     Task<Event?> GetById(Guid eventId, CancellationToken ct = default);
     Task<List<Event>> GetByScraperIdAsync(Guid id, DateTimeOffset? startDate, DateTimeOffset? endDate, CancellationToken ct = default);
     Task<List<Event>> GetByStatus(EventStatus status, CancellationToken ct = default);
+    Task<List<Event>> GetPotentialMatches(DateTime startWindow, DateTime endWindow, string pendingTitle, CancellationToken ct = default);
     Task AddAsync(Event ev, CancellationToken ct = default);
     Task UpdateAsync(Event ev, CancellationToken ct = default);
     Task DeleteAsync(Event ev, CancellationToken ct = default);

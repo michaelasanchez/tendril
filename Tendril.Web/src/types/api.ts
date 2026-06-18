@@ -289,6 +289,11 @@ export interface Event {
   reviewRequiredAtUtc: string;
 }
 
+export interface PendingEventReviewDto {
+  pendingEvent: Event;
+  potentialMatches: Event[];
+}
+
 export interface ScrapeRunResponse {
   success: boolean;
   error?: string | null;
