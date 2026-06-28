@@ -1,5 +1,7 @@
-import React, { useRef, useEffect } from 'react';
+import cn from 'classnames';
+import React, { useEffect, useRef } from 'react';
 import { Form } from 'react-bootstrap';
+import styles from './Form.module.css';
 
 interface FormDateProps {
   label?: string;
@@ -7,6 +9,7 @@ interface FormDateProps {
   onChange: (val: string) => void;
   className?: string;
   disabled?: boolean;
+  inline?: boolean;
 }
 
 export const FormDate: React.FC<FormDateProps> = ({
@@ -15,6 +18,7 @@ export const FormDate: React.FC<FormDateProps> = ({
   onChange,
   className,
   disabled = false,
+  inline = false,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -25,12 +29,12 @@ export const FormDate: React.FC<FormDateProps> = ({
   }, [value]);
 
   return (
-    <Form.Group className={className}>
+    <Form.Group className={cn(inline && styles.Inline, className)}>
       {label && <Form.Label>{label}</Form.Label>}
       <input
         ref={inputRef}
         type="date"
-        className="form-control" 
+        className="form-control"
         disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
         // onBlur={(e) => onChange(e.target.value)}

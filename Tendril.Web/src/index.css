@@ -106,6 +106,7 @@
   --hover: rgb(91, 78, 150);
 
   --new: var(--chart-3);
+  --success: var(--bs-success);
   --warning: var(--chart-4);
 
   --placeholder: rgba(38, 38, 38, 0.4);

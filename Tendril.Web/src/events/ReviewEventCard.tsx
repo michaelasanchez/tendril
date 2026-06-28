@@ -21,12 +21,12 @@ export const ReviewEventCard: React.FC<Props> = ({ e }) => {
         flexDirection: 'row',
         flexGrow: 1,
         opacity: e.status === 'Suppressed' ? 0.4 : 1,
-        border: e.isReviewRequired
+        border: e.requiresReview
           ? '2px solid #7a3333'
           : e.status === 'Pending'
             ? '2px dashed orange'
             : undefined,
-        boxShadow: e.isReviewRequired ? '0 0 10px #c96f6f88' : undefined,
+        boxShadow: e.requiresReview ? '0 0 10px #c96f6f88' : undefined,
       }}
     >
       {

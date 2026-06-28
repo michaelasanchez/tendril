@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Tendril.Api.Dtos;
+using Tendril.Core.Domain.Entities;
 using Tendril.Core.Domain.Enums;
 using Tendril.Core.Interfaces.Repositories;
 using Tendril.Data.Models;
@@ -10,7 +11,7 @@ namespace Tendril.Api.Controllers;
 
 [ApiController]
 [Route("events")]
-public class EventsController(IEventRepository events, IMapper mapper) : ControllerBase
+public class EventsController(IEventRepository events, IEventRevisionRepository eventRevisions, IMapper mapper) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<EventResponse>> Search(
@@ -52,12 +53,10 @@ public class EventsController(IEventRepository events, IMapper mapper) : Control
     }
 
     [HttpGet("{eventId:guid}")]
-    public async Task<ActionResult<VenueDto>> GetById(
-        [FromRoute] Guid eventId,
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<EventDto>> GetById(Guid eventId, CancellationToken cancellationToken)
     {
         var @event = await events.GetById(eventId, cancellationToken);
-
+        if (@event is null) return NotFound();
         return Ok(mapper.Map<EventDto>(@event));
     }
 
@@ -99,11 +98,75 @@ public class EventsController(IEventRepository events, IMapper mapper) : Control
             reviewList.Add(new PendingEventReviewDto
             {
                 PendingEvent = mapper.Map<EventDto>(pending),
-                PotentialMatches = mapper.Map<IEnumerable<EventDto>>(matches)
+                PotentialMatches = mapper.Map<IEnumerable<EventDto>>(matches),
+                ScraperId = pending.ScraperDefinitionId
             });
         }
 
         return Ok(reviewList);
+    }
+
+    [HttpGet("pending/{eventId}")]
+    public async Task<ActionResult<PendingEventReviewDto>> GetPendingReview(
+        Guid eventId,
+        CancellationToken cancellationToken)
+    {
+        // Fetch the raw pending events
+        var pending = await events.GetById(eventId, cancellationToken);
+
+        if (pending is null) return NotFound();
+
+        // Define a window around the event date to check for updates/drift (e.g., +/- 1 day)
+        var eventDate = pending.StartUtc.Date;
+        var startDateWindow = eventDate.AddDays(-1);
+        var endDateWindow = eventDate.AddDays(1);
+
+        // Fetch matching published events within that timeframe
+        var matches = await events.GetPotentialMatches(
+            startDateWindow,
+            endDateWindow,
+            pending.Title,
+            cancellationToken);
+
+        return Ok(new PendingEventReviewDto
+        {
+            PendingEvent = mapper.Map<EventDto>(pending),
+            PotentialMatches = mapper.Map<IEnumerable<EventDto>>(matches)
+        });
+    }
+
+    [HttpPost("{existingId}/supersede/{pendingId}")]
+    public async Task<ActionResult> SupersedeAndPublish(
+        [FromRoute] Guid existingId,
+        [FromRoute] Guid pendingId,
+        CancellationToken cancellationToken)
+    {
+        var existing = await events.GetById(existingId, cancellationToken);
+        var pending = await events.GetById(pendingId, cancellationToken);
+
+        if (existing is null || pending is null)
+            return NotFound();
+
+        existing.Status = EventStatus.Suppressed;
+        existing.StatusAtUtc = DateTime.UtcNow;
+
+        pending.Status = EventStatus.Published;
+        pending.StatusAtUtc = DateTime.UtcNow;
+        pending.UpdatedAtUtc = DateTime.UtcNow;
+
+        await eventRevisions.AddAsync(new EventRevision
+        {
+            Id = Guid.NewGuid(),
+            EventId = existing.Id,
+            AttemptHistoryId = null,
+            RawEventId = null,
+            RelatedId = pending.Id,
+            Reason = EventRevisionReason.Superseded,
+            ChangedAtUtc = DateTimeOffset.UtcNow,
+            ChangedFieldsJson = null
+        }, cancellationToken);
+
+        return Ok();
     }
 
     [HttpPatch("{eventId:guid}")]

@@ -2,6 +2,8 @@
 
 public class PendingEventReviewDto
 {
+    public Guid ScraperId { get; set; }
+
     // The incoming scraped event currently awaiting approval
     public EventDto PendingEvent { get; set; }
 

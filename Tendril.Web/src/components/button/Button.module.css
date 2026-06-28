@@ -21,12 +21,13 @@
     background-color var(--button-delay),
     border-color var(--button-delay);
 
+  --icon-spacing: var(--spacing);
+
   &:has(svg:only-child) {
-    padding: calc(var(--spacing) * 2) calc(var(--spacing) * 2.6);
+    padding: calc(var(--icon-spacing) * 2) calc(var(--icon-spacing) * 2.6);
   }
 
   &:disabled {
-    
   }
 
   &:hover {
@@ -35,13 +36,44 @@
     color: var(--button-hover-color);
   }
 
+  &.ExtraExtraSmall {
+    --icon-spacing: calc(var(--spacing) * 0.7);
+
+    padding: calc(var(--spacing) * 0.5) var(--spacing);
+    font-size: 0.25rem;
+
+    svg {
+      height: calc(1rem * 0.7);
+      width: calc(1rem * 0.7);
+    }
+  }
+
+  &.ExtraSmall {
+    --icon-spacing: calc(var(--spacing) * 0.8);
+
+    padding: var(--spacing) calc(var(--spacing) * 2);
+    font-size: 0.5rem;
+
+    svg {
+      height: calc(1rem * 0.8);
+      width: calc(1rem * 0.8);
+    }
+  }
+
   &.Small {
-  padding: calc(var(--spacing) * 1.5) calc(var(--spacing) * 3);
+    --icon-spacing: calc(var(--spacing) * 0.9);
+
+    padding: calc(var(--spacing) * 1.5) calc(var(--spacing) * 3);
     font-size: 0.75rem;
+
+    svg {
+      height: calc(1rem * 0.9);
+      width: calc(1rem * 0.9);
+    }
   }
 
   &.Large {
-  padding: calc(var(--spacing) * 3) calc(var(--spacing) * 6);
+    padding: calc(var(--spacing) * 3) calc(var(--spacing) * 6);
     font-size: 1.25rem;
   }
 
@@ -75,7 +107,7 @@
   }
 
   &.OutlineSecondary {
-    --button-color: var(--accent-secondary);
+    --button-border: var(--accent-secondary);
 
     &:hover {
       --button-hover-background: var(--accent);
@@ -91,11 +123,45 @@
   }
 
   &.OutlineDanger {
-    --button-color: var(--destructive);
+    --button-border: var(--destructive);
 
     &:hover {
       --button-hover-background: var(--destructive);
       --button-hover-border: var(--destructive);
+      --button-hover-color: var(--accent-foreground);
+    }
+  }
+  
+  &.Success {
+    --button-background: var(--success);
+    --button-border: var(--success);
+    --button-color: var(--accent-foreground);
+  }
+
+  &.OutlineSuccess {
+    --button-color: var(--success);
+    --button-border: var(--success);
+
+    &:hover {
+      --button-hover-background: var(--success);
+      --button-hover-border: var(--success);
+      --button-hover-color: var(--accent-foreground);
+    }
+  }
+
+  &.Warning {
+    --button-background: var(--warning);
+    --button-border: var(--warning);
+    --button-color: var(--accent-foreground);
+  }
+
+  &.OutlineWarning {
+    --button-color: var(--warning);
+    --button-border: var(--warning);
+
+    &:hover {
+      --button-hover-background: var(--warning);
+      --button-hover-border: var(--warning);
       --button-hover-color: var(--accent-foreground);
     }
   }

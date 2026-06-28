@@ -27,6 +27,11 @@ public class EventRevisionConfig : IEntityTypeConfiguration<EventRevision>
             .HasForeignKey(er => er.RawEventId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.HasOne(r => r.RelatedEvent)
+            .WithMany()
+            .HasForeignKey(er => er.RelatedId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.Property(x => x.Reason)
             .HasConversion<string>();
     }

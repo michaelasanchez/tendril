@@ -284,7 +284,8 @@ export interface Event {
   venueName: string;
   venueUrl: string;
   status: EventStatus;
-  isReviewRequired: boolean;
+  requiresReview: boolean;
+  scrapedAtUtc: string;
   updatedAtUtc: string;
   reviewRequiredAtUtc: string;
 }
@@ -292,6 +293,7 @@ export interface Event {
 export interface PendingEventReviewDto {
   pendingEvent: Event;
   potentialMatches: Event[];
+  scraperId: Guid;
 }
 
 export interface ScrapeRunResponse {

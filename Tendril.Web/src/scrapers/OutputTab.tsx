@@ -268,12 +268,12 @@ export const OutputTab: React.FC<Props> = ({
                 flexDirection: 'row',
                 flexGrow: 1,
                 opacity: e.status === 'Suppressed' ? 0.4 : 1,
-                border: e.isReviewRequired
+                border: e.requiresReview
                   ? '2px solid #7a3333'
                   : e.status === 'Pending'
                     ? '2px dashed orange'
                     : undefined,
-                boxShadow: e.isReviewRequired
+                boxShadow: e.requiresReview
                   ? '0 0 10px #c96f6f88'
                   : undefined,
               }}
@@ -379,11 +379,11 @@ export const OutputTab: React.FC<Props> = ({
               <Button
                 onClick={() =>
                   EventsApi.patch(e.id, {
-                    requiresReview: !e.isReviewRequired,
+                    requiresReview: !e.requiresReview,
                   }).then(() => loadEvents())
                 }
               >
-                <Icon name={e.isReviewRequired ? 'flagOff' : 'flag'} />
+                <Icon name={e.requiresReview ? 'flagOff' : 'flag'} />
               </Button>
             </div>
           </div>

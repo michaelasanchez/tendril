@@ -185,7 +185,11 @@ public class EventRepository(TendrilDbContext _context) : IEventRepository
         return _context.Events
             .SingleOrDefaultAsync(x =>
                 x.ScraperDefinitionId == mappedEvent.ScraperDefinitionId &&
-                x.Title == mappedEvent.Title &&
+                (
+                    x.Title == mappedEvent.Title ||
+                    x.Title.Contains(mappedEvent.Title) ||
+                    mappedEvent.Title.Contains(x.Title)
+                ) &&
                 ((x.StartPrecision == DatePrecision.Day || mappedEvent.StartPrecision == DatePrecision.Day)
                     ? x.StartUtc.Date == mappedEvent.StartUtc.Date
                     : x.StartUtc == mappedEvent.StartUtc) &&

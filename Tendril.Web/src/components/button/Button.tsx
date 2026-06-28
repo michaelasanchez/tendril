@@ -9,7 +9,11 @@ export type Variant =
   | 'outline-primary'
   | 'outline-secondary'
   | 'danger'
-  | 'outline-danger';
+  | 'outline-danger'
+  | 'success'
+  | 'outline-success'
+  | 'warning'
+  | 'outline-warning';
 
 export interface ButtonProps {
   children?: ReactNode;
@@ -17,7 +21,7 @@ export interface ButtonProps {
   disabled?: boolean;
   href?: string;
   rel?: string;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'xxs' | 'xs' | 'sm' | 'md' | 'lg';
   target?: string;
   type?: 'button' | 'submit' | 'reset';
   variant?: Variant;
@@ -92,6 +96,10 @@ export const Button: React.FC<ButtonProps> = ({
 
 function getSizeClass(size: ButtonProps['size']) {
   switch (size) {
+    case 'xxs':
+      return styles.ExtraExtraSmall;
+    case 'xs':
+      return styles.ExtraSmall;
     case 'sm':
       return styles.Small;
     case 'lg':
@@ -114,6 +122,14 @@ function getVariantClass(varint: Variant | undefined) {
       return styles.Danger;
     case 'outline-danger':
       return styles.OutlineDanger;
+    case 'success':
+      return styles.Success;
+    case 'outline-success':
+      return styles.OutlineSuccess;
+    case 'warning':
+      return styles.Warning;
+    case 'outline-warning':
+      return styles.OutlineWarning;
     default:
       return '';
   }

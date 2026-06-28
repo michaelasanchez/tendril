@@ -1,5 +1,11 @@
-import type { Event, EventResponse, EventStatus, Guid, PendingEventReviewDto } from '../types/api';
-import { apiGet, apiPatch } from './client';
+import type {
+  Event,
+  EventResponse,
+  EventStatus,
+  Guid,
+  PendingEventReviewDto,
+} from '../types/api';
+import { apiGet, apiPatch, apiPost } from './client';
 
 export interface PatchEventRequest {
   categoryId?: Guid;
@@ -47,8 +53,8 @@ export const EventsApi = {
     return apiGet(`/events${queryString}`, signal);
   },
 
-  getById(evendId: Guid): Promise<Event> {
-    return apiGet(`/events/${evendId}`);
+  getById(eventId: Guid, signal?: AbortSignal): Promise<Event> {
+    return apiGet(`/events/${eventId}`);
   },
 
   getByScraperId(scraperId: Guid): Promise<Event[]> {
@@ -57,6 +63,22 @@ export const EventsApi = {
 
   getPending(signal?: AbortSignal): Promise<PendingEventReviewDto[]> {
     return apiGet('/events/pending', signal);
+  },
+
+  getPendingById(
+    evendId: Guid,
+    signal?: AbortSignal,
+  ): Promise<PendingEventReviewDto> {
+    return apiGet(`/events/pending/${evendId}`, signal);
+  },
+
+  supersedeAndPublish(
+    pendingId: Guid,
+    existingId: Guid,
+    signal?: AbortSignal,
+  ): Promise<void> {
+    console.log('lksdjf"0')
+    return apiPost(`/events/${existingId}/supersede/${pendingId}`, null, signal);
   },
 
   patch(eventId: Guid, request: PatchEventRequest): Promise<void> {
