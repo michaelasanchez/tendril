@@ -127,6 +127,7 @@ public class IngestionService(
 
             // 3. Success Completion
             scraper.State = ScraperState.Healthy;
+            scraper.StateMessage = string.Empty;
             scraper.LastSuccessUtc = DateTimeOffset.UtcNow;
 
             attempt.Success = true;
@@ -137,6 +138,7 @@ public class IngestionService(
             // 4. Failure Completion
             logger.LogError(ex, "Scraper job failed");
             scraper.State = ScraperState.Unhealthy;
+            scraper.StateMessage = $"Scraper failed: {ex.Message}";
             scraper.LastFailureUtc = DateTimeOffset.UtcNow;
             scraper.LastErrorMessage = ex.Message;
 
@@ -145,6 +147,12 @@ public class IngestionService(
         }
         finally
         {
+            if (attempt.Extracted == 0)
+            {
+                scraper.State = ScraperState.Warning;
+                scraper.StateMessage = "Scraper completed with no events extracted";
+            }
+
             // 5. Finalize Stats
             attempt.EndTimeUtc = DateTimeOffset.UtcNow;
 

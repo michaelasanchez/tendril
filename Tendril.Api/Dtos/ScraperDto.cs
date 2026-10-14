@@ -19,6 +19,7 @@ public record ScraperDto
     public bool UseYearTracking { get; set; }
     public bool UseHeadlessBrowser { get; set; }
     public string State { get; set; }
+    public string StateMessage { get; set; }
     public string? LastSuccessUtc { get; set; }
     public string? LastFailureUtc { get; set; }
     public Guid? VenueId { get; set; }

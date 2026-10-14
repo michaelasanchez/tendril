@@ -23,6 +23,7 @@ public class ScraperDefinition
 
     // Health monitoring
     public ScraperState State { get; set; } = ScraperState.Unknown;
+    public string StateMessage { get; set; } = "";
     public DateTimeOffset? LastSuccessUtc { get; set; }
     public DateTimeOffset? LastFailureUtc { get; set; }
     public string? LastErrorMessage { get; set; }

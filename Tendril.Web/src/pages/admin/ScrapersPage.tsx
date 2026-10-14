@@ -223,9 +223,7 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({}) => {
               <th onClick={() => onSort('lastFailureUtc')}>
                 Last Failure{sortIndicator('lastFailureUtc')}
               </th>
-              <th>
-                Pending
-              </th>
+              <th>Pending</th>
             </tr>
           </thead>
 
@@ -249,7 +247,12 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({}) => {
                       {s.baseUrl}
                     </a>
                   </td>
-                  <td>{s.isEventFeed ? s.state : '-'}</td>
+                  <td>
+                    <div>{s.isEventFeed ? s.state : '-'}</div>
+                    {s.stateMessage && (
+                      <small className="text-muted">({s.stateMessage})</small>
+                    )}
+                  </td>
                   <td>
                     {s.hasSuggestions && (
                       <>
@@ -270,9 +273,7 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({}) => {
                   <td>
                     {s.lastFailureUtc ? formatDate(s.lastFailureUtc) : '-'}
                   </td>
-                  <td>
-                    {s.pendingEvents}
-                  </td>
+                  <td>{s.pendingEvents}</td>
                   {/* <td className={tableStyles.TableActions}>
                     <div>
                       <Button

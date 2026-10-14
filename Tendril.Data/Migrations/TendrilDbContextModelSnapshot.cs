@@ -596,6 +596,10 @@ namespace Tendril.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("StateMessage")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("UseHeadlessBrowser")
                         .HasColumnType("bit");
 
@@ -773,7 +777,7 @@ namespace Tendril.Data.Migrations
                         .HasForeignKey("CategoryId");
 
                     b.HasOne("Tendril.Core.Domain.Entities.ScraperDefinition", "Scraper")
-                        .WithMany()
+                        .WithMany("Events")
                         .HasForeignKey("ScraperDefinitionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1005,6 +1009,8 @@ namespace Tendril.Data.Migrations
                     b.Navigation("AttemptHistories");
 
                     b.Navigation("ClassificationRules");
+
+                    b.Navigation("Events");
 
                     b.Navigation("MappingRules");
 

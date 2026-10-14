@@ -68,6 +68,7 @@ export interface ScraperDefinition {
   useYearTracking: boolean;
   useHeadlessBrowser: boolean;
   state: ScraperState;
+  stateMessage: string;
   lastSuccessUtc?: string | null;
   lastFailureUtc?: string | null;
   lastErrorMessage?: string | null;
