@@ -69,5 +69,10 @@ public class ScraperDefinitionConfig : IEntityTypeConfiguration<ScraperDefinitio
             .WithMany(v => v.Scrapers)
             .HasForeignKey(x => x.VenueId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasMany(x => x.Events)
+            .WithOne(e => e.Scraper)
+            .HasForeignKey(e => e.ScraperDefinitionId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

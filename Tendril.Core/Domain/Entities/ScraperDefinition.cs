@@ -45,4 +45,6 @@ public class ScraperDefinition
     public List<ScraperAttemptHistory> AttemptHistories { get; set; } = [];
 
     public List<ScraperAction> ParentSelectors { get; set; } = [];
+
+    public List<Event> Events { get; set; } = [];
 }

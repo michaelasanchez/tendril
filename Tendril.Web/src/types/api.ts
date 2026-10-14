@@ -61,6 +61,7 @@ export interface ScraperDefinition {
   notes: string;
   hasSuggestions: boolean;
   requiresReview: boolean;
+  pendingEvents: number;
   executionMode: ExecutionMode;
   extractionStrategy: ExtractionStrategy;
   paginationType: PaginationType;

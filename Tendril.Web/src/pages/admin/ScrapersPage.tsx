@@ -223,7 +223,9 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({}) => {
               <th onClick={() => onSort('lastFailureUtc')}>
                 Last Failure{sortIndicator('lastFailureUtc')}
               </th>
-              {/* <th /> */}
+              <th>
+                Pending
+              </th>
             </tr>
           </thead>
 
@@ -267,6 +269,9 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({}) => {
                   </td>
                   <td>
                     {s.lastFailureUtc ? formatDate(s.lastFailureUtc) : '-'}
+                  </td>
+                  <td>
+                    {s.pendingEvents}
                   </td>
                   {/* <td className={tableStyles.TableActions}>
                     <div>

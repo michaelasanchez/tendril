@@ -73,8 +73,7 @@ public class EventsController(IEventRepository events, IEventRevisionRepository 
     }
 
     [HttpGet("pending")]
-    public async Task<ActionResult<IEnumerable<PendingEventReviewDto>>> GetPendingReview(
-    CancellationToken cancellationToken)
+    public async Task<ActionResult<IEnumerable<PendingEventReviewDto>>> GetPendingReview(CancellationToken cancellationToken)
     {
         // Fetch the raw pending events
         var pendingEvents = await events.GetByStatus(EventStatus.Pending, cancellationToken);

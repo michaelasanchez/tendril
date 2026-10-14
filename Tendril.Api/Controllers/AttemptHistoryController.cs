@@ -11,7 +11,7 @@ using Tendril.Core.Interfaces.Repositories;
 [Authorize]
 public sealed class AttemptHistoryController(IAttemptHistoryRepository query) : ControllerBase
 {
-    [HttpGet("scraper/{scraperId}")]
+    [HttpGet("scrapers/{scraperId}")]
     public async Task<ActionResult<IReadOnlyList<AttemptHistoryDto>>>
         GetAttemptHistoriesByScraperId(
             [FromRoute] Guid scraperId,

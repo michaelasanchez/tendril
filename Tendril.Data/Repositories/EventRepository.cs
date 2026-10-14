@@ -151,14 +151,41 @@ public class EventRepository(TendrilDbContext _context) : IEventRepository
 
         var candidateEvents = await query.AsNoTracking().ToListAsync(ct);
 
-        // 2. Perform fuzzy string matching in memory to check for variations
-        // This protects DB performance while ensuring strings like "Rock Concert!" match "rock concert"
-        var normalizedPendingTitle = NormalizeTitle(pendingTitle);
-
+        // 2. Perform token-based similarity matching in memory
         return candidateEvents
-            .Where(x => NormalizeTitle(x.Title).Contains(normalizedPendingTitle) ||
-                        normalizedPendingTitle.Contains(NormalizeTitle(x.Title)))
+            .Where(x => AreTitlesSimilar(x.Title, pendingTitle, threshold: 0.65))
             .ToList();
+    }
+
+    private bool AreTitlesSimilar(string title1, string title2, double threshold)
+    {
+        var tokens1 = Tokenize(title1);
+        var tokens2 = Tokenize(title2);
+
+        if (tokens1.Count == 0 || tokens2.Count == 0) return false;
+
+        int intersection = tokens1.Intersect(tokens2).Count();
+        int union = tokens1.Union(tokens2).Count();
+
+        double similarity = (double)intersection / union;
+        return similarity >= threshold;
+    }
+
+    private HashSet<string> Tokenize(string title)
+    {
+        if (string.IsNullOrWhiteSpace(title)) return new HashSet<string>();
+
+        // Common noise words in event lineups to ignore
+        var stopWords = new HashSet<string> { "ft", "feat", "with", "and", "the", "at" };
+
+        // Extracts continuous alphanumeric words, dropping spaces, punctuation, and symbols (+, -, .)
+        var matches = System.Text.RegularExpressions.Regex.Matches(title.ToLower(), @"[a-z0-9]+");
+
+        return matches
+            .Cast<System.Text.RegularExpressions.Match>()
+            .Select(m => m.Value)
+            .Where(word => word.Length > 1 && !stopWords.Contains(word)) // Ignore single-char noise & stop words
+            .ToHashSet();
     }
 
     public async Task AddAsync(Event ev, CancellationToken ct = default)
@@ -170,7 +197,6 @@ public class EventRepository(TendrilDbContext _context) : IEventRepository
     public async Task UpdateAsync(Event ev, CancellationToken ct = default)
     {
         _context.Events.Update(ev);
-
         await _context.SaveChangesAsync(ct);
     }
 
@@ -195,15 +221,4 @@ public class EventRepository(TendrilDbContext _context) : IEventRepository
                     : x.StartUtc == mappedEvent.StartUtc) &&
                 x.Status != EventStatus.Suppressed, ct);
     }
-
-    // Helper method to strip punctuation, spaces, and casing for cleaner soft-matching
-    private string NormalizeTitle(string title)
-    {
-        if (string.IsNullOrWhiteSpace(title)) return string.Empty;
-
-        return new string(title.ToLowerInvariant()
-            .Where(c => char.IsLetterOrDigit(c))
-            .ToArray());
-    }
-
 }

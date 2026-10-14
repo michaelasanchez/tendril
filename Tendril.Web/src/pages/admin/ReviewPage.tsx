@@ -2,6 +2,7 @@ import cn from 'classnames';
 import { differenceInDays, format, startOfDay } from 'date-fns';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Badge, Col, Row, Spinner } from 'react-bootstrap';
+import { useNavigate } from 'react-router';
 import { CategoriesApi } from '../../api/categories';
 import { EventsApi } from '../../api/events';
 import { ScrapersApi } from '../../api/scrapers';
@@ -18,6 +19,11 @@ import type {
 } from '../../types/api';
 import styles from './ReviewPage.module.css';
 
+interface EventFilter {
+  from: string | null;
+  scraperId: Guid | null;
+}
+
 export const ReviewPage: React.FC = () => {
   // Use the updated TypeScript interface name representing the new C# DTO wrapper
   const [reviewPayloads, setReviewPayloads] = useState<PendingEventReviewDto[]>(
@@ -27,9 +33,12 @@ export const ReviewPage: React.FC = () => {
   const [scrapers, setScrapers] = useState<ScraperDefinition[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [from, setFrom] = useState<string | null>(
-    format(new Date(), 'yyyy-MM-dd'),
-  );
+  const [filter, setFilter] = useState<EventFilter>({
+    from: format(new Date(), 'yyyy-MM-dd'),
+    scraperId: null,
+  });
+
+  const navigate = useNavigate();
 
   const loadData = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
@@ -74,38 +83,49 @@ export const ReviewPage: React.FC = () => {
     return () => controller.abort();
   }, [loadData]);
 
-  if (loading) {
-    return (
-      <div className="text-center my-5">
-        <Spinner animation="border" variant="light" />
-      </div>
-    );
-  }
-
   return (
     <section className="container-fluid py-4">
       <div className={pageStyles.pageHeader}>
-        <h2>Pending Review Pipeline ({reviewPayloads.length})</h2>
-        <div>
+        <h2>
+          Pending Review Pipeline (
+          {loading ? (
+            <Spinner animation="border" variant="light" size="sm" />
+          ) : (
+            reviewPayloads.length
+          )}
+          )
+        </h2>
+        <div className="d-flex gap-3">
+          <FormSelect
+            label="Scraper"
+            value={filter.scraperId ?? ''}
+            onChange={(scraperId) => setFilter((f) => ({ ...f, scraperId }))}
+            options={[
+              { value: '', label: '' },
+              ...scrapers.map((s) => ({ value: s.id, label: s.name })),
+            ]}
+          />
           <FormDate
             inline
             label="From"
-            value={from ?? ''}
-            onChange={(val) => setFrom(val)}
+            value={filter.from ?? ''}
+            onChange={(from) => setFilter((f) => ({ ...f, from }))}
           />
         </div>
       </div>
 
       <div className="d-flex flex-column gap-4">
-        {/* Map through the parent wrapper elements returned by C# */}
         {reviewPayloads
           .filter((r) => {
             const startDate =
               r.pendingEvent.startDateTime ?? r.pendingEvent.startDate;
 
             return (
-              !!startDate &&
-              startOfDay(new Date(startDate)) >= new Date(from ?? '')
+              (!filter.from ||
+                (startDate &&
+                  startOfDay(new Date(startDate)) >=
+                    new Date(filter.from ?? ''))) &&
+              (!filter.scraperId || r.scraperId === filter.scraperId)
             );
           })
           .map(({ pendingEvent, potentialMatches, scraperId }) => {
@@ -146,43 +166,9 @@ export const ReviewPage: React.FC = () => {
                           variant={
                             isPending ? 'outline-warning' : 'outline-success'
                           }
-                          //    LEFT OFF HERE     //
-                          //    LEFT OFF HERE     //
-                          //    LEFT OFF HERE     //
-                          //    LEFT OFF HERE     //
-                          //    LEFT OFF HERE     //
-                          //    LEFT OFF HERE     //
-                          //    LEFT OFF HERE     //
-                          //    LEFT OFF HERE     //
-                          //    LEFT OFF HERE     //
-                          //    LEFT OFF HERE     //
-                          //    LEFT OFF HERE     //
-                          //    LEFT OFF HERE     //
-                          //    LEFT OFF HERE     //
-                          //    LEFT OFF HERE     //
-                          //    LEFT OFF HERE     //
-                          //    LEFT OFF HERE     //
-                          //    LEFT OFF HERE     //
-                          //    LEFT OFF HERE     //
-                          //    LEFT OFF HERE     //
-                          //    LEFT OFF HERE     //
-                          //    LEFT OFF HERE     //
-                          //    LEFT OFF HERE     //
-                          //    LEFT OFF HERE     //
-                          //    LEFT OFF HERE     //
-                          //    LEFT OFF HERE     //
-                          //    LEFT OFF HERE     //
-                          //    LEFT OFF HERE     //
-                          //    LEFT OFF HERE     //
-                          //    LEFT OFF HERE     //
-                          //    LEFT OFF HERE     //
-                          //    LEFT OFF HERE     //
-                          //    LEFT OFF HERE     //
-                          //    LEFT OFF HERE     //
-                          //    LEFT OFF HERE     //
-                          //    LEFT OFF HERE     //
-                          //    LEFT OFF HERE     //
-                          //    LEFT OFF HERE     //
+                          onClick={() =>
+                            navigate(`/admin/scrapers/${scraperId}/output`)
+                          }
                         >
                           <Icon name="external" />
                         </Button>

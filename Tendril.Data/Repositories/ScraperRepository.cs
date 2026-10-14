@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Tendril.Core.Domain;
 using Tendril.Core.Domain.Entities;
+using Tendril.Core.Domain.Enums;
 using Tendril.Core.Interfaces.Repositories;
 
 namespace Tendril.Data.Repositories;
@@ -10,6 +11,7 @@ public class ScraperRepository(TendrilDbContext db) : IScraperRepository
     public async Task<List<ScraperDefinition>> GetAllAsync(CancellationToken ct = default)
     {
         return await db.Scrapers
+            .Include(s => s.Events.Where(e => e.Status == EventStatus.Pending))
             .AsNoTracking()
             .ToListAsync(ct);
     }

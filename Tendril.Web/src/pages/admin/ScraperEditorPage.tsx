@@ -86,8 +86,11 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({}) => {
   const [attempts, setAttempts] = useState<ScraperAttemptHistory[]>([]);
 
   const loadAttemptHistories = async () => {
+    console.log('LOADING ATTEMPT HISTORIES');
     if (!scraperId) return;
+    console.log('LOADING ATTEMPT HISTORIES');
     const attempts = await ScrapersApi.getAttemptHistoriesByScraperId(scraperId);
+    console.log('ATTEMPTS', attempts);
     setAttempts(attempts);
   };
   /* Attempts */
