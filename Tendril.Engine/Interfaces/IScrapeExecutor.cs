@@ -8,5 +8,6 @@ public interface IScrapeExecutor
 {
     IAsyncEnumerable<RawScrapedData> RunScraperAsync(
         ScraperDefinition def,
+        ScrapeContext context,
         [EnumeratorCancellation] CancellationToken ct);
 }

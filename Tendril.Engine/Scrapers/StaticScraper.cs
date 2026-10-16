@@ -34,9 +34,14 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
             {
                 html = await client.GetStringAsync(currentUrl, ct);
             }
-            catch
+            catch (OperationCanceledException)
             {
-                // Log failure? Stop? For now, we break the loop.
+                throw;
+            }
+            catch (Exception ex)
+            {
+                context.AddLog(ScraperAttemptLogLevel.Warning,
+                    $"Failed to fetch scraper page '{currentUrl}': {ex.Message}");
                 yield break;
             }
 

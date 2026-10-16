@@ -19,10 +19,9 @@ public class ScrapeExecutor(
 {
     public async IAsyncEnumerable<RawScrapedData> RunScraperAsync(
         ScraperDefinition def,
+        ScrapeContext context,
         [EnumeratorCancellation] CancellationToken ct)
     {
-        var context = new ScrapeContext();
-
         switch (def.ExecutionMode)
         {
             case ExecutionMode.Static:
@@ -75,9 +74,8 @@ public class ScrapeExecutor(
                         childResults.Add(childEvent);
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    // Log error
                 }
 
                 foreach (var res in childResults)
@@ -121,9 +119,8 @@ public class ScrapeExecutor(
                             childResults.Add(childEvent);
                         }
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
-                        // Log error
                     }
 
                     foreach (var res in childResults)
@@ -175,9 +172,8 @@ public class ScrapeExecutor(
                         childResults.Add(childEvent);
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    // Log error
                 }
 
                 foreach (var res in childResults)

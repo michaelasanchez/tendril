@@ -356,8 +356,14 @@ namespace Tendril.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("ErrorMessage")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<Guid?>("EventId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Outcome")
+                        .HasColumnType("int");
 
                     b.Property<string>("RawDataJson")
                         .IsRequired()
@@ -501,6 +507,32 @@ namespace Tendril.Data.Migrations
                     b.HasIndex("ScraperDefinitionId");
 
                     b.ToTable("ScraperAttemptHistory", (string)null);
+                });
+
+            modelBuilder.Entity("Tendril.Core.Domain.Entities.ScraperAttemptLogEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AttemptId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("TimestampUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AttemptId");
+
+                    b.ToTable("ScraperAttemptLogEntry");
                 });
 
             modelBuilder.Entity("Tendril.Core.Domain.Entities.ScraperClassificationRule", b =>
@@ -936,6 +968,17 @@ namespace Tendril.Data.Migrations
                     b.Navigation("ScraperDefinition");
                 });
 
+            modelBuilder.Entity("Tendril.Core.Domain.Entities.ScraperAttemptLogEntry", b =>
+                {
+                    b.HasOne("Tendril.Core.Domain.Entities.ScraperAttemptHistory", "Attempt")
+                        .WithMany("LogEntries")
+                        .HasForeignKey("AttemptId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Attempt");
+                });
+
             modelBuilder.Entity("Tendril.Core.Domain.Entities.ScraperClassificationRule", b =>
                 {
                     b.HasOne("Tendril.Core.Domain.Entities.ScraperDefinition", "ScraperDefinition")
@@ -992,6 +1035,8 @@ namespace Tendril.Data.Migrations
 
             modelBuilder.Entity("Tendril.Core.Domain.Entities.ScraperAttemptHistory", b =>
                 {
+                    b.Navigation("LogEntries");
+
                     b.Navigation("Revisions");
 
                     b.Navigation("ScrapedEventRaws");

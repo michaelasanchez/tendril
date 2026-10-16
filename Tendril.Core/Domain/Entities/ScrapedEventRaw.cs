@@ -1,4 +1,6 @@
-﻿namespace Tendril.Core.Domain.Entities;
+﻿using Tendril.Core.Domain.Enums;
+
+namespace Tendril.Core.Domain.Entities;
 
 public class ScrapedEventRaw
 {
@@ -12,6 +14,9 @@ public class ScrapedEventRaw
 
     public Guid? EventId { get; set; }
     public Event? Event { get; set; }
+
+    public ScrapedEventOutcome Outcome { get; set; } = ScrapedEventOutcome.Pending;
+    public string? ErrorMessage { get; set; }
 
     public DateTimeOffset ScrapedAtUtc { get; set; }
 

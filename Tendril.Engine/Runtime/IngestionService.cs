@@ -51,11 +51,14 @@ public class IngestionService(
         var rawEntities = new List<ScrapedEventRaw>();
         var mappedEntities = new List<Event>();
         var summaries = new List<string>();
+        var context = new ScrapeContext();
+        context.AddLog(ScraperAttemptLogLevel.Information,
+            $"Started ingestion for scraper '{scraper.Name}' ({scraper.Id}, {scraper.ExecutionMode}).");
 
         try
         {
             // 2. Consume the Stream (Process 1 item at a time)
-            await foreach (var raw in executor.RunScraperAsync(scraper, cancellationToken))
+            await foreach (var raw in executor.RunScraperAsync(scraper, context, cancellationToken))
             {
                 extracted++;
 
@@ -117,6 +120,9 @@ public class IngestionService(
                 }
                 catch (Exception ex)
                 {
+                    rawEntity.Outcome = ScrapedEventOutcome.Failed;
+                    rawEntity.ErrorMessage = ex.Message;
+
                     errors.Add(ex.Message);
 
                     errored++;
@@ -136,24 +142,45 @@ public class IngestionService(
         catch (Exception ex)
         {
             // 4. Failure Completion
-            logger.LogError(ex, "Scraper job failed");
-            scraper.State = ScraperState.Unhealthy;
-            scraper.StateMessage = $"Scraper failed: {ex.Message}";
-            scraper.LastFailureUtc = DateTimeOffset.UtcNow;
-            scraper.LastErrorMessage = ex.Message;
+            var wasCanceled = ex is OperationCanceledException && cancellationToken.IsCancellationRequested;
+            if (wasCanceled)
+            {
+                logger.LogInformation(ex, "Scraper job was canceled");
+                context.AddLog(ScraperAttemptLogLevel.Warning,
+                    $"Ingestion for scraper '{scraper.Name}' was canceled.");
+            }
+            else
+            {
+                logger.LogError(ex, "Scraper job failed");
+                context.AddLog(ScraperAttemptLogLevel.Error,
+                    $"Scraper '{scraper.Name}' failed: {ex.Message}");
+
+                scraper.State = ScraperState.Unhealthy;
+                scraper.StateMessage = $"Scraper failed: {ex.Message}";
+                scraper.LastFailureUtc = DateTimeOffset.UtcNow;
+                scraper.LastErrorMessage = ex.Message;
+            }
 
             attempt.Success = false;
-            attempt.ErrorMessage = ex.Message;
+            attempt.ErrorMessage = wasCanceled ? "Ingestion canceled." : ex.Message;
         }
         finally
         {
-            if (attempt.Extracted == 0)
+            if (extracted == 0 && attempt.Success)
             {
                 scraper.State = ScraperState.Warning;
                 scraper.StateMessage = "Scraper completed with no events extracted";
             }
 
             // 5. Finalize Stats
+            foreach (var logEntry in context.LogEntries)
+            {
+                logEntry.AttemptId = attempt.Id;
+                logEntry.Attempt = attempt;
+            }
+
+            attempt.LogEntries = context.LogEntries;
+
             attempt.EndTimeUtc = DateTimeOffset.UtcNow;
 
             attempt.Extracted = extracted;
@@ -163,8 +190,25 @@ public class IngestionService(
             attempt.Skipped = skipped;
             attempt.Errored = errored;
 
-            await scrapers.UpdateAsync(scraper, cancellationToken);
-            await attemptHistories.UpdateAsync(attempt, cancellationToken);
+            if (attempt.Success)
+            {
+                var level = extracted == 0 || errored > 0
+                    ? ScraperAttemptLogLevel.Warning
+                    : ScraperAttemptLogLevel.Information;
+                var outcome = extracted == 0
+                    ? "Scraper completed with no events extracted"
+                    : "Scraper completed";
+
+                context.AddLog(level,
+                    $"{outcome}. Extracted={extracted}, mapped={mapped}, created={created}, updated={updated}, skipped={skipped}, errored={errored}.");
+            }
+
+            var finalizationToken = cancellationToken.IsCancellationRequested
+                ? CancellationToken.None
+                : cancellationToken;
+
+            await scrapers.UpdateAsync(scraper, finalizationToken);
+            await attemptHistories.UpdateAsync(attempt, finalizationToken);
         }
 
         return new IngestResult
@@ -204,6 +248,7 @@ public class IngestionService(
                 existingEvent.UpdatedAtUtc = DateTimeOffset.UtcNow;
 
                 rawEvent.EventId = existingEvent.Id;
+                rawEvent.Outcome = ScrapedEventOutcome.Updated;
 
                 await events.UpdateAsync(existingEvent);
 
@@ -221,11 +266,14 @@ public class IngestionService(
                 return (mappedEvent, "updated", $"Updated - [{existingEvent.Title}]({existingEvent.Id})");
             }
 
+            rawEvent.Outcome = ScrapedEventOutcome.Skipped;
+
             return (mappedEvent, "skipped", $"Skipped - No changes - [{existingEvent.Title}]({existingEvent.Id})");
         }
         else
         {
             rawEvent.EventId = mappedEvent.Id;
+            rawEvent.Outcome = ScrapedEventOutcome.Created;
 
             await events.AddAsync(mappedEvent);
 

@@ -42,7 +42,8 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
             }
             catch (TimeoutException)
             {
-                // Not present or slow — proceed anyway, ExtractAll will return empty
+                context.AddLog(ScraperAttemptLogLevel.Warning,
+                    $"Timed out waiting for JSON-LD content at '{page.Url}'; extraction will continue.");
             }
 
             var content = await page.ContentAsync();
@@ -80,7 +81,8 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
         }
         catch (TimeoutException)
         {
-            // Log warning or break if list never appears
+            context.AddLog(ScraperAttemptLogLevel.Warning,
+                $"Timed out waiting for container selector '{container.Selector}' at '{page.Url}'.");
             yield break;
         }
 
@@ -174,7 +176,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
             }
             else
             {
-                hasMore = await PerformPagination(page, definition);
+                hasMore = await PerformPagination(page, definition, context);
             }
 
         } while (hasMore);
@@ -290,7 +292,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
         }
     }
 
-    private static async Task<bool> PerformPagination(IPage page, ScraperDefinition def)
+    private static async Task<bool> PerformPagination(IPage page, ScraperDefinition def, ScrapeContext context)
     {
         if (def.PaginationType == PaginationType.None) return false;
 
@@ -316,7 +318,16 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
 
                 return true;
             }
-            catch { return false; }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                context.AddLog(ScraperAttemptLogLevel.Warning,
+                    $"Failed to advance pagination at '{page.Url}': {ex.Message}");
+                return false;
+            }
         }
 
         return false;

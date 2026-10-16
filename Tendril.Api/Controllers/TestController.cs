@@ -29,11 +29,13 @@ public class ScraperRunsController(
 
         limit ??= 10;
         var events = new List<RawScrapedData>();
+        var context = new ScrapeContext();
+
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
 
         try
         {
-            await foreach (var item in executor.RunScraperAsync(scraper, cts.Token))
+            await foreach (var item in executor.RunScraperAsync(scraper, context, cts.Token))
             {
                 events.Add(item);
                 if (events.Count >= limit)
@@ -51,7 +53,8 @@ public class ScraperRunsController(
                 success = false,
                 error = ex.Message,
                 count = events.Count,
-                raw = events
+                raw = events,
+                logs = context.LogEntries.Select(log => new { log.TimestampUtc, log.Level, log.Message })
             });
         }
 
@@ -61,7 +64,8 @@ public class ScraperRunsController(
             success = true,
             error = (string?)null,
             count = events.Count,
-            raw = events
+            raw = events,
+            logs = context.LogEntries.Select(log => new { log.TimestampUtc, log.Level, log.Message })
         });
     }
 
@@ -110,15 +114,17 @@ public class ScraperRunsController(
         var yearTracker = new YearTracker();
 
         var scraper = await scrapers.GetByIdWithDetailsAsync(scraperId, ct);
-        if (scraper == null)
-            return NotFound();
+
+        if (scraper == null) return NotFound();
+
+        var context = new ScrapeContext();
 
         var mappedEvents = new List<object>();
         var rawEvents = new List<JsonNode>();
 
         try
         {
-            await foreach (var raw in executor.RunScraperAsync(scraper, ct))
+            await foreach (var raw in executor.RunScraperAsync(scraper, context, ct))
             {
                 // Simulate the Entity wrapper required by the Mapper
                 var rawEntity = new ScrapedEventRaw
@@ -161,7 +167,8 @@ public class ScraperRunsController(
                 error = (string?)null,
                 raw = rawEvents,
                 mappedCount = mappedEvents.Count,
-                mapped = mappedEvents
+                mapped = mappedEvents,
+                logs = context.LogEntries.Select(log => new { log.TimestampUtc, log.Level, log.Message })
             });
         }
         catch (Exception ex)
@@ -172,7 +179,8 @@ public class ScraperRunsController(
                 error = ex.Message,
                 raw = rawEvents,
                 mappedCount = mappedEvents.Count,
-                mapped = mappedEvents
+                mapped = mappedEvents,
+                logs = context.LogEntries.Select(log => new { log.TimestampUtc, log.Level, log.Message })
             });
         }
     }
