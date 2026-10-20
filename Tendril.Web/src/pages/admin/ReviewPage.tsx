@@ -131,6 +131,7 @@ export const ReviewPage: React.FC = () => {
           .map(({ pendingEvent, potentialMatches, scraperId }) => {
             const hasConflict = potentialMatches && potentialMatches.length > 0;
             const isPending = pendingEvent.status === 'Pending';
+            const isSuppressed = pendingEvent.status === 'Suppressed';
 
             return (
               <div
@@ -152,11 +153,22 @@ export const ReviewPage: React.FC = () => {
                     <div className="position-relative h-100">
                       <div className="d-flex gap-1 align-items-center">
                         <Badge
-                          bg={isPending ? 'warning' : 'success'}
+                          bg={
+                            isPending
+                              ? 'warning'
+                              : isSuppressed
+                                ? 'danger'
+                                : 'success'
+                          }
                           text={isPending ? 'dark' : 'light'}
                           className={styles.statusBadge}
                         >
-                          {isPending ? 'INCOMING PENDING' : 'PUBLISHED'} (From:{' '}
+                          {isPending
+                            ? 'INCOMING PENDING'
+                            : isSuppressed
+                              ? 'SUPPRESSED'
+                              : 'PUBLISHED'}{' '}
+                          (From:{' '}
                           {scrapers.find((s) => s.id === scraperId)?.name ??
                             'Unknown Scraper'}
                           )
@@ -164,7 +176,11 @@ export const ReviewPage: React.FC = () => {
                         <Button
                           size="xxs"
                           variant={
-                            isPending ? 'outline-warning' : 'outline-success'
+                            isPending
+                              ? 'outline-warning'
+                              : isSuppressed
+                                ? 'outline-danger'
+                                : 'outline-success'
                           }
                           onClick={() =>
                             navigate(`/admin/scrapers/${scraperId}/output`)

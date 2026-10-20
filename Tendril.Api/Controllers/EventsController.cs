@@ -87,11 +87,17 @@ public class EventsController(IEventRepository events, IEventRevisionRepository 
             var startDateWindow = eventDate.AddDays(-1);
             var endDateWindow = eventDate.AddDays(1);
 
+            if (pending.Title.Contains("Sqwerv"))
+            {
+                ;
+
+            }
+
             // Fetch matching published events within that timeframe
             var matches = await events.GetPotentialMatches(
                 startDateWindow,
                 endDateWindow,
-                pending.Title,
+                pending,
                 cancellationToken);
 
             reviewList.Add(new PendingEventReviewDto
@@ -124,7 +130,7 @@ public class EventsController(IEventRepository events, IEventRevisionRepository 
         var matches = await events.GetPotentialMatches(
             startDateWindow,
             endDateWindow,
-            pending.Title,
+            pending,
             cancellationToken);
 
         return Ok(new PendingEventReviewDto
