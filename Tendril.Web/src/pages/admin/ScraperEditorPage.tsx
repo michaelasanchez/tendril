@@ -156,9 +156,11 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({}) => {
             useYearTracking: true,
             useHeadlessBrowser: false,
             state: 'Unknown',
+            stateMessage: '',
             lastSuccessUtc: null,
             lastFailureUtc: null,
             lastErrorMessage: null,
+            pendingEvents: 0,
             venueId: null,
           },
         );

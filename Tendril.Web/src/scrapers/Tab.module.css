@@ -37,3 +37,13 @@
   gap: 1em;
   align-items: flex-end;
 }
+
+.EventRow:focus-visible {
+  outline: 2px solid var(--bs-primary);
+  outline-offset: 3px;
+}
+
+.SelectedEvent {
+  outline: 2px solid var(--bs-primary);
+  outline-offset: 2px;
+}

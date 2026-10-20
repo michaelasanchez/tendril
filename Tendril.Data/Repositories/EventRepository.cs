@@ -104,6 +104,16 @@ public class EventRepository(TendrilDbContext _context) : IEventRepository
         return await query.FirstOrDefaultAsync(ct);
     }
 
+    public async Task<List<Event>> GetByIds(List<Guid> eventIds, CancellationToken ct = default)
+    {
+        var query = _context.Events
+            .Include(x => x.Category)
+            .Include(x => x.Venue)
+            .Where(x => eventIds.Contains(x.Id));
+
+        return await query.ToListAsync(ct);
+    }
+
     public async Task<List<Event>> GetByScraperIdAsync(Guid id, DateTimeOffset? startDate, DateTimeOffset? endDate, CancellationToken ct = default)
     {
         var query = _context.Events

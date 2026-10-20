@@ -13,7 +13,7 @@ namespace Tendril.Api.Controllers;
 [Route("events")]
 public class EventsController(IEventRepository events, IEventRevisionRepository eventRevisions, IMapper mapper) : ControllerBase
 {
-    [HttpGet]
+    [HttpGet("search")]
     public async Task<ActionResult<EventResponse>> Search(
         [FromQuery] DateTimeOffset? startDate,
         [FromQuery] DateTimeOffset? endDate,
@@ -58,6 +58,14 @@ public class EventsController(IEventRepository events, IEventRevisionRepository 
         var @event = await events.GetById(eventId, cancellationToken);
         if (@event is null) return NotFound();
         return Ok(mapper.Map<EventDto>(@event));
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<List<EventDto>>> GetByIds([FromQuery] Guid[] ids)
+    {
+        var all = await events.GetByIds([.. ids]);
+
+        return Ok(mapper.Map<List<EventDto>>(all));
     }
 
     [HttpGet("scraper/{scraperId:guid}")]
@@ -185,26 +193,49 @@ public class EventsController(IEventRepository events, IEventRevisionRepository 
 
         if (@event is not null)
         {
-            if (request.CategoryId is not null && request.CategoryId != Guid.Empty)
-            {
-                @event.CategoryId = request.CategoryId;
-            }
-
-            if (request.Status is EventStatus status)
-            {
-                @event.Status = status;
-                @event.StatusAtUtc = DateTimeOffset.UtcNow;
-            }
-
-            if (request.RequiresReview is not null)
-            {
-                @event.RequiresReview = request.RequiresReview.Value;
-                @event.RequiresReviewAtUtc = DateTimeOffset.UtcNow;
-            }
+            PatchEvent(@event, request);
 
             await events.UpdateAsync(@event, ct);
         }
 
         return NoContent();
+    }
+
+    [HttpPatch]
+    [Authorize]
+    public async Task<ActionResult> UpdateEvents(
+        [FromBody] PatchEventsRequest request,
+        CancellationToken ct)
+    {
+        var all = await events.GetByIds(request.Ids, ct);
+
+        foreach (var @event in all)
+        {
+            PatchEvent(@event, request.Patch);
+
+            await events.UpdateAsync(@event, ct);
+        }
+
+        return NoContent();
+    }
+
+    private static void PatchEvent(Event e, PatchEventRequest request)
+    {
+        if (request.CategoryId is not null && request.CategoryId != Guid.Empty)
+        {
+            e.CategoryId = request.CategoryId;
+        }
+
+        if (request.Status is EventStatus status)
+        {
+            e.Status = status;
+            e.StatusAtUtc = DateTimeOffset.UtcNow;
+        }
+
+        if (request.RequiresReview is not null)
+        {
+            e.RequiresReview = request.RequiresReview.Value;
+            e.RequiresReviewAtUtc = DateTimeOffset.UtcNow;
+        }
     }
 }

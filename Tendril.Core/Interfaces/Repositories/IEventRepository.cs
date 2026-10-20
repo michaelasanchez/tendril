@@ -9,6 +9,7 @@ public interface IEventRepository
 {
     Task<PagedResponse<Event>> GetAllAsync(EventFilter filter, int? limit, Guid? cursor, CancellationToken ct = default);
     Task<Event?> GetById(Guid eventId, CancellationToken ct = default);
+    Task<List<Event>> GetByIds(List<Guid> eventIds, CancellationToken ct = default);
     Task<List<Event>> GetByScraperIdAsync(Guid id, DateTimeOffset? startDate, DateTimeOffset? endDate, CancellationToken ct = default);
     Task<List<Event>> GetByStatus(EventStatus status, CancellationToken ct = default);
     Task<List<Event>> GetPotentialMatches(DateTime startWindow, DateTime endWindow, Event pendingEvent, CancellationToken ct = default);

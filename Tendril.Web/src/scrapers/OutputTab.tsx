@@ -1,7 +1,7 @@
 import cn from 'classnames';
 import { format, startOfDay } from 'date-fns';
-import { useEffect, useMemo, useState } from 'react';
-import { Card } from 'react-bootstrap';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Card, Form } from 'react-bootstrap';
 import { EventsApi } from '../api/events';
 import NoImage from '../assets/no-image.svg';
 import { SquareButton as Button, SquareButton } from '../components/button';
@@ -73,6 +73,8 @@ export const OutputTab: React.FC<Props> = ({
     category: {},
   });
   const [stats, setStats] = useState<Stats>(defaultStats());
+  const [selectedIds, setSelectedIds] = useState<Set<Guid>>(() => new Set());
+  const eventRowRefs = useRef(new Map<Guid, HTMLDivElement>());
 
   useEffect(() => {
     if (scraperId !== 'new') {
@@ -117,7 +119,9 @@ export const OutputTab: React.FC<Props> = ({
     }
   }, [events]);
 
-  useEffect(() => {}, [scraperId]);
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [scraperId]);
 
   const filteredEvents = useMemo(() => {
     let filtered: Event[] = [...events];
@@ -150,6 +154,54 @@ export const OutputTab: React.FC<Props> = ({
 
     return filtered;
   }, [events, show]);
+
+  useEffect(() => {
+    const visibleIds = new Set(filteredEvents.map((event) => event.id));
+    setSelectedIds((current) => {
+      const next = new Set([...current].filter((id) => visibleIds.has(id)));
+      return next.size === current.size ? current : next;
+    });
+  }, [filteredEvents]);
+
+  const selectedEvents = events.filter((event) => selectedIds.has(event.id));
+  const allVisibleSelected =
+    filteredEvents.length > 0 &&
+    filteredEvents.every((event) => selectedIds.has(event.id));
+  const someVisibleSelected = filteredEvents.some((event) =>
+    selectedIds.has(event.id),
+  );
+
+  const toggleEventSelection = (eventId: Guid) => {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (next.has(eventId)) {
+        next.delete(eventId);
+      } else {
+        next.add(eventId);
+      }
+      return next;
+    });
+  };
+
+  const toggleVisibleSelection = (selected: boolean) => {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      filteredEvents.forEach((event) => {
+        if (selected) {
+          next.add(event.id);
+        } else {
+          next.delete(event.id);
+        }
+      });
+      return next;
+    });
+  };
+
+  const applyBulkPatch = (patch: Parameters<typeof EventsApi.patchMany>[1]) =>
+    EventsApi.patchMany(
+      selectedEvents.map((event) => event.id),
+      patch,
+    ).then(loadEvents);
 
   return (
     <>
@@ -249,6 +301,93 @@ export const OutputTab: React.FC<Props> = ({
           <div></div>
         </Card.Body>
       </Card>
+      <Card className={cn(cardStyles.BgCard, cardStyles.MarginBottom)}>
+        <Card.Body
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '0.75em',
+          }}
+        >
+          <Form.Check
+            type="checkbox"
+            label={`${allVisibleSelected ? 'Deselect' : 'Select'} all visible`}
+            checked={allVisibleSelected}
+            ref={(input) => {
+              if (input) {
+                input.indeterminate =
+                  someVisibleSelected && !allVisibleSelected;
+              }
+            }}
+            onChange={(event) =>
+              toggleVisibleSelection(event.target.checked)
+            }
+            disabled={filteredEvents.length === 0}
+          />
+          <strong aria-live="polite">
+            {selectedEvents.length} selected
+          </strong>
+          {selectedEvents.length > 0 && (
+            <>
+              <FormSelect
+                value="__select__"
+                options={[
+                  { value: '__select__', label: 'Change category...' },
+                  { value: '__none__', label: 'None' },
+                  ...categories.map((category) => ({
+                    value: category.id,
+                    label: category.name,
+                  })),
+                ]}
+                onChange={(value) => {
+                  if (value !== '__select__') {
+                    void applyBulkPatch({
+                      categoryId: value === '__none__' ? null : value,
+                    });
+                  }
+                }}
+              />
+              {selectedEvents.some((event) => event.status !== 'Published') && (
+                <Button
+                  onClick={() => void applyBulkPatch({ status: 'Published' })}
+                >
+                  Publish selected
+                </Button>
+              )}
+              {selectedEvents.some((event) => event.status !== 'Pending') && (
+                <Button onClick={() => void applyBulkPatch({ status: 'Pending' })}>
+                  {selectedEvents.every(
+                    (event) => event.status === 'Suppressed',
+                  )
+                    ? 'Restore selected'
+                    : 'Set pending'}
+                </Button>
+              )}
+              {selectedEvents.some((event) => event.status !== 'Suppressed') && (
+                <Button
+                  onClick={() => void applyBulkPatch({ status: 'Suppressed' })}
+                >
+                  Archive selected
+                </Button>
+              )}
+              <Button
+                onClick={() =>
+                  void applyBulkPatch({
+                    requiresReview: !selectedEvents.every(
+                      (event) => event.requiresReview,
+                    ),
+                  })
+                }
+              >
+                {selectedEvents.every((event) => event.requiresReview)
+                  ? 'Clear review flag'
+                  : 'Flag for review'}
+              </Button>
+            </>
+          )}
+        </Card.Body>
+      </Card>
       <div
         style={{
           display: 'grid',
@@ -260,9 +399,49 @@ export const OutputTab: React.FC<Props> = ({
         {filteredEvents.map((e) => (
           <div
             key={e.id}
+            className={styles.EventRow}
             style={{ display: 'flex', gap: '1em', alignItems: 'stretch' }}
+            ref={(element) => {
+              if (element) {
+                eventRowRefs.current.set(e.id, element);
+              } else {
+                eventRowRefs.current.delete(e.id);
+              }
+            }}
+            tabIndex={0}
+            role="group"
+            aria-label={`Event row: ${e.title}. Use arrow keys to move between events and space to select.`}
+            onKeyDown={(event) => {
+              if (event.target !== event.currentTarget) {
+                return;
+              }
+              const index = filteredEvents.findIndex(
+                (visibleEvent) => visibleEvent.id === e.id,
+              );
+              if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                event.preventDefault();
+                const nextIndex =
+                  index + (event.key === 'ArrowDown' ? 1 : -1);
+                if (nextIndex >= 0 && nextIndex < filteredEvents.length) {
+                  eventRowRefs.current
+                    .get(filteredEvents[nextIndex].id)
+                    ?.focus();
+                }
+              } else if (event.key === ' ') {
+                event.preventDefault();
+                toggleEventSelection(e.id);
+              }
+            }}
           >
+            <Form.Check
+              type="checkbox"
+              aria-label={`Select ${e.title}`}
+              checked={selectedIds.has(e.id)}
+              tabIndex={-1}
+              onChange={() => toggleEventSelection(e.id)}
+            />
             <Card
+              className={selectedIds.has(e.id) ? styles.SelectedEvent : undefined}
               style={{
                 display: 'flex',
                 flexDirection: 'row',
@@ -347,7 +526,9 @@ export const OutputTab: React.FC<Props> = ({
                   })) ?? []),
                 ]}
                 onChange={(value) =>
-                  EventsApi.patch(e.id, { categoryId: value }).then(() =>
+                  EventsApi.patch(e.id, {
+                    categoryId: value || null,
+                  }).then(() =>
                     loadEvents(),
                   )
                 }

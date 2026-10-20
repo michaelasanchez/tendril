@@ -1,16 +1,21 @@
 import type {
-  Event,
-  EventResponse,
-  EventStatus,
-  Guid,
-  PendingEventReviewDto,
+    Event,
+    EventResponse,
+    EventStatus,
+    Guid,
+    PendingEventReviewDto,
 } from '../types/api';
 import { apiGet, apiPatch, apiPost } from './client';
 
 export interface PatchEventRequest {
-  categoryId?: Guid;
+  categoryId?: Guid | null;
   status?: EventStatus;
   requiresReview?: boolean;
+}
+
+export interface PatchEventsRequest {
+  ids: Guid[];
+  patch: PatchEventRequest;
 }
 
 export interface EventFilter {
@@ -50,11 +55,15 @@ export const EventsApi = {
 
     const queryString = !!params.size ? `?${params.toString()}` : '';
 
-    return apiGet(`/events${queryString}`, signal);
+    return apiGet(`/events/search${queryString}`, signal);
   },
 
   getById(eventId: Guid, signal?: AbortSignal): Promise<Event> {
-    return apiGet(`/events/${eventId}`);
+    return apiGet(`/events/${eventId}`, signal);
+  },
+
+  getByIds(ids: Guid[], signal?: AbortSignal): Promise<Event[]> {
+    return apiGet(`/events?ids=${ids.join(',')}`, signal);
   },
 
   getByScraperId(scraperId: Guid): Promise<Event[]> {
@@ -84,4 +93,8 @@ export const EventsApi = {
   patch(eventId: Guid, request: PatchEventRequest): Promise<void> {
     return apiPatch(`/events/${eventId}`, request);
   },
+
+  patchMany(ids: Guid[], patch: PatchEventRequest): Promise<void> {
+    return apiPatch(`/events`, { ids, patch });
+  }
 };
