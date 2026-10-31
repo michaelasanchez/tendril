@@ -14,6 +14,7 @@ public class TendrilDbContext(DbContextOptions<TendrilDbContext> options) : DbCo
     public DbSet<ScrapedEventRaw> RawEvents => Set<ScrapedEventRaw>();
     public DbSet<ApiParameter> ApiParameters => Set<ApiParameter>();
     public DbSet<ScraperAttemptHistory> AttemptHistory => Set<ScraperAttemptHistory>();
+    public DbSet<ScraperAttemptLogEntry> AttemptLogs => Set<ScraperAttemptLogEntry>();
     public DbSet<ScraperClassificationRule> ClassificationRules => Set<ScraperClassificationRule>();
     public DbSet<ScraperMappingRule> MappingRules => Set<ScraperMappingRule>();
     public DbSet<ScheduledTask> ScheduledTasks => Set<ScheduledTask>();
@@ -35,6 +36,7 @@ public class TendrilDbContext(DbContextOptions<TendrilDbContext> options) : DbCo
         modelBuilder.ApplyConfiguration(new ScheduledTaskConfig());
         modelBuilder.ApplyConfiguration(new ScrapedEventRawConfig());
         modelBuilder.ApplyConfiguration(new ScraperAttemptHistoryConfig());
+        modelBuilder.ApplyConfiguration(new ScraperAttemptLogEntryConfig());
         modelBuilder.ApplyConfiguration(new ScraperClassificationRuleConfig());
         modelBuilder.ApplyConfiguration(new ScraperDefinitionConfig());
         modelBuilder.ApplyConfiguration(new ScraperMappingRuleConfig());

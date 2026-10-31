@@ -13,8 +13,8 @@ public class ScraperAttemptLogEntryConfig : IEntityTypeConfiguration<ScraperAtte
 
         builder.HasKey(x => x.Id);
 
-        builder.HasOne<ScraperAttemptHistory>()
-            .WithMany()
+        builder.HasOne(x => x.Attempt)
+            .WithMany(x => x.LogEntries)
             .HasForeignKey(x => x.AttemptId)
             .OnDelete(DeleteBehavior.Cascade);
     }

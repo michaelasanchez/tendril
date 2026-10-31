@@ -13,6 +13,8 @@ public class ApiMappingProfile : Profile
 
         CreateMap<ScraperAttemptHistory, AttemptHistoryDto>();
 
+        CreateMap<ScraperAttemptLogEntry, AttemptLogEntryDto>();
+
         CreateMap<ScrapedEventRaw, ScrapedEventRawDto>();
 
         CreateMap<ScraperDefinition, ScraperDto>()

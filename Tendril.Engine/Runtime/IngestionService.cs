@@ -52,6 +52,7 @@ public class IngestionService(
         var mappedEntities = new List<Event>();
         var summaries = new List<string>();
         var context = new ScrapeContext();
+
         context.AddLog(ScraperAttemptLogLevel.Information,
             $"Started ingestion for scraper '{scraper.Name}' ({scraper.Id}, {scraper.ExecutionMode}).");
 
@@ -173,14 +174,6 @@ public class IngestionService(
             }
 
             // 5. Finalize Stats
-            foreach (var logEntry in context.LogEntries)
-            {
-                logEntry.AttemptId = attempt.Id;
-                logEntry.Attempt = attempt;
-            }
-
-            attempt.LogEntries = context.LogEntries;
-
             attempt.EndTimeUtc = DateTimeOffset.UtcNow;
 
             attempt.Extracted = extracted;
@@ -209,6 +202,7 @@ public class IngestionService(
 
             await scrapers.UpdateAsync(scraper, finalizationToken);
             await attemptHistories.UpdateAsync(attempt, finalizationToken);
+            await attemptHistories.AddLogs(attempt.Id, context.LogEntries, finalizationToken);
         }
 
         return new IngestResult
@@ -233,7 +227,12 @@ public class IngestionService(
     {
         var mappedEvent = mapper.MapEvent(scraper, rawEvent, scraper.UseYearTracking ? trackedYear : null);
 
-        if (mappedEvent.StartUtc == default) return (mappedEvent, "skipped", "Skipped - Missing start date");
+        if (mappedEvent.StartUtc == default)
+        {
+            rawEvent.Outcome = ScrapedEventOutcome.Skipped;
+
+            return (mappedEvent, "skipped", "Skipped - Missing start date");
+        }
 
         classifier.ClassifyEvent(scraper, rawEvent, mappedEvent);
 

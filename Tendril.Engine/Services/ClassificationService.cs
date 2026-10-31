@@ -13,7 +13,6 @@ public class ClassificationService(TendrilDbContext context) : IClassificationSe
     public void ClassifyEvent(ScraperDefinition scraper, ScrapedEventRaw mappedEvent, Event targetEvent)
     {// 1. Parse ONCE outside the loop for performance
         using var jsonDoc = JsonDocument.Parse(mappedEvent.RawDataJson);
-        var root = jsonDoc.RootElement;
 
         var rules = context.ClassificationRules
             .Include(r => r.Assignments)
@@ -23,6 +22,7 @@ public class ClassificationService(TendrilDbContext context) : IClassificationSe
 
         foreach (var rule in rules)
         {
+            var root = jsonDoc.RootElement;
             var valueToCompare = string.Empty;
             bool found = true;
 

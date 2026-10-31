@@ -16,4 +16,6 @@ public class AttemptHistoryDto
     public int Skipped { get; set; }
     public int Errored { get; set; }
     public string? ErrorMessage { get; init; }
+
+    public ICollection<AttemptLogEntryDto> LogEntries { get; set; } = [];
 }

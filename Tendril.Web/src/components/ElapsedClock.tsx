@@ -52,10 +52,10 @@ export const ElapsedClock: React.FC<ElapsedClockProps> = ({
 
 function formatElapsed(from: Date, now: Date) {
   const seconds = differenceInSeconds(now, from);
-
+  
   if (seconds < 60) return `${seconds}s`;
   const minutes = differenceInMinutes(now, from);
-  if (minutes < 60) return `${minutes}m${seconds}s`;
+  if (minutes < 60) return `${minutes}m${seconds - (minutes * 60)}s`;
   const hours = differenceInHours(now, from);
   if (hours < 24) return `${hours}h${minutes}m${seconds}s`;
   const days = differenceInDays(now, from);

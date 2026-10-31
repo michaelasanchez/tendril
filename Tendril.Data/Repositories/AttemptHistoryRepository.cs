@@ -16,6 +16,19 @@ public class AttemptHistoryRepository(TendrilDbContext db) : IAttemptHistoryRepo
         await db.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task AddLogs(Guid attemptId, IEnumerable<ScraperAttemptLogEntry> logEntries, CancellationToken ct = default)
+    {
+
+        foreach (var logEntry in logEntries)
+        {
+            logEntry.AttemptId = attemptId;
+        }
+
+        db.AttemptLogs.AddRange(logEntries);
+
+        await db.SaveChangesAsync(ct);
+    }
+
     public async Task<PagedResponse<ScraperAttemptHistory>> GetPagedAttemptsAsync(
         Guid? scraperDefinitionId,
         int? limit,
@@ -78,6 +91,7 @@ public class AttemptHistoryRepository(TendrilDbContext db) : IAttemptHistoryRepo
     {
         return db.AttemptHistory
             .Include(x => x.ScraperDefinition)
+            .Include(x => x.LogEntries)
             .AsNoTracking()
             .Where(a => a.ScraperDefinitionId == scraperId)
             .OrderByDescending(a => a.StartTimeUtc)

@@ -62,6 +62,10 @@ export const RunsTab: React.FC<Props> = ({
     }
   };
 
+  const [selectedAttemptId, setSelectedAttemptId] = useState<Guid | null>(null);
+
+  const selectedAttempt = attempts.find((a) => a.id == selectedAttemptId);
+
   return (
     <>
       <div className={pageStyles.pageHeader}>
@@ -124,39 +128,61 @@ export const RunsTab: React.FC<Props> = ({
                 <th>Skipped</th>
                 <th>Errored</th>
                 <th>Error Message</th>
+                <th />
               </tr>
             </thead>
             <tbody>
               {attempts.map((a) => (
-                <tr key={a.id}>
-                  <td>
-                    <code>
-                      {format(new Date(a.startTimeUtc ?? ''), 'yyyy-MM-dd')}{' '}
-                      <small className="text-muted">
-                        {format(new Date(a.startTimeUtc ?? ''), 'hh:mm')}
-                      </small>
-                    </code>
-                  </td>
-                  {/* <td>
+                <>
+                  <tr key={a.id}>
+                    <td>
+                      <code>
+                        {format(new Date(a.startTimeUtc ?? ''), 'yyyy-MM-dd')}{' '}
+                        <small className="text-muted">
+                          {format(new Date(a.startTimeUtc ?? ''), 'hh:mm')}
+                        </small>
+                      </code>
+                    </td>
+                    {/* <td>
                     {!!a.endTimeUtc && new Date(a.endTimeUtc).toLocaleString()}
                   </td> */}
-                  <td>
-                    {!!a.endTimeUtc &&
-                      intervalToDuration({
-                        start: parseISO(a.startTimeUtc),
-                        end: parseISO(a.endTimeUtc),
-                      }).seconds}
-                    s
-                  </td>
-                  <td>{a.success ? '✅ Yes' : '❌ No'}</td>
-                  <td>{a.extracted}</td>
-                  <td>{a.mapped}</td>
-                  <td>{a.created}</td>
-                  <td>{a.updated}</td>
-                  <td>{a.skipped}</td>
-                  <td>{a.errored}</td>
-                  <td>{a.errorMessage}</td>
-                </tr>
+                    <td>
+                      {!!a.endTimeUtc &&
+                        intervalToDuration({
+                          start: parseISO(a.startTimeUtc),
+                          end: parseISO(a.endTimeUtc),
+                        }).seconds}
+                      s
+                    </td>
+                    <td>{a.success ? '✅ Yes' : '❌ No'}</td>
+                    <td>{a.extracted}</td>
+                    <td>{a.mapped}</td>
+                    <td>{a.created}</td>
+                    <td>{a.updated}</td>
+                    <td>{a.skipped}</td>
+                    <td>{a.errored}</td>
+                    <td>{a.errorMessage}</td>
+                    <td>
+                      {a.logEntries.length > 0 && (
+                        <Button
+                          variant="outline-primary"
+                          size="sm"
+                          onClick={() => setSelectedAttemptId(a.id)}
+                        >
+                          {selectedAttemptId === a.id ? 'Hide' : 'View'} Logs
+                        </Button>
+                      )}
+                    </td>
+                  </tr>
+                  {selectedAttemptId === a.id &&
+                    selectedAttempt?.logEntries.map((l, i) => (
+                      <tr key={i}>
+                        <td colSpan={11}>
+                          <pre>{l.message}</pre>
+                        </td>
+                      </tr>
+                    ))}
+                </>
               ))}
             </tbody>
           </Table>

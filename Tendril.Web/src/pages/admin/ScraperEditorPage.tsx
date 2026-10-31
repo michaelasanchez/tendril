@@ -30,7 +30,6 @@ import type {
   Venue,
 } from '../../types/api';
 import styles from './ScraperEditorPage.module.css';
-import AttemptHistoryPage from './AttemptHistoryPage';
 
 type TabKey =
   | 'general'
@@ -86,11 +85,9 @@ export const ScraperEditorPage: React.FC<ScraperEditorPage> = ({}) => {
   const [attempts, setAttempts] = useState<ScraperAttemptHistory[]>([]);
 
   const loadAttemptHistories = async () => {
-    console.log('LOADING ATTEMPT HISTORIES');
     if (!scraperId) return;
-    console.log('LOADING ATTEMPT HISTORIES');
-    const attempts = await ScrapersApi.getAttemptHistoriesByScraperId(scraperId);
-    console.log('ATTEMPTS', attempts);
+    const attempts =
+      await ScrapersApi.getAttemptHistoriesByScraperId(scraperId);
     setAttempts(attempts);
   };
   /* Attempts */

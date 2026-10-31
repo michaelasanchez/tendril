@@ -32,7 +32,15 @@ public sealed class AttemptHistoryController(IAttemptHistoryRepository query) : 
             Updated = a.Updated,
             Skipped = a.Skipped,
             Errored = a.Errored,
-            ErrorMessage = a.ErrorMessage
+            ErrorMessage = a.ErrorMessage,
+            LogEntries = a.LogEntries
+                .Select(x => new AttemptLogEntryDto
+                {
+                    TimestampUtc = x.TimestampUtc,
+                    Level = x.Level,
+                    Message = x.Message
+                })
+                .ToList()
         });
 
         return Ok(resources);

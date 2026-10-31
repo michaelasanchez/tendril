@@ -12,15 +12,15 @@ using Tendril.Data;
 namespace Tendril.Data.Migrations
 {
     [DbContext(typeof(TendrilDbContext))]
-    [Migration("20261015011111_AddAttemptLogAndRawOutcome")]
-    partial class AddAttemptLogAndRawOutcome
+    [Migration("20261022010943_AddAttemptHistoryLogEntryAndScraperEventOutcomeFields")]
+    partial class AddAttemptHistoryLogEntryAndScraperEventOutcomeFields
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.2")
+                .HasAnnotation("ProductVersion", "10.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -535,7 +535,7 @@ namespace Tendril.Data.Migrations
 
                     b.HasIndex("AttemptId");
 
-                    b.ToTable("ScraperAttemptLogEntry");
+                    b.ToTable("ScraperAttemptLogEntry", (string)null);
                 });
 
             modelBuilder.Entity("Tendril.Core.Domain.Entities.ScraperClassificationRule", b =>

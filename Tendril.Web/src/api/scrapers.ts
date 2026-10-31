@@ -236,7 +236,7 @@ export const ScrapersApi = {
     scraperId: Guid,
     signal?: AbortSignal,
   ): Promise<ScraperSummary> {
-    return apiGet(`/scrapers/summaries/${scraperId}`, signal);
+    return apiGet(`/scrapers/${scraperId}/summaries`, signal);
   },
 
   // Runs

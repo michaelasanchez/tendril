@@ -17,7 +17,7 @@ namespace Tendril.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.2")
+                .HasAnnotation("ProductVersion", "10.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -532,7 +532,7 @@ namespace Tendril.Data.Migrations
 
                     b.HasIndex("AttemptId");
 
-                    b.ToTable("ScraperAttemptLogEntry");
+                    b.ToTable("ScraperAttemptLogEntry", (string)null);
                 });
 
             modelBuilder.Entity("Tendril.Core.Domain.Entities.ScraperClassificationRule", b =>

@@ -177,6 +177,12 @@ export interface ScraperClassificationRule {
   assignments: RuleAssignment[];
 }
 
+export interface AttemptLogEntry {
+  timestampUtc: string;
+  level: string;
+  message: string;
+}
+
 export interface ScraperAttemptHistory {
   id: Guid;
   scraperName: string | null;
@@ -191,6 +197,7 @@ export interface ScraperAttemptHistory {
   skipped: number;
   errored: number;
   errorMessage: string;
+  logEntries: AttemptLogEntry[];
 }
 
 export interface ScheduledTask {
