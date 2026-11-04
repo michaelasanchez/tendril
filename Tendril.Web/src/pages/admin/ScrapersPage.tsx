@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router';
 import { ScrapersApi } from '../../api/scrapers';
 import { SquareButton } from '../../components/button';
 import { Icon } from '../../components/Icon';
+import { useLocalStorage } from '../../hooks';
 import { pageStyles, tableStyles } from '../../styles';
 import type { ScraperDefinition } from '../../types/api';
 
@@ -106,12 +107,23 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({}) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const sortStorage = useLocalStorage('sort');
+
   const hasLoaded = useRef(false);
 
-  const [sort, setSort] = useState<Sort | null>({
-    key: 'name',
-    direction: 'asc',
-  });
+  const [sort, setSort] = useState<Sort | null>(
+    sortStorage.exists()
+      ? JSON.parse(sortStorage.fetch()!)
+      : {
+          key: 'name',
+          direction: 'asc',
+        },
+  );
+
+  useEffect(() => {
+    if (!sort) return;
+    sortStorage.commit(JSON.stringify(sort));
+  }, [sort]);
 
   const onSort = (key: SortKey) => {
     setSort((prev) => {

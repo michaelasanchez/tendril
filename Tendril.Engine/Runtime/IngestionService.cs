@@ -133,9 +133,18 @@ public class IngestionService(
             }
 
             // 3. Success Completion
-            scraper.State = ScraperState.Healthy;
-            scraper.StateMessage = string.Empty;
-            scraper.LastSuccessUtc = DateTimeOffset.UtcNow;
+
+            if (extracted == 0)
+            {
+                scraper.State = ScraperState.Warning;
+                scraper.StateMessage = "Scraper completed with no events extracted";
+            }
+            else
+            {
+                scraper.State = ScraperState.Healthy;
+                scraper.StateMessage = string.Empty;
+                scraper.LastSuccessUtc = DateTimeOffset.UtcNow;
+            }
 
             attempt.Success = true;
             attempt.ErrorMessage = null;
@@ -167,12 +176,6 @@ public class IngestionService(
         }
         finally
         {
-            if (extracted == 0 && attempt.Success)
-            {
-                scraper.State = ScraperState.Warning;
-                scraper.StateMessage = "Scraper completed with no events extracted";
-            }
-
             // 5. Finalize Stats
             attempt.EndTimeUtc = DateTimeOffset.UtcNow;
 
