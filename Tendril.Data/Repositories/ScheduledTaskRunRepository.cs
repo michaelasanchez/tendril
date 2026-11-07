@@ -68,6 +68,7 @@ public class ScheduledTaskRunRepository(TendrilDbContext db) : IScheduledTaskRun
             .AsNoTracking()
             .Include(run => run.ScheduledTask)
             .Include(run => run.AttemptHistories)
+                .ThenInclude(attempt => attempt.ScraperDefinition)
             .OrderByDescending(run => run.StartTimeUtc)
             .Take(limit)
             .ToListAsync(ct);

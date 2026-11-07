@@ -18,6 +18,7 @@ const ReviewPage = lazy(() => import('./pages/admin/ReviewPage'));
 const ScraperEditorPage = lazy(() => import('./pages/admin/ScraperEditorPage'));
 const ScrapersPage = lazy(() => import('./pages/admin/ScrapersPage'));
 const TagsPage = lazy(() => import('./pages/admin/TagsPage'));
+const TaskRunHistoryPage = lazy(() => import('./pages/admin/TaskRunHistoryPage'));
 const VenuesPage = lazy(() => import('./pages/admin/VenuesPage'));
 const WorkerPage = lazy(() => import('./pages/admin/WorkerPage'));
 
@@ -134,6 +135,7 @@ export default function App() {
               <Route path="tags" element={<TagsPage />} />
               <Route path="venues" element={<VenuesPage />} />
               <Route path="worker" element={<WorkerPage />} />
+              <Route path="task-runs" element={<TaskRunHistoryPage />} />
               <Route path="automate" element={<AutomatePage />} />
               <Route path="review" element={<ReviewPage />} />
               <Route path="summary" element={

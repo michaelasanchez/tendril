@@ -199,7 +199,7 @@ export const WorkerPage: React.FC = () => {
         </section>
 
         <section className={styles.Section}>
-          <SectionHeading title="Recent task runs" detail="Latest 20 runs" linkTo="/admin/automate" linkText="Schedule settings" />
+          <SectionHeading title="Recent task runs" detail="Latest 20 runs" linkTo="/admin/task-runs" linkText="View run history" />
           <div className={styles.TableWrap}>
             <Table responsive hover size="sm" className={styles.Table}>
               <thead><tr><th>Task</th><th>Result</th><th>Started</th><th>Attempts</th></tr></thead>
@@ -223,7 +223,7 @@ export const WorkerPage: React.FC = () => {
         <SectionHeading title="Recent scraper attempts" detail={`Latest ${attempts.length} records`} linkTo="/admin/summary" linkText="Open attempt history" />
         <div className={styles.TableWrap}>
           <Table responsive hover size="sm" className={styles.Table}>
-            <thead><tr><th>Scraper</th><th>Origin</th><th>Result</th><th>Started</th><th>Events</th><th>Details</th></tr></thead>
+            <thead><tr><th>Scraper</th><th>Origin</th><th>Result</th><th>Started</th><th>Events</th><th>Issue / details</th></tr></thead>
             <tbody>
               {attempts.slice(0, 10).map((attempt) => {
                 const running = attempt.errorMessage === 'Running...';
@@ -241,7 +241,12 @@ export const WorkerPage: React.FC = () => {
                     </td>
                     <td>{formatDateTime(attempt.startTimeUtc)}</td>
                     <td>{attempt.extracted} extracted / {attempt.created} created</td>
-                    <td className={styles.ErrorCell}>{running ? 'In progress' : attempt.errorMessage || 'No errors recorded'}</td>
+                    <td className={styles.ErrorCell}>
+                      <span>{running ? 'In progress' : attempt.errorMessage || 'No errors recorded'}</span>
+                      <Link className={styles.AttemptLink} to={`/admin/scrapers/${attempt.scraperDefinitionId}/runs/${attempt.id}`}>
+                        Open attempt <ArrowUpRight size={14} />
+                      </Link>
+                    </td>
                   </tr>
                 );
               })}

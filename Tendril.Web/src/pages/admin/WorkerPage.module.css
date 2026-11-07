@@ -319,6 +319,21 @@
   text-overflow: ellipsis;
 }
 
+.AttemptLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin-left: 0.6rem;
+  color: var(--foreground);
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.AttemptLink:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
 .Badge {
   font-family: var(--font-mono);
   font-size: 0.65rem;

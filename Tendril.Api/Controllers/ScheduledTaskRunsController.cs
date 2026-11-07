@@ -34,7 +34,26 @@ public sealed class ScheduledTaskRunsController(IScheduledTaskRunRepository runs
                 run.AttemptHistories.Count,
                 completedAttempts.Count(attempt => attempt.Success),
                 completedAttempts.Count(attempt => !attempt.Success),
-                run.AttemptHistories.Count(attempt => attempt.ErrorMessage == "Running..."));
+                run.AttemptHistories.Count(attempt => attempt.ErrorMessage == "Running..."),
+                run.AttemptHistories
+                    .OrderBy(attempt => attempt.StartTimeUtc)
+                    .Select(attempt => new ScheduledTaskRunAttemptDto(
+                        attempt.Id,
+                        attempt.ScraperDefinitionId,
+                        attempt.ScraperDefinition.Name,
+                        attempt.ErrorMessage == "Running..."
+                            ? "Running"
+                            : attempt.Success ? "Succeeded" : "Failed",
+                        attempt.StartTimeUtc,
+                        attempt.ErrorMessage == "Running..." ? null : attempt.EndTimeUtc,
+                        attempt.Extracted,
+                        attempt.Mapped,
+                        attempt.Created,
+                        attempt.Updated,
+                        attempt.Skipped,
+                        attempt.Errored,
+                        attempt.ErrorMessage == "Running..." ? null : attempt.ErrorMessage))
+                    .ToList());
         }).ToList());
     }
 }

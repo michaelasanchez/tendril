@@ -1,0 +1,434 @@
+.Page {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 1.5rem 0 3rem;
+}
+
+.PageHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1.25rem;
+}
+
+.PageHeader h1 {
+  margin: 0;
+  font-family: var(--font-slab);
+  font-size: var(--text-xl);
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+
+.Eyebrow {
+  margin: 0 0 0.35rem;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.Subtitle,
+.EditorHeading > div > p:last-child {
+  margin: 0.35rem 0 0;
+  color: var(--muted-foreground);
+}
+
+.HeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-shrink: 0;
+}
+
+.HeaderActions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.Loading {
+  color: var(--muted-foreground);
+}
+
+.OverviewStrip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0 0 1.5rem;
+  border-block: 1px solid var(--border);
+}
+
+.SummaryMetric {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  min-height: 4.5rem;
+  padding: 0.75rem 1rem;
+  border-right: 1px solid var(--border);
+}
+
+.SummaryMetric:first-child {
+  padding-left: 0;
+}
+
+.SummaryMetric:last-child {
+  border-right: 0;
+}
+
+.SummaryIcon {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 auto;
+  border-radius: 4px;
+  background: var(--card);
+  color: var(--foreground);
+}
+
+.SummaryMetric div > span {
+  display: block;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+}
+
+.SummaryMetric strong {
+  display: block;
+  margin-top: 0.1rem;
+  font-family: var(--font-slab);
+  font-size: var(--text-lg);
+  font-weight: 500;
+}
+
+.TableSection {
+  min-width: 0;
+  margin-bottom: 2rem;
+}
+
+.TableHeading,
+.EditorHeading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.7rem;
+}
+
+.TableHeading > div {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.TableHeading h2,
+.EditorHeading h2 {
+  margin: 0;
+  font-family: var(--font-slab);
+  font-size: var(--text-lg);
+}
+
+.TableHeading span,
+.TableHint {
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
+}
+
+.TableHint {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.TableWrap {
+  width: 100%;
+  overflow-x: auto;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.ScheduleTable {
+  min-width: 980px;
+  margin: 0;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.ScheduleTable th {
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.ScheduleTable th,
+.ScheduleTable td {
+  padding: 0.75rem 0.6rem;
+  background: transparent;
+}
+
+.Sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.Sortable:hover {
+  color: var(--foreground) !important;
+}
+
+.DisabledRow td {
+  color: var(--muted-foreground);
+  opacity: 0.72;
+}
+
+.TaskName,
+.CronDescription,
+.NextRun {
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.TaskNotes {
+  display: block;
+  max-width: 16rem;
+  overflow: hidden;
+  color: var(--muted-foreground);
+  text-overflow: ellipsis;
+}
+
+.CronDescription {
+  color: var(--foreground);
+}
+
+.CronCode {
+  display: inline-block;
+  margin-top: 0.2rem;
+  color: var(--muted-foreground);
+  font-size: var(--text-xs);
+}
+
+.Badge,
+.StatusBadge {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.NextRun {
+  font-variant-numeric: tabular-nums;
+}
+
+.TargetCount {
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
+}
+
+.TableActions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.TableActions button {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+}
+
+.IconAction {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--foreground);
+}
+
+.IconAction:hover {
+  background: var(--card);
+}
+
+.DangerAction {
+  color: #b13d34;
+}
+
+.Empty {
+  padding: 2rem !important;
+  color: var(--muted-foreground);
+  text-align: center;
+}
+
+.EditorSection {
+  padding-top: 0.75rem;
+}
+
+.EditorHeading {
+  margin-bottom: 1rem;
+}
+
+.EditorCard {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--card);
+}
+
+.CronEditor {
+  display: grid;
+  grid-template-columns: minmax(14rem, 0.7fr) minmax(18rem, 1.3fr);
+  align-items: end;
+  gap: 0.8rem 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--background);
+}
+
+.CronEditor > :nth-child(2) {
+  margin-bottom: 0;
+}
+
+.CronFieldGrid,
+.CronHelp,
+.SavedCron {
+  grid-column: 1 / -1;
+}
+
+.SavedCron {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: -0.5rem;
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
+}
+
+.SavedCron span,
+.PreviewLabel {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+}
+
+.SavedCron code {
+  padding: 0.2rem 0.45rem;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--card);
+  color: var(--foreground);
+}
+
+.CronFieldGrid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.CronField {
+  min-width: 0;
+  padding: 0.45rem 0.6rem;
+  border-left: 2px solid var(--accent-secondary);
+  background: var(--card);
+}
+
+.CronField span {
+  display: block;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+}
+
+.CronField code {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--foreground);
+  font-size: var(--text-base);
+}
+
+.CronHelp {
+  display: grid;
+  gap: 0.25rem;
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
+}
+
+.CronHelp strong {
+  color: var(--foreground);
+}
+
+.CronHelp .PreviewLabel {
+  color: var(--muted-foreground);
+}
+
+.CronHelp .InvalidCron {
+  color: #b13d34;
+}
+
+.CronHelp small {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  align-items: center;
+  margin-top: 0.25rem;
+}
+
+.CronHelp code {
+  padding: 0.05rem 0.25rem;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--foreground);
+}
+
+@media (max-width: 720px) {
+  .Page {
+    padding-top: 1rem;
+  }
+
+  .PageHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .HeaderActions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .OverviewStrip {
+    grid-template-columns: 1fr;
+  }
+
+  .SummaryMetric,
+  .SummaryMetric:first-child {
+    padding-left: 0.25rem;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .SummaryMetric:last-child {
+    border-bottom: 0;
+  }
+
+  .TableHeading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .CronEditor {
+    grid-template-columns: 1fr;
+  }
+
+  .CronFieldGrid {
+    grid-template-columns: repeat(5, minmax(3.2rem, 1fr));
+    overflow-x: auto;
+  }
+}

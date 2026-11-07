@@ -1,0 +1,360 @@
+.Page {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 1.5rem 0 3rem;
+}
+
+.PageHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1.25rem;
+}
+
+.PageHeader h1 {
+  margin: 0;
+  font-family: var(--font-slab);
+  font-size: var(--text-xl);
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+
+.Eyebrow {
+  margin: 0 0 0.35rem;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.Subtitle {
+  margin: 0.35rem 0 0;
+  color: var(--muted-foreground);
+}
+
+.HeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.HeaderActions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.UpdatedAt,
+.SectionHeading > span,
+.Footnote {
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
+}
+
+.Summary {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin: 0 0 1.5rem;
+  border-block: 1px solid var(--border);
+}
+
+.SummaryValue {
+  min-width: 0;
+  padding: 0.75rem 1rem;
+  border-right: 1px solid var(--border);
+}
+
+.SummaryValue:first-child {
+  padding-left: 0;
+}
+
+.SummaryValue:last-child {
+  border-right: 0;
+}
+
+.SummaryValue span {
+  display: block;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+}
+
+.SummaryValue strong {
+  display: block;
+  margin-top: 0.2rem;
+  font-family: var(--font-slab);
+  font-size: var(--text-lg);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.RunSection {
+  min-width: 0;
+}
+
+.SectionHeading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.65rem;
+}
+
+.SectionHeading h2 {
+  margin: 0;
+  font-family: var(--font-slab);
+  font-size: var(--text-lg);
+}
+
+.TableWrap,
+.AttemptTableWrap {
+  width: 100%;
+  overflow-x: auto;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.RunTable,
+.AttemptTable {
+  margin: 0;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.RunTable {
+  min-width: 920px;
+}
+
+.RunTable th,
+.AttemptTable th {
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.RunTable th,
+.RunTable td,
+.AttemptTable th,
+.AttemptTable td {
+  padding: 0.7rem 0.6rem;
+  background: transparent;
+}
+
+.RunTable tbody > tr:not(.AttemptGroupRow) {
+  border-bottom: 1px solid var(--border);
+}
+
+.ActiveRun td {
+  background: rgba(35, 115, 77, 0.035) !important;
+}
+
+.TaskCell strong,
+.TaskCell small {
+  display: block;
+}
+
+.TaskCell strong {
+  font-weight: 600;
+}
+
+.TaskCell small {
+  margin-top: 0.15rem;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+}
+
+.StatusBadge {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.DurationCell,
+.ActiveDuration {
+  display: table-cell;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.ActiveDuration {
+  color: #23734d;
+  font-weight: 600;
+}
+
+.ActiveDuration svg {
+  margin-right: 0.3rem;
+  vertical-align: -2px;
+}
+
+.AttemptCounts {
+  display: flex;
+  gap: 0.55rem;
+}
+
+.SuccessCount,
+.FailureCount,
+.ActiveCount {
+  font-size: var(--text-sm);
+}
+
+.SuccessCount {
+  color: #23734d;
+}
+
+.FailureCount {
+  color: #b13d34;
+}
+
+.ActiveCount {
+  color: #9a6715;
+}
+
+.ExpandButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding-inline: 0;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.AttemptGroupRow > td {
+  padding: 0 !important;
+  border-bottom: 1px solid var(--border);
+  background: var(--card) !important;
+}
+
+.AttemptGroup {
+  padding: 0.9rem 1rem 1rem 1.5rem;
+  border-left: 3px solid #63917b;
+}
+
+.GroupHeading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.6rem;
+}
+
+.GroupHeading strong {
+  font-family: var(--font-slab);
+  font-size: var(--text-base);
+}
+
+.GroupHeading span {
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
+}
+
+.AttemptTableWrap {
+  border-bottom: 0;
+}
+
+.AttemptTable {
+  min-width: 860px;
+  font-size: var(--text-sm);
+}
+
+.AttemptTable th {
+  font-size: 0.65rem;
+}
+
+.ScraperCell {
+  font-weight: 600;
+}
+
+.IssueCell {
+  max-width: 16rem;
+  overflow: hidden;
+  color: var(--muted-foreground);
+  text-overflow: ellipsis;
+}
+
+.OpenLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  color: var(--foreground);
+  text-decoration: none;
+}
+
+.OpenLink:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.NoAttempts,
+.Empty,
+.Loading {
+  padding: 1.5rem !important;
+  color: var(--muted-foreground);
+  text-align: center;
+}
+
+.Loading svg {
+  margin-right: 0.5rem;
+}
+
+.Footnote {
+  margin: 0.6rem 0 0;
+}
+
+.Footnote a {
+  color: var(--foreground);
+}
+
+.Spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 720px) {
+  .Page {
+    padding-top: 1rem;
+  }
+
+  .PageHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .HeaderActions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .Summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .SummaryValue,
+  .SummaryValue:first-child {
+    padding-left: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .SummaryValue:nth-child(2n) {
+    border-right: 0;
+  }
+
+  .SummaryValue:last-child {
+    grid-column: 1 / -1;
+    border-bottom: 0;
+  }
+
+  .GroupHeading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+}

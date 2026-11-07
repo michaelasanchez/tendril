@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Cronos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Tendril.Api.Dtos;
@@ -80,11 +81,41 @@ public class ScheduledTasksController(
         var task = await tasks.GetByIdWithScrapersAsync(id, cancellationToken);
         if (task is null) return NotFound();
 
+        DateTimeOffset? nextRunAtUtc = null;
+        if (request.CronExpression is not null &&
+            !string.Equals(request.CronExpression, task.CronExpression, StringComparison.Ordinal))
+        {
+            if (string.IsNullOrWhiteSpace(request.CronExpression))
+            {
+                return BadRequest("Cron expression cannot be empty.");
+            }
+
+            try
+            {
+                var cron = CronExpression.Parse(request.CronExpression);
+                var next = cron.GetNextOccurrence(DateTime.UtcNow);
+                if (next is null)
+                {
+                    return BadRequest("Cron expression has no future occurrence.");
+                }
+
+                nextRunAtUtc = new DateTimeOffset(next.Value, TimeSpan.Zero);
+            }
+            catch (CronFormatException)
+            {
+                return BadRequest("Cron expression is invalid.");
+            }
+        }
+
         // Update Scalar values
         if (request.Name is not null) task.Name = request.Name;
         if (request.Notes is not null) task.Notes = request.Notes;
         if (request.IsDisabled is not null) task.IsDisabled = request.IsDisabled.Value;
-        if (request.CronExpression is not null) task.CronExpression = request.CronExpression;
+        if (request.CronExpression is not null)
+        {
+            task.CronExpression = request.CronExpression;
+            if (nextRunAtUtc.HasValue) task.NextRunAtUtc = nextRunAtUtc.Value;
+        }
         if (request.NextRunAtUtc is not null) task.NextRunAtUtc = request.NextRunAtUtc.Value;
         if (request.Status is not null) task.Status = request.Status.Value;
 

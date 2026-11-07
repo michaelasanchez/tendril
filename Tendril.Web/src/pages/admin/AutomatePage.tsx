@@ -1,15 +1,27 @@
 // src/pages/ScheduledTasksPage.tsx
 import cn from 'classnames';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Card, Form, Table } from 'react-bootstrap';
+import { Alert, Badge, Card, Form, Table } from 'react-bootstrap';
+import { CalendarClock, Eye, EyeOff, Pencil, Play, Plus, Power, Trash2 } from 'lucide-react';
+import cronstrue from 'cronstrue';
 import { ScheduledTasksApi } from '../../api/scheduledTasks';
 import { ScrapersApi } from '../../api/scrapers';
 import { SquareButton as Button } from '../../components/button';
 import { FormCheck, FormInput, FormSelect, FormText } from '../../components/form';
-import { Icon } from '../../components/Icon';
-import { cardStyles, pageStyles, tableStyles } from '../../styles';
 import formStyles from '../../styles/Form.module.css';
 import type { Guid, ScheduledTask, ScraperDefinition } from '../../types/api';
+import styles from './AutomatePage.module.css';
+
+const cronPresets = [
+  { value: '*/15 * * * *', label: 'Every 15 minutes', description: 'Runs at 0, 15, 30, and 45 minutes past each hour.' },
+  { value: '0 * * * *', label: 'Hourly', description: 'Runs at the start of every hour.' },
+  { value: '0 */4 * * *', label: 'Every 4 hours', description: 'Runs every four hours, starting at midnight.' },
+  { value: '0 2 * * *', label: 'Daily at 2:00 AM', description: 'Runs every day at 2:00 AM.' },
+  { value: '0 8 * * 1-5', label: 'Weekdays at 8:00 AM', description: 'Runs Monday through Friday at 8:00 AM.' },
+  { value: '0 3 * * 0', label: 'Weekly, Sunday at 3:00 AM', description: 'Runs every Sunday at 3:00 AM.' },
+] as const;
+
+const cronFieldLabels = ['Minute', 'Hour', 'Day', 'Month', 'Weekday'];
 
 type SortKey =
   | 'name'
@@ -28,6 +40,7 @@ export const AutomatePage: React.FC = () => {
   const [tasks, setTasks] = useState<ScheduledTask[]>([]);
   const [scrapers, setScrapers] = useState<ScraperDefinition[]>([]);
   const [editing, setEditing] = useState<Partial<ScheduledTask>>({});
+  const [savedCronExpression, setSavedCronExpression] = useState<string | null>(null);
 
   const [isNew, setIsNew] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -105,9 +118,18 @@ export const AutomatePage: React.FC = () => {
     });
   }, [tasks, sort, showDisabled]);
 
+  const enabledCount = tasks.filter((task) => !task.isDisabled).length;
+  const runningCount = tasks.filter((task) => task.status === 'Running').length;
+  const disabledCount = tasks.filter((task) => task.isDisabled).length;
+  const currentCron = editing.cronExpression ?? '';
+  const matchingPreset = cronPresets.find((preset) => preset.value === currentCron);
+  const cronFields = currentCron.trim().split(/\s+/).slice(0, 5);
+  const cronDescription = describeCronExpression(currentCron);
+
   // Inline CRUD Form Invocation
   const startNew = () => {
     setIsNew(true);
+    setSavedCronExpression(null);
     setEditing({
       name: '',
       notes: '',
@@ -121,12 +143,14 @@ export const AutomatePage: React.FC = () => {
 
   const startEdit = (task: ScheduledTask) => {
     setIsNew(false);
+    setSavedCronExpression(task.cronExpression);
     setEditing({ ...task });
     setError(null);
   };
 
   const cancelEdit = () => {
     setEditing({});
+    setSavedCronExpression(null);
     setIsNew(false);
     setError(null);
   };
@@ -203,55 +227,63 @@ export const AutomatePage: React.FC = () => {
   };
 
   return (
-    <section>
-      <div className={pageStyles.pageHeader}>
+    <main className={styles.Page}>
+      <header className={styles.PageHeader}>
         <div>
-          <h2>Task Schedules</h2>
+          <p className={styles.Eyebrow}>AUTOMATION</p>
+          <h1>Task schedules</h1>
+          <p className={styles.Subtitle}>Control when scraper collections run and see what is coming up next.</p>
         </div>
-        <div style={{ display: 'flex', gap: '1em' }}>
+        <div className={styles.HeaderActions}>
           {tasks.some((t) => t.isDisabled) && (
             <Button
               variant="outline-primary"
               onClick={() => setShowDisabled(!showDisabled)}
             >
-              <Icon name={showDisabled ? 'visible' : 'invisible'} /> Disabled
-              Tasks
+              {showDisabled ? <EyeOff size={16} /> : <Eye size={16} />}
+              {showDisabled ? 'Hide disabled' : 'Show disabled'}
             </Button>
           )}
           <Button variant="primary" onClick={startNew}>
-            Add Task
+            <Plus size={16} /> Add schedule
           </Button>
         </div>
-      </div>
+      </header>
 
-      {error && !editing.name && (
-        <p className="error" style={{ color: '#ff6b6b' }}>
-          {error}
-        </p>
-      )}
-      {loading && <p>Loading orchestrations...</p>}
+      {error && !editing.name && <Alert variant="danger">{error}</Alert>}
+      {loading && <p className={styles.Loading}>Loading schedules...</p>}
 
-      <Card className={cn(cardStyles.BgCard, cardStyles.MarginBottom)}>
-        <Card.Body>
-          <Table className={tableStyles.Table} hover responsive>
+      <section className={styles.OverviewStrip} aria-label="Schedule summary">
+        <SummaryMetric icon={<CalendarClock size={17} />} label="Enabled schedules" value={enabledCount} />
+        <SummaryMetric icon={<Play size={16} />} label="Running now" value={runningCount} />
+        <SummaryMetric icon={<Power size={16} />} label="Disabled" value={disabledCount} />
+      </section>
+
+      <section className={styles.TableSection}>
+          <div className={styles.TableHeading}>
+            <div><h2>All schedules</h2><span>{processedTasks.length} shown</span></div>
+            <span className={styles.TableHint}>Select a column heading to sort</span>
+          </div>
+          <div className={styles.TableWrap}>
+          <Table className={styles.ScheduleTable} hover responsive>
             <thead>
               <tr>
-                <th onClick={() => onSort('name')}>
+                <th onClick={() => onSort('name')} className={styles.Sortable}>
                   Task Name{sortIndicator('name')}
                 </th>
-                <th onClick={() => onSort('cronExpression')}>
+                <th onClick={() => onSort('cronExpression')} className={styles.Sortable}>
                   Cron Expression{sortIndicator('cronExpression')}
                 </th>
-                <th onClick={() => onSort('selectionStrategy')}>
+                <th onClick={() => onSort('selectionStrategy')} className={styles.Sortable}>
                   Strategy{sortIndicator('selectionStrategy')}
                 </th>
-                <th onClick={() => onSort('status')}>
+                <th onClick={() => onSort('status')} className={styles.Sortable}>
                   Worker Status{sortIndicator('status')}
                 </th>
-                <th onClick={() => onSort('nextRunAtUtc')}>
+                <th onClick={() => onSort('nextRunAtUtc')} className={styles.Sortable}>
                   Next Run Due{sortIndicator('nextRunAtUtc')}
                 </th>
-                <th>Scrapers</th>
+                <th>Targets</th>
                 <th />
               </tr>
             </thead>
@@ -259,70 +291,70 @@ export const AutomatePage: React.FC = () => {
               {processedTasks.map((t) => (
                 <tr
                   key={t.id}
-                  className={t.isDisabled ? tableStyles.Disabled : ''}
+                  className={cn(t.isDisabled && styles.DisabledRow)}
                 >
                   <td>
-                    <strong>{t.name}</strong>
+                    <strong className={styles.TaskName}>{t.name}</strong>
+                    {t.notes && <small className={styles.TaskNotes}>{t.notes}</small>}
                   </td>
                   <td>
-                    <code>{t.cronExpression}</code>
+                    <strong className={styles.CronDescription}>{describeCron(t.cronExpression)}</strong>
+                    <code className={styles.CronCode}>{t.cronExpression}</code>
                   </td>
-                  <td>{t.selectionStrategy}</td>
-                  <td>{t.status}</td>
+                  <td><Badge bg="light" text="dark" className={styles.Badge}>{t.selectionStrategy === 'All' ? 'All active' : 'Selected'}</Badge></td>
+                  <td><TaskStatus status={t.status} disabled={t.isDisabled} /></td>
                   <td>
-                    {t.nextRunAtUtc
-                      ? new Date(t.nextRunAtUtc).toLocaleString()
-                      : '-'}
+                    <strong className={styles.NextRun}>{formatDateTime(t.nextRunAtUtc)}</strong>
                   </td>
                   <td>
-                    {t.selectionStrategy === 'All'
-                      ? 'All Active'
-                      : `${t.scraperIds?.length ?? 0} Selected`}
+                    <span className={styles.TargetCount}>
+                      {t.selectionStrategy === 'All'
+                        ? `${scrapers.filter((scraper) => !scraper.disabled && scraper.isEventFeed).length} feeds`
+                        : `${t.scraperIds?.length ?? 0} selected`}
+                    </span>
                   </td>
-                  <td className={tableStyles.TableActions}>
-                    <div>
-                      <Button onClick={() => startEdit(t)}>
-                        <Icon name="edit" />
-                      </Button>
-                      <Button onClick={() => toggleDisable(t)}>
-                        <Icon name={t.isDisabled ? 'disabled' : 'enable'} />
-                      </Button>
-                      <Button
-                        variant="outline-danger"
-                        onClick={() => remove(t)}
-                      >
-                        <Icon name="remove" />
-                      </Button>
-                    </div>
+                  <td className={styles.TableActions}>
+                    <button type="button" className={styles.IconAction} onClick={() => startEdit(t)} title={`Edit ${t.name}`} aria-label={`Edit ${t.name}`}>
+                      <Pencil size={15} />
+                    </button>
+                    <button type="button" className={styles.IconAction} onClick={() => toggleDisable(t)} title={t.isDisabled ? `Enable ${t.name}` : `Disable ${t.name}`} aria-label={t.isDisabled ? `Enable ${t.name}` : `Disable ${t.name}`}>
+                      <Power size={15} />
+                    </button>
+                    <button type="button" className={cn(styles.IconAction, styles.DangerAction)} onClick={() => remove(t)} title={`Delete ${t.name}`} aria-label={`Delete ${t.name}`}>
+                      <Trash2 size={15} />
+                    </button>
                   </td>
                 </tr>
               ))}
               {processedTasks.length === 0 && !loading && (
                 <tr>
-                  <td colSpan={7}>No scheduled tasks defined.</td>
+                  <td colSpan={7} className={styles.Empty}>No schedules match this view.</td>
                 </tr>
               )}
             </tbody>
           </Table>
-        </Card.Body>
-      </Card>
+            </div>
+      </section>
 
       {/* Inline Management Editor Block */}
       {editing.name !== undefined && (
-        <>
-          <hr />
-          <h4 style={{ marginBottom: '1rem' }}>
+        <section className={styles.EditorSection}>
+          <div className={styles.EditorHeading}>
+            <div>
+              <p className={styles.Eyebrow}>SCHEDULE CONFIGURATION</p>
+              <h2>
             {isNew
-              ? 'New Schedule Definition'
-              : `Edit Schedule: ${editing.name}`}
-          </h4>
+              ? 'New schedule'
+              : `Edit ${editing.name}`}
+              </h2>
+              <p>Times are interpreted as UTC by the worker.</p>
+            </div>
+          </div>
           {error && (
-            <p className="error" style={{ color: '#ff6b6b' }}>
-              {error}
-            </p>
+            <Alert variant="danger">{error}</Alert>
           )}
 
-          <Card className={cardStyles.BgCard}>
+          <Card className={styles.EditorCard}>
             <Card.Body>
               <Form
                 className={formStyles.form}
@@ -345,25 +377,52 @@ export const AutomatePage: React.FC = () => {
                   />
                 </div>
 
-                <div className={formStyles.formGroup}>
-                  <FormInput
-                    label="Cron Expression"
-                    value={editing.cronExpression ?? ''}
-                    placeholder="e.g. 0 */4 * * *"
-                    onChange={(cronExpression) =>
-                      setEditing({ ...editing, cronExpression })
-                    }
-                  />
-                  <small
-                    className="text-muted"
-                    style={{
-                      display: 'block',
-                      marginTop: '-0.5rem',
-                      marginBottom: '1rem',
+                <div className={cn(formStyles.formGroup, styles.CronEditor)}>
+                  <FormSelect
+                    label="Schedule pattern"
+                    value={matchingPreset?.value ?? 'custom'}
+                    options={[
+                      ...cronPresets.map((preset) => ({ value: preset.value, label: preset.label })),
+                      { value: 'custom', label: 'Custom expression' },
+                    ]}
+                    onChange={(value) => {
+                      const preset = cronPresets.find((candidate) => candidate.value === value);
+                      if (preset) {
+                        setEditing({ ...editing, cronExpression: preset.value });
+                      }
                     }}
-                  >
-                    Layout intervals: Minute, Hour, Day, Month, Day-of-Week
-                  </small>
+                  />
+
+                  <Form.Group>
+                    <Form.Label>Cron expression</Form.Label>
+                    <Form.Control
+                      value={currentCron}
+                      placeholder="e.g. 0 */4 * * *"
+                      onChange={(event) =>
+                        setEditing({ ...editing, cronExpression: event.target.value })
+                      }
+                    />
+                  </Form.Group>
+                  <div className={styles.SavedCron}>
+                    <span>Currently saved</span>
+                    <code>{savedCronExpression ?? 'Not saved yet'}</code>
+                  </div>
+                  <div className={styles.CronFieldGrid} aria-label="Cron expression fields">
+                    {cronFieldLabels.map((label, index) => (
+                      <div className={styles.CronField} key={label}>
+                        <span>{label}</span>
+                        <code>{cronFields[index] ?? '*'}</code>
+                      </div>
+                    ))}
+                  </div>
+                  <div className={styles.CronHelp}>
+                    <span className={styles.PreviewLabel}>Schedule preview</span>
+                    <strong className={cronDescription.valid ? undefined : styles.InvalidCron}>
+                      {cronDescription.description}
+                    </strong>
+                    <span>{matchingPreset?.description ?? 'Five fields: minute, hour, day of month, month, and day of week.'}</span>
+                    <small><code>*</code> any value <code>*/n</code> interval <code>1-5</code> range</small>
+                  </div>
                 </div>
 
                 <FormSelect
@@ -451,10 +510,51 @@ export const AutomatePage: React.FC = () => {
               </Form>
             </Card.Body>
           </Card>
-        </>
+        </section>
       )}
-    </section>
+    </main>
   );
 };
+
+function SummaryMetric({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
+  return (
+    <div className={styles.SummaryMetric}>
+      <span className={styles.SummaryIcon}>{icon}</span>
+      <div><span>{label}</span><strong>{value}</strong></div>
+    </div>
+  );
+}
+
+function TaskStatus({ status, disabled }: { status: string; disabled: boolean }) {
+  if (disabled) return <Badge bg="secondary" className={styles.StatusBadge}>Disabled</Badge>;
+  const variant = status === 'Running' ? 'success' : status === 'Retrying' ? 'warning' : status === 'Error' || status === 'InvalidCron' ? 'danger' : 'light';
+  return <Badge bg={variant} text={variant === 'light' || variant === 'warning' ? 'dark' : undefined} className={styles.StatusBadge}>{status}</Badge>;
+}
+
+function describeCron(expression: string): string {
+  const preset = cronPresets.find((item) => item.value === expression);
+  return preset?.label ?? 'Custom schedule';
+}
+
+function describeCronExpression(expression: string): { description: string; valid: boolean } {
+  const fields = expression.trim().split(/\s+/);
+  if (!expression.trim()) return { description: 'Enter a cron expression to preview it.', valid: false };
+  if (fields.length !== 5) return { description: 'Use exactly five cron fields.', valid: false };
+
+  try {
+    return {
+      description: cronstrue.toString(expression, { use24HourTimeFormat: true }),
+      valid: true,
+    };
+  } catch {
+    return { description: 'This expression could not be interpreted.', valid: false };
+  }
+}
+
+function formatDateTime(value?: string | null): string {
+  if (!value) return 'Not scheduled';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? 'Not scheduled' : date.toLocaleString();
+}
 
 export default AutomatePage;

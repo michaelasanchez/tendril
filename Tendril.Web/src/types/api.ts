@@ -227,6 +227,23 @@ export interface ScheduledTaskRun {
   successfulAttemptCount: number;
   failedAttemptCount: number;
   inProgressAttemptCount: number;
+  attempts: ScheduledTaskRunAttempt[];
+}
+
+export interface ScheduledTaskRunAttempt {
+  id: Guid;
+  scraperDefinitionId: Guid;
+  scraperName: string;
+  status: 'Running' | 'Succeeded' | 'Failed' | string;
+  startTimeUtc: string;
+  endTimeUtc: string | null;
+  extracted: number;
+  mapped: number;
+  created: number;
+  updated: number;
+  skipped: number;
+  errored: number;
+  errorMessage: string | null;
 }
 
 export interface ScrapedEventRaw {

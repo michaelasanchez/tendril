@@ -60,10 +60,11 @@ export const AttemptHistoryPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    var abortController = new AbortController();
+    const abortController = new AbortController();
 
     loadScrapers(abortController.signal);
     loadInitialAttempts(abortController.signal);
+    return () => abortController.abort();
   }, [scraperId]);
 
   const loadScrapers = useCallback(async (signal?: AbortSignal) => {
@@ -99,7 +100,7 @@ export const AttemptHistoryPage: React.FC = () => {
     } finally {
       setLoading((prev) => ({ ...prev, attempts: false }));
     }
-  }, []);
+  }, [scraperId]);
 
   const loadMore = useCallback(async (signal?: AbortSignal) => {
     if (!nextCursor) return;
@@ -117,7 +118,7 @@ export const AttemptHistoryPage: React.FC = () => {
     } finally {
       setLoading((prev) => ({ ...prev, attempts: false }));
     }
-  }, []);
+  }, [nextCursor, scraperId]);
 
   const handleSelectAttempt = async (attempt: ScraperAttemptHistory) => {
     setSelectedAttempt(attempt);
@@ -152,7 +153,7 @@ export const AttemptHistoryPage: React.FC = () => {
 
   return (
     <div className="p-4">
-      <h2 className="mb-4">Scraper Run History</h2>
+      <h2 className="mb-4">Scraper Attempt History</h2>
 
       <Row>
         {/* LEFT COLUMN: HISTORY LIST */}
@@ -211,9 +212,10 @@ export const AttemptHistoryPage: React.FC = () => {
                   variant="link"
                   size="sm"
                   className="text-center w-100 py-3"
+                  disabled={loading.attempts}
                   onClick={() => loadMore()}
                 >
-                  Load Older...
+                  {loading.attempts ? 'Loading older attempts...' : 'Load older attempts'}
                 </Button>
               )}
             </ListGroup>

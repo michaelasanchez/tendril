@@ -13,6 +13,7 @@
   "dependencies": {
     "bootstrap": "^5.3.8",
     "classnames": "^2.5.1",
+    "cronstrue": "^3.38.0",
     "date-arithmetic": "^4.1.0",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.33.0",

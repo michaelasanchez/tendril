@@ -87,7 +87,7 @@ export const ReviewPage: React.FC = () => {
     <section className="container-fluid py-4">
       <div className={pageStyles.pageHeader}>
         <h2>
-          Pending Review Pipeline (
+          Pending Event Review (
           {loading ? (
             <Spinner animation="border" variant="light" size="sm" />
           ) : (
