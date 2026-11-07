@@ -2,6 +2,7 @@ using Tendril.Core.Domain.Entities;
 using Tendril.Core.Domain.Enums;
 using Tendril.Core.Interfaces.Repositories;
 using Tendril.Engine.Abstractions;
+using Tendril.Engine.Playwright;
 using Tendril.Worker.Infrastructure;
 using Tendril.Worker.Utils;
 
@@ -54,8 +55,10 @@ public sealed class Worker(
     private async Task RecoverOnStartupAsync(CancellationToken ct)
     {
         // Kill leftover Chrome from a crash / power loss, then wipe stale profiles.
-        BrowserProcessSweeper.KillByCommandLineMatch(BrowserPaths.ProfileRoot, logger);
-        BrowserPaths.DeleteAllProfiles(logger);
+        //BrowserProcessSweeper.KillByCommandLineMatch(BrowserPaths.ProfileRoot, logger);
+        //BrowserPaths.DeleteAllProfiles(logger);
+        BrowserProcessSweeper.KillByCommandLineMatch("--remote-debugging-port=9222", logger);
+        BrowserProcessSweeper.KillByCommandLineMatch("ms-playwright", logger);
 
         await using var scope = scopeFactory.CreateAsyncScope();
         var taskRepo = scope.ServiceProvider.GetRequiredService<IScheduledTaskRepository>();
@@ -97,6 +100,7 @@ public sealed class Worker(
         var taskRunRepo = sp.GetRequiredService<IScheduledTaskRunRepository>();
         var scraperRepo = sp.GetRequiredService<IScraperRepository>();
         var ingestion = sp.GetRequiredService<IIngestionService>();
+        var browsers = sp.GetRequiredService<PlaywrightContextFactory>();
 
         var task = await taskRepo.GetByIdAsync(taskId, ct);
         if (task is null || task.IsDisabled) return;
@@ -152,11 +156,13 @@ public sealed class Worker(
                 }
 
                 // Item 17: leak trend over weeks of uptime.
-                //logger.LogInformation(
-                //    "After scraper {ScraperId}: chrome={ChromeMb} MB, dotnet={DotnetMb} MB",
-                //    scraper.Id,
-                //    BrowserProcessSweeper.GetWorkingSetMb(BrowserPaths.ProfileRoot),
-                //    GC.GetTotalMemory(false) / (1024 * 1024));
+                logger.LogInformation(
+                    "After scraper {ScraperId}: chrome={ChromeMb} MB, dotnet={DotnetMb} MB",
+                    scraper.Id,
+                    BrowserProcessSweeper.GetWorkingSetMb(BrowserPaths.ProfileRoot),
+                    GC.GetTotalMemory(false) / (1024 * 1024));
+
+                await browsers.StopPersistentChromeAsync();
             }
 
             run = await taskRunRepo.GetByIdWithAttemptsAsync(run.Id, ct) ?? run;
@@ -189,6 +195,8 @@ public sealed class Worker(
         }
         finally
         {
+            await browsers.RecycleAsync();
+
             try
             {
                 // CancellationToken.None: ct may already be cancelled during shutdown.
