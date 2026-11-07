@@ -26,6 +26,7 @@ public static class DependencyInjection
         services.AddScoped<DynamicScraper>();
         services.AddScoped<StaticScraper>();
 
+        services.AddOptions<BrowserOptions>();
         services.AddSingleton<PlaywrightContextFactory>();
 
         return services;

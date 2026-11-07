@@ -350,6 +350,38 @@ namespace Tendril.Data.Migrations
                     b.ToTable("ScheduledTaskRuns");
                 });
 
+            modelBuilder.Entity("Tendril.Core.Domain.Entities.WorkerSession", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("LastHeartbeatAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("MachineName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<int>("ProcessId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("StartedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset?>("StoppedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StartedAtUtc");
+
+                    b.HasIndex("MachineName", "StartedAtUtc");
+
+                    b.ToTable("WorkerSession", (string)null);
+                });
+
             modelBuilder.Entity("Tendril.Core.Domain.Entities.ScrapedEventRaw", b =>
                 {
                     b.Property<Guid>("Id")

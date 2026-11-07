@@ -42,11 +42,13 @@ public class ScheduledTaskRunRepository(TendrilDbContext db) : IScheduledTaskRun
     /// </summary>
     public async Task<ScheduledTaskRun?> GetIncompleteRunAsync(Guid scheduledTaskId, CancellationToken ct = default)
     {
+        // Only runs that are still in progress. A Failed run is finished: resuming it would skip
+        // every scraper that succeeded back then and fail again without any retries.
+        // AttemptHistories are deliberately not loaded; use GetSucceededScraperIdsAsync.
         return await db.ScheduledTaskRuns
-            .Include(r => r.AttemptHistories)
-            // You can adjust the string literals to Enums later if you prefer
-            .Where(r => r.ScheduledTaskId == scheduledTaskId && r.Status != RunStatus.Completed)
-            .OrderByDescending(r => r.StartTimeUtc) // Grab the most recent incomplete one
+            .Where(r => r.ScheduledTaskId == scheduledTaskId
+                        && (r.Status == RunStatus.Running || r.Status == RunStatus.Retrying))
+            .OrderByDescending(r => r.StartTimeUtc)
             .FirstOrDefaultAsync(ct);
     }
 
@@ -60,6 +62,37 @@ public class ScheduledTaskRunRepository(TendrilDbContext db) : IScheduledTaskRun
             .Include(r => r.AttemptHistories)
             .FirstOrDefaultAsync(r => r.Id == id, ct);
     }
+
+    public Task<List<ScheduledTaskRun>> GetRecentAsync(int limit, CancellationToken ct = default) =>
+        db.ScheduledTaskRuns
+            .AsNoTracking()
+            .Include(run => run.ScheduledTask)
+            .Include(run => run.AttemptHistories)
+            .OrderByDescending(run => run.StartTimeUtc)
+            .Take(limit)
+            .ToListAsync(ct);
+
+    public async Task<HashSet<Guid>> GetSucceededScraperIdsAsync(Guid runId, CancellationToken ct = default)
+    {
+        var ids = await db.ScheduledTaskRuns
+            .AsNoTracking()
+            .Where(r => r.Id == runId)
+            .SelectMany(r => r.AttemptHistories)
+            .Where(a => a.Success)
+            .Select(a => a.ScraperDefinitionId)
+            .Distinct()
+            .ToListAsync(ct);
+
+        return [.. ids];
+    }
+
+    public Task<int> CloseInterruptedAttemptsAsync(DateTimeOffset now, CancellationToken ct = default) =>
+        db.AttemptHistory
+            .Where(a => a.ScheduledTaskRunId != null && a.ErrorMessage == "Running...")
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(a => a.Success, false)
+                .SetProperty(a => a.EndTimeUtc, now)
+                .SetProperty(a => a.ErrorMessage, (string?)"Interrupted: the worker stopped before this attempt finished."), ct);
 
     #endregion
 }

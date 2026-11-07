@@ -27,6 +27,7 @@ public static class DependencyInjection
         services.AddScoped<IRawEventRepository, RawEventRepository>();
         services.AddScoped<IScheduledTaskRepository, ScheduledTaskRepository>();
         services.AddScoped<IScheduledTaskRunRepository, ScheduledTaskRunRepository>();
+        services.AddScoped<IWorkerSessionRepository, WorkerSessionRepository>();
         services.AddScoped<IScraperRepository, ScraperRepository>();
         services.AddScoped<IActionRepository, ActionRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();

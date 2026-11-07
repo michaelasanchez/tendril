@@ -104,9 +104,13 @@ public class ScrapeExecutor(
             ? await scope.BrowserContext.NewPageAsync()
             : scope.GetPage() ?? await scope.BrowserContext.NewPageAsync();
 
+        // Playwright calls take no CancellationToken. Closing the page makes any pending call
+        // throw immediately, so a shutdown or the per-scraper deadline can interrupt a stuck page.
+        using var abortOnCancel = ct.Register(static p => _ = CloseQuietlyAsync((IPage)p!), page);
+
         try
         {
-            await foreach (var item in dynamicLogic.ExecuteAsync(page, def, context).WithCancellation(ct))
+            await foreach (var item in dynamicLogic.ExecuteAsync(page, def, context, ct))
             {
                 if (item.ChildScraperId is not null)
                 {
@@ -149,6 +153,12 @@ public class ScrapeExecutor(
                 // ignore any other close errors, the context dispose will handle it
             }
         }
+    }
+
+    private static async Task CloseQuietlyAsync(IPage page)
+    {
+        try { await page.CloseAsync(); }
+        catch { /* already closed or the connection is gone */ }
     }
 
     // --- PIPELINE 3: API --- //

@@ -21,6 +21,10 @@ public class IngestionService(
     IClassificationService classifier,
     IScrapeExecutor executor) : IIngestionService
 {
+    // Hard cap on one scraper's wall-clock time. Playwright timeouts are per operation, so
+    // without this a scraper that keeps paginating (or keeps hitting slow pages) never ends.
+    private static readonly TimeSpan MaxRuntime = TimeSpan.FromMinutes(30);
+
     public async Task<IngestResult> Ingest(
         ScraperDefinition scraper,
         Guid? scheduledTaskRunId = null,
@@ -56,10 +60,15 @@ public class IngestionService(
         context.AddLog(ScraperAttemptLogLevel.Information,
             $"Started ingestion for scraper '{scraper.Name}' ({scraper.Id}, {scraper.ExecutionMode}).");
 
+        // Linked to the caller's token: shutdown cancels both, the deadline cancels only this one.
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        deadline.CancelAfter(MaxRuntime);
+        var token = deadline.Token;
+
         try
         {
             // 2. Consume the Stream (Process 1 item at a time)
-            await foreach (var raw in executor.RunScraperAsync(scraper, context, cancellationToken))
+            await foreach (var raw in executor.RunScraperAsync(scraper, context, token))
             {
                 extracted++;
 
@@ -73,7 +82,7 @@ public class IngestionService(
                     RawDataJson = JsonSerializer.Serialize(raw)
                 };
 
-                await rawEvents.AddAsync(rawEntity, cancellationToken);
+                await rawEvents.AddAsync(rawEntity, token);
 
                 rawEntities.Add(rawEntity);
 
@@ -152,7 +161,14 @@ public class IngestionService(
         catch (Exception ex)
         {
             // 4. Failure Completion
-            var wasCanceled = ex is OperationCanceledException && cancellationToken.IsCancellationRequested;
+            // Playwright can't be cancelled directly (the executor closes the page instead), so a
+            // cancellation may surface as a PlaywrightException. Judge by the tokens, not the type.
+            var wasCanceled = cancellationToken.IsCancellationRequested;
+            var timedOut = !wasCanceled && deadline.IsCancellationRequested;
+            var failure = timedOut
+                ? $"Exceeded the {MaxRuntime.TotalMinutes:0} minute time limit."
+                : ex.Message;
+
             if (wasCanceled)
             {
                 logger.LogInformation(ex, "Scraper job was canceled");
@@ -163,16 +179,16 @@ public class IngestionService(
             {
                 logger.LogError(ex, "Scraper job failed");
                 context.AddLog(ScraperAttemptLogLevel.Error,
-                    $"Scraper '{scraper.Name}' failed: {ex.Message}");
+                    $"Scraper '{scraper.Name}' failed: {failure}");
 
                 scraper.State = ScraperState.Unhealthy;
-                scraper.StateMessage = $"Scraper failed: {ex.Message}";
+                scraper.StateMessage = $"Scraper failed: {failure}";
                 scraper.LastFailureUtc = DateTimeOffset.UtcNow;
-                scraper.LastErrorMessage = ex.Message;
+                scraper.LastErrorMessage = failure;
             }
 
             attempt.Success = false;
-            attempt.ErrorMessage = wasCanceled ? "Ingestion canceled." : ex.Message;
+            attempt.ErrorMessage = wasCanceled ? "Ingestion canceled." : failure;
         }
         finally
         {

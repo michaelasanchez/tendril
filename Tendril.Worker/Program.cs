@@ -1,10 +1,26 @@
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Net;
 using Tendril.Data;
 using Tendril.Engine;
+using Tendril.Engine.Playwright;
 using Tendril.Worker;
+using Tendril.Worker.Infrastructure;
+
+// Only one worker may run: startup recovery assumes any task left in "Running" is an orphan.
+// ProgramData is writable by every account, including a service account.
+var lockPath = Path.Combine(
+    Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Tendril", "worker.lock");
+
+using var instanceGuard = SingleInstanceGuard.TryAcquire(lockPath);
+if (instanceGuard is null)
+{
+    Console.Error.WriteLine("Another Tendril worker is already running. Exiting.");
+    return 1;
+}
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseWindowsService(); // no-op when run from a console
 
 var cookieContainer = new CookieContainer();
 builder.Services.AddSingleton(cookieContainer);
@@ -31,14 +47,17 @@ builder.Services.AddHttpClient("ScraperClient")
         client.DefaultRequestHeaders.Add("Upgrade-Insecure-Requests", "1");
     });
 
-builder.Services.AddDbContext<TendrilDbContext>(options =>
-{
-    options.UseSqlServer(builder.Configuration.GetConnectionString("Default"));
-});
-
+// AddDataServices registers TendrilDbContext (previously registered twice).
 builder.Services.AddDataServices(builder.Configuration);
 builder.Services.AddEngineServices();
 
+builder.Services.TryAddSingleton(TimeProvider.System);
+builder.Services.Configure<BrowserOptions>(builder.Configuration.GetSection("Browser"));
+
+// Time to unwind a scraper and stop Chrome before the host gives up.
+builder.Services.Configure<HostOptions>(o => o.ShutdownTimeout = TimeSpan.FromSeconds(45));
+
+builder.Services.AddHostedService<WorkerSessionHostedService>();
 builder.Services.AddHostedService<Worker>();
 
 var app = builder.Build();
@@ -46,3 +65,5 @@ var app = builder.Build();
 app.MapGet("/", () => "Tendril Background Worker is running...");
 
 app.Run();
+
+return 0;

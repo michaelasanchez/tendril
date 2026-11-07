@@ -1,18 +1,17 @@
-﻿using Microsoft.Playwright;
+﻿using Microsoft.Extensions.Options;
+using Microsoft.Playwright;
 using System.Diagnostics;
 using Tendril.Core.Domain.Entities;
 
 namespace Tendril.Engine.Playwright;
 
-public sealed class PlaywrightContextFactory : IAsyncDisposable
+public sealed class PlaywrightContextFactory(IOptions<BrowserOptions> options) : IAsyncDisposable
 {
-    private const string ChromePath = @"C:\Program Files\Google\Chrome\Application\chrome.exe";
-
-    // Existing persistent profiles live here (C:\temp\{scraperId}), so logins survive.
-    private const string ProfileRoot = @"C:\temp";
-
-    private const int DebugPort = 9222;
-    private static readonly string DebugUrl = $"http://127.0.0.1:{DebugPort}";
+    // Existing persistent profiles live under ProfileRoot ({root}\{scraperId}), so logins survive.
+    private string ChromePath => options.Value.ChromePath;
+    private string ProfileRoot => options.Value.ProfileRoot;
+    private int DebugPort => options.Value.DebugPort;
+    private string DebugUrl => $"http://127.0.0.1:{DebugPort}";
 
     // Cold start of Chrome on an old machine can be slow.
     private static readonly TimeSpan ChromeStartTimeout = TimeSpan.FromSeconds(45);
@@ -136,6 +135,13 @@ public sealed class PlaywrightContextFactory : IAsyncDisposable
     private async Task<IBrowserContext> LaunchPersistentChromeAsync(
         IPlaywright playwright, ScraperDefinition def)
     {
+        // If something already answers on our port, connecting would silently attach to the
+        // wrong browser (for example the API's, or a leftover Chrome).
+        if (await IsDebugPortAnsweringAsync())
+            throw new InvalidOperationException(
+                $"Something is already answering on debug port {DebugPort}. " +
+                "Set Browser:DebugPort to a port no other process uses.");
+
         var userDataDir = Path.Combine(ProfileRoot, def.Id.ToString());
         Directory.CreateDirectory(userDataDir);
         TrimCaches(userDataDir);
@@ -208,7 +214,7 @@ public sealed class PlaywrightContextFactory : IAsyncDisposable
         }
     }
 
-    private static async Task WaitForChromeAsync(Process process)
+    private async Task WaitForChromeAsync(Process process)
     {
         using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(2) };
         var sw = Stopwatch.StartNew();
@@ -236,6 +242,21 @@ public sealed class PlaywrightContextFactory : IAsyncDisposable
         }
 
         throw new TimeoutException("Chrome did not become ready in time.");
+    }
+
+    private async Task<bool> IsDebugPortAnsweringAsync()
+    {
+        using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(2) };
+
+        try
+        {
+            using var response = await http.GetAsync($"{DebugUrl}/json/version");
+            return response.IsSuccessStatusCode;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private static void TrimCaches(string userDataDir)

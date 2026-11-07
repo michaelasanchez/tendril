@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Tendril.Core.Domain;
 using Tendril.Core.Domain.Entities;
 using Tendril.Core.Domain.Enums;
 using Tendril.Core.Interfaces.Repositories;
@@ -55,40 +56,15 @@ public class ScheduledTaskRepository(TendrilDbContext db) : IScheduledTaskReposi
 
     #region Worker Specific Methods
 
-    /// <summary>
-    /// Locates the oldest pending task that is due for execution.
-    /// </summary>
-    public async Task<ScheduledTask?> GetNextDueTaskAsync(DateTimeOffset now, CancellationToken ct = default)
-    {
-        return await db.ScheduledTasks
-            .Where(t => !t.IsDisabled && t.Status == Core.Domain.Entities.ScheduledTaskStatus.Idle && t.NextRunAtUtc <= now)
-            .OrderBy(t => t.NextRunAtUtc)
-            .FirstOrDefaultAsync(ct);
-    }
-
-    /// <summary>
-    /// Resolves the collection of active scrapers assigned to run under this task, 
-    /// evaluated against the task's SelectionStrategy.
-    /// </summary>
-    public async Task<List<ScraperDefinition>> GetScrapersForTaskAsync(ScheduledTask task, CancellationToken ct = default)
-    {
-        // Strategy: Run all active scrapers in the entire platform
-        if (task.SelectionStrategy == SelectionStrategy.All)
-        {
-            return await db.Scrapers
-                .AsNoTracking()
-                .ToListAsync(ct);
-        }
-
-        // Strategy: Run only the specific scrapers mapped via the associative table
-        return await db.ScheduledTasks
-            .Where(t => t.Id == task.Id)
-            .SelectMany(t => t.ScraperDefinitions)
+    public Task<ScheduledTaskSnapshot?> GetSnapshotAsync(Guid id, CancellationToken ct = default) =>
+        db.ScheduledTasks
             .AsNoTracking()
-            .ToListAsync(ct);
-    }
+            .Where(t => t.Id == id)
+            .Select(t => new ScheduledTaskSnapshot(
+                t.Id, t.Name, t.IsDisabled, t.CronExpression, t.SelectionStrategy, t.MaxRetries))
+            .FirstOrDefaultAsync(ct);
 
-    public Task<List<Guid>> GetDueTaskIdsAsync(DateTimeOffset now, CancellationToken ct) =>
+    public Task<List<Guid>> GetDueTaskIdsAsync(DateTimeOffset now, CancellationToken ct = default) =>
         db.ScheduledTasks
             .AsNoTracking()
             .Where(t => !t.IsDisabled
@@ -98,13 +74,73 @@ public class ScheduledTaskRepository(TendrilDbContext db) : IScheduledTaskReposi
             .Select(t => t.Id)
             .ToListAsync(ct);
 
+    public Task<List<Guid>> GetEventFeedScraperIdsAsync(
+        Guid taskId, SelectionStrategy strategy, CancellationToken ct = default)
+    {
+        IQueryable<ScraperDefinition> scrapers;
+
+        switch (strategy)
+        {
+            case SelectionStrategy.All:
+                scrapers = db.Scrapers.AsNoTracking();
+                break;
+
+            case SelectionStrategy.Selected:
+                scrapers = db.ScheduledTasks
+                    .AsNoTracking()
+                    .Where(t => t.Id == taskId)
+                    .SelectMany(t => t.ScraperDefinitions);
+                break;
+
+            default:
+                return Task.FromResult(new List<Guid>());
+        }
+
+        return scrapers
+            .Where(s => s.IsEventFeed)
+            .OrderBy(s => s.Name)
+            .Select(s => s.Id)
+            .ToListAsync(ct);
+    }
+
     // Safe only because exactly one worker process ever runs (enforced by SingleInstanceGuard).
-    public Task<int> RecoverOrphanedRunningTasksAsync(DateTimeOffset now, CancellationToken ct) =>
+    public Task<int> RecoverOrphanedRunningTasksAsync(DateTimeOffset now, CancellationToken ct = default) =>
         db.ScheduledTasks
             .Where(t => t.Status == ScheduledTaskStatus.Running)
             .ExecuteUpdateAsync(s => s
                 .SetProperty(t => t.Status, ScheduledTaskStatus.Retrying)
                 .SetProperty(t => t.NextRunAtUtc, now), ct);
+
+    public Task MarkRunStartedAsync(Guid id, DateTimeOffset startedAtUtc, CancellationToken ct = default) =>
+        db.ScheduledTasks
+            .Where(t => t.Id == id)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(t => t.Status, ScheduledTaskStatus.Running)
+                .SetProperty(t => t.LastRunStartedAtUtc, (DateTimeOffset?)startedAtUtc), ct);
+
+    public Task SaveScheduleAsync(
+        Guid id, ScheduledTaskStatus status, DateTimeOffset nextRunAtUtc,
+        DateTimeOffset completedAtUtc, CancellationToken ct = default) =>
+        db.ScheduledTasks
+            .Where(t => t.Id == id)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(t => t.Status, status)
+                .SetProperty(t => t.NextRunAtUtc, nextRunAtUtc)
+                .SetProperty(t => t.LastRunCompletedAtUtc, (DateTimeOffset?)completedAtUtc), ct);
+
+    public Task SetStatusAsync(Guid id, ScheduledTaskStatus status, CancellationToken ct = default) =>
+        db.ScheduledTasks
+            .Where(t => t.Id == id)
+            .ExecuteUpdateAsync(s => s.SetProperty(t => t.Status, status), ct);
+
+    public Task DisableAsync(
+        Guid id, ScheduledTaskStatus status, DateTimeOffset completedAtUtc, CancellationToken ct = default) =>
+        db.ScheduledTasks
+            .Where(t => t.Id == id)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(t => t.IsDisabled, true)
+                .SetProperty(t => t.Status, status)
+                .SetProperty(t => t.LastRunCompletedAtUtc, (DateTimeOffset?)completedAtUtc), ct);
 
     #endregion
 }

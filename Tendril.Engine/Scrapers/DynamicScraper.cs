@@ -1,4 +1,5 @@
 ﻿using Microsoft.Playwright;
+using System.Runtime.CompilerServices;
 using Tendril.Core.Domain.Entities;
 using Tendril.Core.Domain.Enums;
 using Tendril.Engine.Extensions;
@@ -14,7 +15,8 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
     public async IAsyncEnumerable<ScrapeYieldItem> ExecuteAsync(
         IPage page,
         ScraperDefinition definition,
-        ScrapeContext context)
+        ScrapeContext context,
+        [EnumeratorCancellation] CancellationToken ct = default)
     {
         // 1. NAVIGATION
         try
@@ -92,10 +94,14 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
 
         do
         {
+            ct.ThrowIfCancellationRequested();
+
             var items = await page.QuerySelectorAllAsync($"{container.Selector}:not(.{ProcessedClass})");
 
             foreach (var item in items)
             {
+                ct.ThrowIfCancellationRequested();
+
                 var result = new ScrapeYieldItem();
 
                 var partial = false;

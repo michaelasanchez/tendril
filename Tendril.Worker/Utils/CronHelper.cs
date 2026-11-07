@@ -1,33 +1,42 @@
-﻿using Cronos;
-using Tendril.Core.Domain.Entities;
+using Cronos;
 
 namespace Tendril.Worker.Utils;
 
+public enum NextRunResult
+{
+    Scheduled,
+    NoFutureOccurrence,
+    InvalidExpression
+}
+
 public static class CronHelper
 {
-    public static void CalculateNextRun(ScheduledTask task, DateTimeOffset fromTime)
+    /// <summary>
+    /// Pure calculation: the worker applies the result with targeted updates, so it never
+    /// mutates (or saves) a tracked ScheduledTask.
+    /// </summary>
+    public static NextRunResult TryGetNextRun(
+        string cronExpression, DateTimeOffset fromTime, out DateTimeOffset nextRunAtUtc)
     {
+        nextRunAtUtc = default;
+
+        if (string.IsNullOrWhiteSpace(cronExpression))
+            return NextRunResult.InvalidExpression;
+
         try
         {
-            var expression = CronExpression.Parse(task.CronExpression);
-            var nextOccurrence = expression.GetNextOccurrence(fromTime.UtcDateTime);
+            var expression = CronExpression.Parse(cronExpression);
+            var next = expression.GetNextOccurrence(fromTime.UtcDateTime);
 
-            if (nextOccurrence.HasValue)
-            {
-                task.NextRunAtUtc = new DateTimeOffset(nextOccurrence.Value, TimeSpan.Zero);
-                //logger.LogInformation("Task '{Name}' rescheduled for {NextRun}", task.Name, task.NextRunAtUtc);
-            }
-            else
-            {
-                task.IsDisabled = true;
-                //logger.LogWarning("Task '{Name}' has a CRON expression that yields no future occurrences. Disabling task.", task.Name);
-            }
+            if (next is null)
+                return NextRunResult.NoFutureOccurrence;
+
+            nextRunAtUtc = new DateTimeOffset(next.Value, TimeSpan.Zero);
+            return NextRunResult.Scheduled;
         }
-        catch (CronFormatException ex)
+        catch (CronFormatException)
         {
-            task.IsDisabled = true;
-            task.Status = ScheduledTaskStatus.InvalidCron;
-            //logger.LogError(ex, "Task '{Name}' has a malformed CRON expression. Disabling task.", task.Name);
+            return NextRunResult.InvalidExpression;
         }
     }
 }
