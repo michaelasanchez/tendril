@@ -13,4 +13,8 @@ public interface IScheduledTaskRepository
 
     Task<ScheduledTask?> GetNextDueTaskAsync(DateTimeOffset now, CancellationToken ct = default);
     Task<List<ScraperDefinition>> GetScrapersForTaskAsync(ScheduledTask task, CancellationToken ct = default);
+
+
+    Task<List<Guid>> GetDueTaskIdsAsync(DateTimeOffset now, CancellationToken ct);
+    Task<int> RecoverOrphanedRunningTasksAsync(DateTimeOffset now, CancellationToken ct);
 }

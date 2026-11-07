@@ -88,5 +88,23 @@ public class ScheduledTaskRepository(TendrilDbContext db) : IScheduledTaskReposi
             .ToListAsync(ct);
     }
 
+    public Task<List<Guid>> GetDueTaskIdsAsync(DateTimeOffset now, CancellationToken ct) =>
+        db.ScheduledTasks
+            .AsNoTracking()
+            .Where(t => !t.IsDisabled
+                        && (t.Status == ScheduledTaskStatus.Idle || t.Status == ScheduledTaskStatus.Retrying)
+                        && t.NextRunAtUtc <= now)
+            .OrderBy(t => t.NextRunAtUtc)
+            .Select(t => t.Id)
+            .ToListAsync(ct);
+
+    // Safe only because exactly one worker process ever runs (enforced by SingleInstanceGuard).
+    public Task<int> RecoverOrphanedRunningTasksAsync(DateTimeOffset now, CancellationToken ct) =>
+        db.ScheduledTasks
+            .Where(t => t.Status == ScheduledTaskStatus.Running)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(t => t.Status, ScheduledTaskStatus.Retrying)
+                .SetProperty(t => t.NextRunAtUtc, now), ct);
+
     #endregion
 }
