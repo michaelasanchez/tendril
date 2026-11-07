@@ -23,10 +23,21 @@
   margin-top: 1em;
 }
 
+.FormDropdown,
 .FormSelect,
 .FormInputSelect {
   .ClearButton {
     margin-left: 0.5em;
+  }
+
+  &.Pill {
+    button,
+    select {
+      background-color: var(--accent);
+      border: none;
+      border-radius: 2rem;
+      text-transform: uppercase;
+    }
   }
 }
 

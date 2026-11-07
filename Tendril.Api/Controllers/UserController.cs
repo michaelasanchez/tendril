@@ -48,7 +48,7 @@ public class UserController(ITokenService _tokenService, IUserRepository _userRe
             new AuthenticationProperties { IsPersistent = true }
         );
 
-        return Ok(new { user.Name, user.PictureUrl, user.Email });
+        return Ok(new { user.Name, user.PictureUrl, user.Email, user.IsAdmin });
     }
 
     [HttpPost("logout")]
@@ -74,7 +74,7 @@ public class UserController(ITokenService _tokenService, IUserRepository _userRe
         if (user == null) return NotFound();
 
         // 3. Return the profile info React needs to display the UI
-        return Ok(new { user.Name, user.PictureUrl, user.Email });
+        return Ok(new { user.Name, user.PictureUrl, user.Email, user.IsAdmin });
     }
 
     [HttpPost("refresh")]

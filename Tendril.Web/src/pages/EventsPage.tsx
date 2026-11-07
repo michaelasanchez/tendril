@@ -133,6 +133,24 @@ export const EventsPage: React.FC = () => {
     [],
   );
 
+  const loadEvent = useCallback(async (id: string, signal?: AbortSignal) => {
+    setLoading((prev) => ({ ...prev, event: true }));
+
+    try {
+      const result = await EventsApi.getById(id, signal);
+
+      setEvents((prev) =>
+        prev.map((e) => (e.id === id ? result : e)),
+      );
+    } catch (err) {
+      console.error('Failed to fetch event', err);
+    } finally {
+      if (!signal?.aborted) {
+        setLoading((prev) => ({ ...prev, event: false }));
+      }
+    }
+  }, []);
+
   const loadCategories = useCallback(async (signal?: AbortSignal) => {
     setLoading((prev) => ({ ...prev, categories: true }));
 
@@ -342,11 +360,13 @@ export const EventsPage: React.FC = () => {
             <Col lg={8} className={cn(styles.EventsColumn)}>
               <EventList
                 className={styles.EventList}
+                categories={categories}
                 events={filteredEvents}
                 favorites={favorites}
                 lastRef={lastElementRef}
                 onEventClick={(clicked) => navigate(`/event/${clicked.id}`)}
                 onFavorite={handleFavorite}
+                onReload={(event) => loadEvent(event.id)}
               />
               {loading.events && (
                 <div className={styles.Loading}>

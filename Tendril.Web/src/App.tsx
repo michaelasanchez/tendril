@@ -5,6 +5,7 @@ import { Container, Spinner } from 'react-bootstrap';
 import { Navigate, Outlet, Route, Routes, useNavigate } from 'react-router';
 import { SquareButton } from './components/button';
 import { Navbar } from './components/navbar';
+import { UserProvider } from './contexts/UserContext';
 import { useBootstrapTheme } from './hooks';
 import { useAuth } from './hooks/useAuth';
 import { EventsPage } from './pages';
@@ -135,7 +136,14 @@ export default function App() {
             <AttemptHistoryPage />} />
             </Route>
 
-            <Route path="*" element={<EventsPage />} />
+            <Route
+              path="*"
+              element={
+                <UserProvider user={user}>
+                  <EventsPage />
+                </UserProvider>
+              }
+            />
           </Routes>
         </Suspense>
       </Container>

@@ -7,4 +7,5 @@ public class UserDto
     public string Name { get; set; }
     public string PictureUrl { get; set; }
     public string RefreshToken { get; set; }
+    public string IsAdmin { get; set; }
 }

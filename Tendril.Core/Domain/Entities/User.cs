@@ -11,5 +11,7 @@ public class User
     public string? PictureUrl { get; set; }
     public string? RefreshToken { get; set; }
 
+    public bool IsAdmin { get; set; } = false;
+
     public DateTime CreatedAt { get; set; }
 }

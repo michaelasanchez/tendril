@@ -1,31 +1,40 @@
 import cn from 'classnames';
 import { format } from 'date-fns';
 import { Card } from 'react-bootstrap';
+import { EventsApi } from '../api/events';
 import NoImage from '../assets/no-image.svg';
 import { Badge } from '../components/badge';
 import { IconButton } from '../components/button';
+import { FormSelect } from '../components/form';
+import { FormDropdown } from '../components/form/FormDropdown';
 import { Icon } from '../components/Icon';
+import { useIsAdmin } from '../contexts/UserContext';
 import { cardStyles } from '../styles';
-import type { Event } from '../types/api';
+import type { Category, Event } from '../types/api';
 import styles from './EventCard.module.css';
 
 interface Props {
+  categories: Category[];
   event: Event;
   className?: string | CSSModuleClasses;
   favorite?: boolean;
   ref?: (node: HTMLDivElement | null) => void;
   onClick?: () => void;
   onFavorite?: () => void;
+  onReload?: () => void;
 }
 
 export const EventCard: React.FC<Props> = ({
   className,
+  categories,
   event,
   favorite,
   ref,
   onClick,
   onFavorite,
+  onReload,
 }) => {
+  const isAdmin = useIsAdmin();
   return (
     <Card
       key={event.id}
@@ -55,9 +64,38 @@ export const EventCard: React.FC<Props> = ({
             />
           </div>
           <div className={styles.TopRight}>
-            {!!event.categoryName && (
-              <Badge className={styles.Uppercase}>{event.categoryName}</Badge>
-            )}
+            {!!event.categoryName &&
+              (isAdmin ? (
+                <>
+                  <FormSelect
+                    pill={true}
+                    value={
+                      categories?.find((c) => c.name == event.categoryName)
+                        ?.id ?? ''
+                    }
+                    options={[
+                      { value: '', label: 'None' },
+                      ...(categories?.map((c) => ({
+                        value: c.id,
+                        label: c.name,
+                      })) ?? []),
+                    ]}
+                    onChange={(value) =>
+                      EventsApi.patch(event.id, {
+                        categoryId: value || null,
+                      }).then(() => onReload?.())
+                    }
+                  />
+                  <FormDropdown
+                    pill
+                    id={`event-${event.id}-dropdown`}
+                    title={<Icon name="menu" />}
+                    options={[]}
+                  />
+                </>
+              ) : (
+                <Badge className={styles.Uppercase}>{event.categoryName}</Badge>
+              ))}
           </div>
         </div>
       </div>

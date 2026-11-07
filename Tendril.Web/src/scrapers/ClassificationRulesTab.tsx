@@ -8,7 +8,7 @@ import {
   FormCheck,
   FormInput,
   FormSelect,
-  type SelectOption,
+  type Option,
 } from '../components/form';
 import { Icon } from '../components/Icon';
 import { cardStyles, pageStyles, tableStyles } from '../styles';
@@ -27,7 +27,7 @@ interface Props {
   categories: Category[];
 }
 
-const conditionTypeOptions: SelectOption[] = [
+const conditionTypeOptions: Option[] = [
   'Default',
   'Equals',
   'NotEquals',

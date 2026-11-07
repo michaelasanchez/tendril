@@ -8,7 +8,7 @@ import {
   FormInput,
   FormInputSelect,
   FormSelect,
-  type SelectOption,
+  type Option,
 } from '../components/form';
 import { Icon } from '../components/Icon';
 import { cardStyles, pageStyles, tableStyles } from '../styles';
@@ -25,7 +25,7 @@ interface Props {
   actions: ScraperAction[];
 }
 
-const transformTypeOptions: SelectOption[] = [
+const transformTypeOptions: Option[] = [
   'None',
   'Constant',
   'Trim',
@@ -44,7 +44,7 @@ const transformTypeOptions: SelectOption[] = [
   'SrcSetToUrl',
 ].map((o) => ({ value: o, label: o }));
 
-const targetFieldOptions: SelectOption[] = [
+const targetFieldOptions: Option[] = [
   'Title',
   'Location',
   'Description',
@@ -63,7 +63,7 @@ export const MappingRulesTab: React.FC<Props> = ({ scraperId, actions }) => {
   const [isNew, setIsNew] = useState(false);
   const [showDisabled, setShowDisabled] = useState(true);
 
-  const [sourceFieldOptions, setSourceFieldOptions] = useState<SelectOption[]>(
+  const [sourceFieldOptions, setSourceFieldOptions] = useState<Option[]>(
     [],
   );
 

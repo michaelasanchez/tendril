@@ -44,7 +44,7 @@ export interface FormDateProps {
   autoFocus?: boolean;
 }
 
-export interface SelectOption {
+export interface Option {
   value: string;
   label: string;
 }
@@ -53,9 +53,10 @@ export interface FormSelectProps {
   label?: string;
   value: string;
   onChange: (value: string) => void;
-  options: SelectOption[];
+  options: Option[];
   autoFocus?: boolean;
   clearable?: boolean;
   disabled?: boolean;
   placeholder?: string;
+  pill?: boolean;
 }

@@ -12,12 +12,14 @@ export const FormSelect: React.FC<FormSelectProps> = ({
   autoFocus = false,
   clearable = false,
   disabled = false,
+  pill = false,
 }) => (
-  <Form.Group className={styles.FormSelect}>
+  <Form.Group className={cn(styles.FormSelect, pill && styles.Pill)}>
     {!!label && <Form.Label>{label}</Form.Label>}
     <Form.Select
       value={value}
       onChange={(e) => onChange(e.target.value)}
+      onClick={(e) => e.stopPropagation()}
       autoFocus={autoFocus}
       disabled={disabled}
     >
