@@ -11,6 +11,7 @@ import { useAuth } from './hooks/useAuth';
 import { EventsPage } from './pages';
 
 const AttemptHistoryPage = lazy(() => import('./pages/admin/AttemptHistoryPage'));
+const AttemptDetailPage = lazy(() => import('./scrapers/AttemptDetailTab'));
 const AutomatePage = lazy(() => import('./pages/admin/AutomatePage'));
 const CategoriesPage = lazy(() => import('./pages/admin/CategoriesPage'));
 const ReviewPage = lazy(() => import('./pages/admin/ReviewPage'));
@@ -18,6 +19,7 @@ const ScraperEditorPage = lazy(() => import('./pages/admin/ScraperEditorPage'));
 const ScrapersPage = lazy(() => import('./pages/admin/ScrapersPage'));
 const TagsPage = lazy(() => import('./pages/admin/TagsPage'));
 const VenuesPage = lazy(() => import('./pages/admin/VenuesPage'));
+const WorkerPage = lazy(() => import('./pages/admin/WorkerPage'));
 
 function AdminLayout({
   authorized,
@@ -123,6 +125,7 @@ export default function App() {
                 element={<Navigate to="/admin/scrapers" replace />}
               />
               <Route path="scrapers" element={<ScrapersPage />} />
+              <Route path="scrapers/:scraperId/runs/:runId" element={<AttemptDetailPage />} />
               <Route
                 path="scrapers/:scraperId/:tabId?"
                 element={<ScraperEditorPage />}
@@ -130,6 +133,7 @@ export default function App() {
               <Route path="categories" element={<CategoriesPage />} />
               <Route path="tags" element={<TagsPage />} />
               <Route path="venues" element={<VenuesPage />} />
+              <Route path="worker" element={<WorkerPage />} />
               <Route path="automate" element={<AutomatePage />} />
               <Route path="review" element={<ReviewPage />} />
               <Route path="summary" element={

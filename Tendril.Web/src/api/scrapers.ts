@@ -198,8 +198,9 @@ export const ScrapersApi = {
   // Gets a single attempt's metadata
   getAttemptById(
     attemptId: string,
+    signal?: AbortSignal,
   ): Promise<ScraperAttemptHistory> {
-    return apiGet(`/attempt-histories/${attemptId}`);
+    return apiGet(`/attempt-histories/${attemptId}`, signal);
   },
 
   // Gets the raw JSON data for a specific run (Paginated)
@@ -207,6 +208,7 @@ export const ScrapersApi = {
     attemptId: string,
     limit?: number,
     cursor?: string,
+    signal?: AbortSignal,
   ): Promise<PagedResponse<ScrapedEventRaw>> {
     const params = new URLSearchParams();
     if (limit) params.append('limit', limit.toString());
@@ -215,15 +217,18 @@ export const ScrapersApi = {
     const query = params.toString() ? `?${params.toString()}` : '';
     return apiGet(
       `/attempt-histories/${attemptId}/raw-events${query}`,
+      signal,
     );
   },
 
   // Gets the list of actual changes made during a run
   getRevisionsByAttempt(
     attemptId: string,
+    signal?: AbortSignal,
   ): Promise<EventRevision[]> {
     return apiGet(
       `/attempt-histories/${attemptId}/revisions`,
+      signal,
     );
   },
 

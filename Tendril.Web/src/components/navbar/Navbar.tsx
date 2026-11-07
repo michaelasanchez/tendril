@@ -51,6 +51,7 @@ export const Navbar: React.FC<Props> = ({
             <Nav.Link href="/admin/venues">Venues</Nav.Link>
             <hr />
             <Nav.Link href="/admin/automate">Automate</Nav.Link>
+            <Nav.Link href="/admin/worker">Worker</Nav.Link>
             <Nav.Link href="/admin/review">Review</Nav.Link>
             <Nav.Link href="/admin/summary">Summary</Nav.Link>
             <hr />

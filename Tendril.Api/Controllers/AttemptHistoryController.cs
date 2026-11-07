@@ -22,6 +22,8 @@ public sealed class AttemptHistoryController(IAttemptHistoryRepository query) : 
         var resources = attempts.Select(a => new AttemptHistoryDto
         {
             Id = a.Id,
+            ScraperDefinitionId = a.ScraperDefinitionId,
+            ScheduledTaskRunId = a.ScheduledTaskRunId,
             ScraperName = a.ScraperDefinition.Name,
             StartTimeUtc = a.StartTimeUtc,
             EndTimeUtc = a.EndTimeUtc,
@@ -63,6 +65,8 @@ public sealed class AttemptHistoryController(IAttemptHistoryRepository query) : 
             Items = pagedAttempts.Items.Select(a => new AttemptHistoryDto
             {
                 Id = a.Id,
+                ScraperDefinitionId = a.ScraperDefinitionId,
+                ScheduledTaskRunId = a.ScheduledTaskRunId,
                 ScraperName = a.ScraperDefinition.Name,
                 StartTimeUtc = a.StartTimeUtc,
                 EndTimeUtc = a.EndTimeUtc,
@@ -89,6 +93,8 @@ public sealed class AttemptHistoryController(IAttemptHistoryRepository query) : 
         return Ok(new AttemptHistoryDto
         {
             Id = a.Id,
+            ScraperDefinitionId = a.ScraperDefinitionId,
+            ScheduledTaskRunId = a.ScheduledTaskRunId,
             ScraperName = a.ScraperDefinition.Name,
             StartTimeUtc = a.StartTimeUtc,
             EndTimeUtc = a.EndTimeUtc,
@@ -99,7 +105,15 @@ public sealed class AttemptHistoryController(IAttemptHistoryRepository query) : 
             Updated = a.Updated,
             Skipped = a.Skipped,
             Errored = a.Errored,
-            ErrorMessage = a.ErrorMessage
+            ErrorMessage = a.ErrorMessage,
+            LogEntries = a.LogEntries
+                .Select(x => new AttemptLogEntryDto
+                {
+                    TimestampUtc = x.TimestampUtc,
+                    Level = x.Level,
+                    Message = x.Message
+                })
+                .ToList()
         });
     }
 

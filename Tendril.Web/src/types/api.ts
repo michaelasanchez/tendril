@@ -185,10 +185,11 @@ export interface AttemptLogEntry {
 
 export interface ScraperAttemptHistory {
   id: Guid;
+  scraperDefinitionId: Guid;
+  scheduledTaskRunId: Guid | null;
   scraperName: string | null;
   startTimeUtc: string;
   endTimeUtc: string | null;
-  groupKey: string;
   success: boolean;
   extracted: number;
   mapped: number;
@@ -212,6 +213,20 @@ export interface ScheduledTask {
     lastRunStartedAtUtc: string | null ,
     lastRunCompletedAtUtc: string | null ,
     scraperIds: Guid[] ,
+}
+
+export interface ScheduledTaskRun {
+  id: Guid;
+  scheduledTaskId: Guid;
+  scheduledTaskName: string;
+  status: 'Running' | 'Completed' | 'Retrying' | 'Failed' | string;
+  startTimeUtc: string;
+  endTimeUtc: string | null;
+  retryCount: number;
+  attemptCount: number;
+  successfulAttemptCount: number;
+  failedAttemptCount: number;
+  inProgressAttemptCount: number;
 }
 
 export interface ScrapedEventRaw {

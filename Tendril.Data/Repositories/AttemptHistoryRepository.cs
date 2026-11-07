@@ -83,6 +83,7 @@ public class AttemptHistoryRepository(TendrilDbContext db) : IAttemptHistoryRepo
     {
         return await db.AttemptHistory
             .Include(x => x.ScraperDefinition)
+            .Include(x => x.LogEntries)
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == id, ct);
     }

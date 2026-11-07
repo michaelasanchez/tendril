@@ -7,12 +7,14 @@ import {
   ListGroup,
   Row,
   Spinner,
+  Stack,
   Tab,
   Table,
   Tabs,
 } from 'react-bootstrap';
 
 import cn from 'classnames';
+import { Link } from 'react-router';
 import { ScrapersApi } from '../../api/scrapers';
 import type {
   EventRevision,
@@ -50,6 +52,12 @@ export const AttemptHistoryPage: React.FC = () => {
     attempts: true,
   });
   const [detailLoading, setDetailLoading] = useState(false);
+  const [clockNow, setClockNow] = useState(Date.now());
+
+  useEffect(() => {
+    const timerId = window.setInterval(() => setClockNow(Date.now()), 1000);
+    return () => window.clearInterval(timerId);
+  }, []);
 
   useEffect(() => {
     var abortController = new AbortController();
@@ -160,19 +168,37 @@ export const AttemptHistoryPage: React.FC = () => {
               {attempts.map((a) => (
                 <ListGroup.Item
                   key={a.id}
-                  action
                   active={selectedAttempt?.id === a.id}
-                  onClick={() => handleSelectAttempt(a)}
-                  className="d-flex justify-content-between align-items-center"
+                  className="d-flex justify-content-between align-items-center gap-2"
                 >
-                  <div>
+                  <button
+                    type="button"
+                    className={cn('btn p-0 text-start border-0 flex-grow-1', selectedAttempt?.id === a.id ? 'text-white' : 'text-body')}
+                    onClick={() => handleSelectAttempt(a)}
+                  >
                     <em>{a.scraperName}</em>
-                    <small className="d-block text-muted">
+                    <small className={cn('d-block', selectedAttempt?.id === a.id ? 'text-white-50' : 'text-muted')}>
                       {new Date(a.startTimeUtc).toLocaleString()}
                     </small>
                     <strong>{a.extracted} items</strong>
-                  </div>
-                  {renderStatusBadge(a.success)}
+                    {a.errorMessage === 'Running...' && (
+                      <small className="d-block text-success fw-semibold">Running for {formatElapsed(a.startTimeUtc, clockNow)}</small>
+                    )}
+                  </button>
+                  <Stack gap={1} className="align-items-end">
+                    <Badge bg={a.scheduledTaskRunId ? 'primary' : 'secondary'}>
+                      {a.scheduledTaskRunId ? 'Scheduled' : 'Manual'}
+                    </Badge>
+                    <Link
+                      className="small"
+                      to={`/admin/scrapers/${a.scraperDefinitionId}/runs/${a.id}`}
+                    >
+                      Open
+                    </Link>
+                  </Stack>
+                  {a.errorMessage === 'Running...'
+                    ? <Badge bg="warning" text="dark">RUNNING</Badge>
+                    : renderStatusBadge(a.success)}
                 </ListGroup.Item>
               ))}
               {loading.attempts && (
@@ -422,5 +448,13 @@ export const AttemptHistoryPage: React.FC = () => {
     </div>
   );
 };
+
+function formatElapsed(startedAtUtc: string, now: number): string {
+  const seconds = Math.max(0, Math.floor((now - new Date(startedAtUtc).getTime()) / 1000));
+  if (!Number.isFinite(seconds)) return 'Not available';
+  if (seconds < 60) return `${seconds}s`;
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
+  return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
+}
 
 export default AttemptHistoryPage;
