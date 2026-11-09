@@ -73,7 +73,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
 
         foreach (var step in preSelectors)
         {
-            await ProcessSelector(page, null, step, preResult.Data);
+            await ProcessSelector(page, null, step, preResult.Data, context);
         }
 
         // 4. WAIT FOR CONTENT
@@ -96,6 +96,8 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
         {
             ct.ThrowIfCancellationRequested();
 
+            var pageEventCount = 0;
+            var pageUrl = page.Url;
             var items = await page.QuerySelectorAllAsync($"{container.Selector}:not(.{ProcessedClass})");
 
             foreach (var item in items)
@@ -155,7 +157,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
                     else
                     {
                         // Standard data extraction
-                        await ProcessSelector(page, item, step, result.Data);
+                        await ProcessSelector(page, item, step, result.Data, context);
                     }
                 }
 
@@ -166,6 +168,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
 
                 if (processedSignatures.Add(signature) && !partial)
                 {
+                    pageEventCount++;
                     yield return preResult.Merge(result);
                 }
             }
@@ -174,6 +177,8 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
             if (!items.Any())
             {
                 hasMore = false;
+                context.AddLog(ScraperAttemptLogLevel.Information,
+                    $"Located {pageEventCount} event(s) on page '{pageUrl}'; no more items found.");
 
                 if (context.ParentItem?.AllowEmptyResult == true)
                 {
@@ -182,7 +187,12 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
             }
             else
             {
-                hasMore = await PerformPagination(page, definition, context);
+                hasMore = await PerformPagination(page, definition, context, pageUrl, pageEventCount);
+                if (!hasMore)
+                {
+                    context.AddLog(ScraperAttemptLogLevel.Information,
+                        $"Located {pageEventCount} event(s) on page '{pageUrl}'; pagination did not advance.");
+                }
             }
 
         } while (hasMore);
@@ -192,7 +202,8 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
         IPage page,
         IElementHandle? item,
         ScraperAction step,
-        RawScrapedData? scrapedData)
+        RawScrapedData? scrapedData,
+        ScrapeContext context)
     {
         // 1. Exclusions
         if (step.Type is ActionType.Container or ActionType.FollowLink) return;
@@ -292,19 +303,54 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
                 scrapedData.Fields[step.OutputField] = value.Trim();
             }
         }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (TimeoutException ex)
+        {
+            context.AddLog(ScraperAttemptLogLevel.Warning,
+                $"Timed out processing selector '{step.Selector}' at '{page.Url}': {ex.Message}");
+        }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error processing step {step.Selector}: {ex.Message}");
+            context.AddLog(ScraperAttemptLogLevel.Warning,
+                $"Failed to process selector '{step.Selector}' at '{page.Url}': {ex.Message}");
         }
     }
 
-    private static async Task<bool> PerformPagination(IPage page, ScraperDefinition def, ScrapeContext context)
+    private static async Task<bool> PerformPagination(
+        IPage page,
+        ScraperDefinition def,
+        ScrapeContext context,
+        string pageUrl,
+        int pageEventCount)
     {
         if (def.PaginationType == PaginationType.None) return false;
 
         if (def.PaginationType == PaginationType.InfiniteScroll)
         {
-            return await PerformScroll(page);
+            try
+            {
+                var advanced = await PerformScroll(page);
+                if (advanced)
+                {
+                    context.AddLog(ScraperAttemptLogLevel.Information,
+                        $"Located {pageEventCount} event(s) on page '{pageUrl}'; advanced infinite-scroll pagination.");
+                }
+
+                return advanced;
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                context.AddLog(ScraperAttemptLogLevel.Warning,
+                    $"Located {pageEventCount} event(s) on page '{pageUrl}', but failed to advance infinite-scroll pagination: {ex.Message}");
+                throw;
+            }
         }
 
         if (def.PaginationType == PaginationType.NextButton)
@@ -312,16 +358,18 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
             var nextBtnDef = def.Actions.FirstOrDefault(s => s.IsPaginationTrigger);
             if (nextBtnDef == null) return false;
 
-            var nextBtn = await page.QuerySelectorAsync(nextBtnDef.Selector);
-            if (nextBtn == null || await nextBtn.IsDisabledAsync()) return false;
-
             try
             {
+                var nextBtn = await page.QuerySelectorAsync(nextBtnDef.Selector);
+                if (nextBtn == null || await nextBtn.IsDisabledAsync()) return false;
+
                 await nextBtn.ClickAsync();
                 await page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
 
                 await PerformWait(page, nextBtnDef.Delay);
 
+                context.AddLog(ScraperAttemptLogLevel.Information,
+                    $"Located {pageEventCount} event(s) on page '{pageUrl}'; advanced next-button pagination.");
                 return true;
             }
             catch (OperationCanceledException)
@@ -331,7 +379,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
             catch (Exception ex)
             {
                 context.AddLog(ScraperAttemptLogLevel.Warning,
-                    $"Failed to advance pagination at '{page.Url}': {ex.Message}");
+                    $"Located {pageEventCount} event(s) on page '{pageUrl}', but failed to advance pagination: {ex.Message}");
                 return false;
             }
         }

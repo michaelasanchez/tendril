@@ -16,6 +16,7 @@ import {
 import cn from 'classnames';
 import { Link } from 'react-router';
 import { ScrapersApi } from '../../api/scrapers';
+import { FormSelect } from '../../components/form';
 import type {
   EventRevision,
   Guid,
@@ -80,45 +81,51 @@ export const AttemptHistoryPage: React.FC = () => {
     }
   }, []);
 
-  const loadInitialAttempts = useCallback(async (signal?: AbortSignal) => {
-    setLoading((prev) => ({ ...prev, attempts: true }));
-    try {
-      const response = await ScrapersApi.getPagedAttemptHistories(
-        scraperId ?? undefined,
-        15,
-        undefined,
-        signal,
-      );
+  const loadInitialAttempts = useCallback(
+    async (signal?: AbortSignal) => {
+      setLoading((prev) => ({ ...prev, attempts: true }));
+      try {
+        const response = await ScrapersApi.getPagedAttemptHistories(
+          scraperId ?? undefined,
+          15,
+          undefined,
+          signal,
+        );
 
-      setAttempts(response.items);
-      setNextCursor(response.nextCursor);
+        setAttempts(response.items);
+        setNextCursor(response.nextCursor);
 
-      // Automatically select the most recent attempt
-      if (response.items.length > 0) {
-        handleSelectAttempt(response.items[0]);
+        // Automatically select the most recent attempt
+        if (response.items.length > 0) {
+          handleSelectAttempt(response.items[0]);
+        }
+      } finally {
+        setLoading((prev) => ({ ...prev, attempts: false }));
       }
-    } finally {
-      setLoading((prev) => ({ ...prev, attempts: false }));
-    }
-  }, [scraperId]);
+    },
+    [scraperId],
+  );
 
-  const loadMore = useCallback(async (signal?: AbortSignal) => {
-    if (!nextCursor) return;
+  const loadMore = useCallback(
+    async (signal?: AbortSignal) => {
+      if (!nextCursor) return;
 
-    setLoading((prev) => ({ ...prev, attempts: true }));
-    try {
-      const response = await ScrapersApi.getPagedAttemptHistories(
-        scraperId ?? undefined,
-        15,
-        nextCursor,
-        signal,
-      );
-      setAttempts((prev) => [...prev, ...response.items]);
-      setNextCursor(response.nextCursor);
-    } finally {
-      setLoading((prev) => ({ ...prev, attempts: false }));
-    }
-  }, [nextCursor, scraperId]);
+      setLoading((prev) => ({ ...prev, attempts: true }));
+      try {
+        const response = await ScrapersApi.getPagedAttemptHistories(
+          scraperId ?? undefined,
+          15,
+          nextCursor,
+          signal,
+        );
+        setAttempts((prev) => [...prev, ...response.items]);
+        setNextCursor(response.nextCursor);
+      } finally {
+        setLoading((prev) => ({ ...prev, attempts: false }));
+      }
+    },
+    [nextCursor, scraperId],
+  );
 
   const handleSelectAttempt = async (attempt: ScraperAttemptHistory) => {
     setSelectedAttempt(attempt);
@@ -158,6 +165,16 @@ export const AttemptHistoryPage: React.FC = () => {
       <Row>
         {/* LEFT COLUMN: HISTORY LIST */}
         <Col md={4}>
+          <FormSelect
+            className="mb-3"
+            options={[
+              { value: '', label: '' },
+              ...scrapers.map((s) => ({ value: s.id, label: s.name })),
+            ]}
+            label="Scraper"
+            value={scraperId}
+            onChange={(value) => setScraperId(value as Guid)}
+          />
           <Card className="shadow-sm">
             <Card.Header className="font-weight-bold">
               Recent Attempts
@@ -174,16 +191,28 @@ export const AttemptHistoryPage: React.FC = () => {
                 >
                   <button
                     type="button"
-                    className={cn('btn p-0 text-start border-0 flex-grow-1', selectedAttempt?.id === a.id ? 'text-white' : 'text-body')}
+                    className={cn(
+                      'btn p-0 text-start border-0 flex-grow-1',
+                      selectedAttempt?.id === a.id ? 'text-white' : 'text-body',
+                    )}
                     onClick={() => handleSelectAttempt(a)}
                   >
                     <em>{a.scraperName}</em>
-                    <small className={cn('d-block', selectedAttempt?.id === a.id ? 'text-white-50' : 'text-muted')}>
+                    <small
+                      className={cn(
+                        'd-block',
+                        selectedAttempt?.id === a.id
+                          ? 'text-white-50'
+                          : 'text-muted',
+                      )}
+                    >
                       {new Date(a.startTimeUtc).toLocaleString()}
                     </small>
                     <strong>{a.extracted} items</strong>
                     {a.errorMessage === 'Running...' && (
-                      <small className="d-block text-success fw-semibold">Running for {formatElapsed(a.startTimeUtc, clockNow)}</small>
+                      <small className="d-block text-success fw-semibold">
+                        Running for {formatElapsed(a.startTimeUtc, clockNow)}
+                      </small>
                     )}
                   </button>
                   <Stack gap={1} className="align-items-end">
@@ -197,9 +226,13 @@ export const AttemptHistoryPage: React.FC = () => {
                       Open
                     </Link>
                   </Stack>
-                  {a.errorMessage === 'Running...'
-                    ? <Badge bg="warning" text="dark">RUNNING</Badge>
-                    : renderStatusBadge(a.success)}
+                  {a.errorMessage === 'Running...' ? (
+                    <Badge bg="warning" text="dark">
+                      RUNNING
+                    </Badge>
+                  ) : (
+                    renderStatusBadge(a.success)
+                  )}
                 </ListGroup.Item>
               ))}
               {loading.attempts && (
@@ -215,7 +248,9 @@ export const AttemptHistoryPage: React.FC = () => {
                   disabled={loading.attempts}
                   onClick={() => loadMore()}
                 >
-                  {loading.attempts ? 'Loading older attempts...' : 'Load older attempts'}
+                  {loading.attempts
+                    ? 'Loading older attempts...'
+                    : 'Load older attempts'}
                 </Button>
               )}
             </ListGroup>
@@ -452,7 +487,10 @@ export const AttemptHistoryPage: React.FC = () => {
 };
 
 function formatElapsed(startedAtUtc: string, now: number): string {
-  const seconds = Math.max(0, Math.floor((now - new Date(startedAtUtc).getTime()) / 1000));
+  const seconds = Math.max(
+    0,
+    Math.floor((now - new Date(startedAtUtc).getTime()) / 1000),
+  );
   if (!Number.isFinite(seconds)) return 'Not available';
   if (seconds < 60) return `${seconds}s`;
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;

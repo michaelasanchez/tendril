@@ -138,6 +138,8 @@ public class IngestionService(
                     errored++;
 
                     logger.LogError(ex, "Error mapping event");
+                    context.AddLog(ScraperAttemptLogLevel.Warning,
+                        $"Failed to map scraped raw event '{rawEntity.Id}': {ex.Message}");
                 }
             }
 
@@ -164,8 +166,10 @@ public class IngestionService(
             // Playwright can't be cancelled directly (the executor closes the page instead), so a
             // cancellation may surface as a PlaywrightException. Judge by the tokens, not the type.
             var wasCanceled = cancellationToken.IsCancellationRequested;
-            var timedOut = !wasCanceled && deadline.IsCancellationRequested;
-            var failure = timedOut
+            var deadlineExceeded = !wasCanceled && deadline.IsCancellationRequested;
+            var timedOut = !wasCanceled &&
+                (deadlineExceeded || ex is TaskCanceledException || HasTimeoutException(ex));
+            var failure = deadlineExceeded
                 ? $"Exceeded the {MaxRuntime.TotalMinutes:0} minute time limit."
                 : ex.Message;
 
@@ -174,6 +178,16 @@ public class IngestionService(
                 logger.LogInformation(ex, "Scraper job was canceled");
                 context.AddLog(ScraperAttemptLogLevel.Warning,
                     $"Ingestion for scraper '{scraper.Name}' was canceled.");
+            }
+            else if (timedOut)
+            {
+                logger.LogWarning(ex, "Scraper job timed out");
+                context.AddLog(ScraperAttemptLogLevel.Warning,
+                    $"Scraper '{scraper.Name}' timed out: {failure}");
+                scraper.State = ScraperState.Unhealthy;
+                scraper.StateMessage = $"Scraper timed out: {failure}";
+                scraper.LastFailureUtc = DateTimeOffset.UtcNow;
+                scraper.LastErrorMessage = failure;
             }
             else
             {
@@ -298,6 +312,10 @@ public class IngestionService(
             return (mappedEvent, "created", $"Created - [{mappedEvent.Title}]({mappedEvent.Id})");
         }
     }
+
+    private static bool HasTimeoutException(Exception exception) =>
+        exception is TimeoutException ||
+        exception.InnerException is not null && HasTimeoutException(exception.InnerException);
 
     private static List<RevisionResult> ReviseEventFields(Event current, Event incoming)
     {

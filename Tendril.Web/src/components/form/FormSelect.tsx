@@ -5,6 +5,7 @@ import type { FormSelectProps } from '.';
 import styles from '../../styles/Form.module.css';
 
 export const FormSelect: React.FC<FormSelectProps> = ({
+  className,
   label,
   value,
   onChange,
@@ -14,10 +15,10 @@ export const FormSelect: React.FC<FormSelectProps> = ({
   disabled = false,
   pill = false,
 }) => (
-  <Form.Group className={cn(styles.FormSelect, pill && styles.Pill)}>
+  <Form.Group className={cn(styles.FormSelect, pill && styles.Pill, className)}>
     {!!label && <Form.Label>{label}</Form.Label>}
     <Form.Select
-      value={value}
+      value={value ?? ''}
       onChange={(e) => onChange(e.target.value)}
       onClick={(e) => e.stopPropagation()}
       autoFocus={autoFocus}

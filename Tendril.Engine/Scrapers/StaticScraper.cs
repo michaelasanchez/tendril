@@ -34,8 +34,14 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
             {
                 html = await client.GetStringAsync(currentUrl, ct);
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException ex)
             {
+                if (!ct.IsCancellationRequested)
+                {
+                    context.AddLog(ScraperAttemptLogLevel.Warning,
+                        $"Timed out fetching scraper page '{currentUrl}': {ex.Message}");
+                }
+
                 throw;
             }
             catch (Exception ex)
@@ -45,11 +51,19 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
                 yield break;
             }
 
+            var pageEventCount = 0;
+
             // 2. STRATEGY: JSON-LD
             if (def.ExtractionStrategy == ExtractionStrategy.JsonLd)
             {
                 foreach (var data in jsonLd.ExtractAll(html, def.Actions.FirstOrDefault()?.Selector ?? "Event"))
+                {
+                    pageEventCount++;
                     yield return new ScrapeYieldItem { Data = data };
+                }
+
+                context.AddLog(ScraperAttemptLogLevel.Information,
+                    $"Located {pageEventCount} event(s) on page '{currentUrl}'.");
 
                 if (def.PaginationType == PaginationType.None) yield break;
             }
@@ -59,8 +73,12 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
             {
                 foreach (var item in RunRegexExtraction(html, def))
                 {
+                    pageEventCount++;
                     yield return item;
                 }
+
+                context.AddLog(ScraperAttemptLogLevel.Information,
+                    $"Located {pageEventCount} event(s) on page '{currentUrl}'.");
             }
 
             // 4. STRATEGY: DOM (CSS/XPath)
@@ -73,16 +91,36 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
                 // A. Extract Items (Logic extracted to helper for cleanliness)
                 foreach (var item in ExtractDomItems(page, def, context, currentUrl))
                 {
+                    pageEventCount++;
                     yield return item;
                 }
 
                 // B. Handle Pagination
                 // We overwrite currentUrl if we find a new link, otherwise null stops the loop
-                currentUrl = GetNextPageUrl(page, def, currentUrl);
+                var previousUrl = currentUrl;
+                var nextUrl = GetNextPageUrl(page, def, currentUrl);
 
-                if (!string.IsNullOrEmpty(currentUrl))
+                if (!string.IsNullOrEmpty(nextUrl) && processedUrls.Contains(nextUrl))
                 {
-                    await Task.Delay(Random.Shared.Next(1000, 2000), ct);
+                    context.AddLog(ScraperAttemptLogLevel.Warning,
+                        $"Located {pageEventCount} event(s) on page '{previousUrl}'. Pagination returned already visited page '{nextUrl}'; stopping to avoid a loop.");
+                    currentUrl = null;
+                }
+                else
+                {
+                    currentUrl = nextUrl;
+
+                    if (!string.IsNullOrEmpty(currentUrl))
+                    {
+                        context.AddLog(ScraperAttemptLogLevel.Information,
+                            $"Located {pageEventCount} event(s) on page '{previousUrl}'; advancing to '{currentUrl}'.");
+                        await Task.Delay(Random.Shared.Next(1000, 2000), ct);
+                    }
+                    else
+                    {
+                        context.AddLog(ScraperAttemptLogLevel.Information,
+                            $"Located {pageEventCount} event(s) on page '{previousUrl}'; no next page found.");
+                    }
                 }
             }
 
@@ -109,7 +147,7 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
 
         foreach (var step in preSelectors)
         {
-            ExtractField(page, null, step, preResult.Data, def.ExtractionStrategy, currentUrl);
+            ExtractField(page, null, step, preResult.Data, def.ExtractionStrategy, currentUrl, context);
         }
 
         // 2. Find Items
@@ -173,7 +211,7 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
                 }
                 else
                 {
-                    ExtractField(page, item, step, result.Data, def.ExtractionStrategy, currentUrl);
+                    ExtractField(page, item, step, result.Data, def.ExtractionStrategy, currentUrl, context);
                 }
             }
 
@@ -239,7 +277,14 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
         }
     }
 
-    private static void ExtractField(HtmlDocument page, HtmlNode? parentNode, ScraperAction step, RawScrapedData rawEvent, ExtractionStrategy strategy, string currentUrl)
+    private static void ExtractField(
+        HtmlDocument page,
+        HtmlNode? parentNode,
+        ScraperAction step,
+        RawScrapedData rawEvent,
+        ExtractionStrategy strategy,
+        string currentUrl,
+        ScrapeContext context)
     {
         try
         {
@@ -290,9 +335,10 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
                 rawEvent.Fields[step.OutputField] = value;
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // TODO: we'll figure this out one day
+            context.AddLog(ScraperAttemptLogLevel.Warning,
+                $"Failed to extract selector '{step.Selector}' from '{currentUrl}': {ex.Message}");
         }
     }
 

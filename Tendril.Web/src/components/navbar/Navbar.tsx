@@ -41,26 +41,27 @@ export const Navbar: React.FC<Props> = ({
           </div>
           {authorized && <BootstrapNavbar.Toggle className={styles.Toggle} />}
         </div>
-        <BootstrapNavbar.Collapse>
-          <Nav className={styles.NavRight}>
-            <Nav.Link href="/">Events</Nav.Link>
-            <hr />
-            <Nav.Link href="/admin/scrapers">Scrapers</Nav.Link>
-            <Nav.Link href="/admin/categories">Categories</Nav.Link>
-            <Nav.Link href="/admin/tags">Tags</Nav.Link>
-            <Nav.Link href="/admin/venues">Venues</Nav.Link>
-            <hr />
-            <Nav.Link href="/admin/automate">Schedules</Nav.Link>
-            <Nav.Link href="/admin/task-runs">Task Runs</Nav.Link>
-            <Nav.Link href="/admin/worker">Worker Monitor</Nav.Link>
-            <Nav.Link href="/admin/review">Event Review</Nav.Link>
-            <Nav.Link href="/admin/summary">Attempt History</Nav.Link>
-            <hr />
-            <Nav.Link onClick={onLogout}>
-              Logout
-            </Nav.Link>
-          </Nav>
-        </BootstrapNavbar.Collapse>
+
+        {authorized && (
+          <BootstrapNavbar.Collapse>
+            <Nav className={styles.NavRight}>
+              <Nav.Link href="/">Events</Nav.Link>
+              <hr />
+              <Nav.Link href="/admin/scrapers">Scrapers</Nav.Link>
+              <Nav.Link href="/admin/categories">Categories</Nav.Link>
+              <Nav.Link href="/admin/tags">Tags</Nav.Link>
+              <Nav.Link href="/admin/venues">Venues</Nav.Link>
+              <hr />
+              <Nav.Link href="/admin/worker">Worker</Nav.Link>
+              <Nav.Link href="/admin/automate">Schedules</Nav.Link>
+              <Nav.Link href="/admin/task-runs">Task Runs</Nav.Link>
+              <Nav.Link href="/admin/summary">Attempt History</Nav.Link>
+              <Nav.Link href="/admin/review">Event Review</Nav.Link>
+              <hr />
+              <Nav.Link onClick={onLogout}>Logout</Nav.Link>
+            </Nav>
+          </BootstrapNavbar.Collapse>
+        )}
       </Container>
     </BootstrapNavbar>
   );

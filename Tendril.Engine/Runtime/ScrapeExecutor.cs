@@ -74,8 +74,14 @@ public class ScrapeExecutor(
                         childResults.Add(childEvent);
                     }
                 }
-                catch (Exception)
+                catch (OperationCanceledException)
                 {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    context.AddLog(ScraperAttemptLogLevel.Warning,
+                        $"Child scraper '{item.ChildScraperId}' failed: {ex.Message}");
                 }
 
                 foreach (var res in childResults)
@@ -123,8 +129,14 @@ public class ScrapeExecutor(
                             childResults.Add(childEvent);
                         }
                     }
-                    catch (Exception)
+                    catch (OperationCanceledException)
                     {
+                        throw;
+                    }
+                    catch (Exception ex)
+                    {
+                        context.AddLog(ScraperAttemptLogLevel.Warning,
+                            $"Child scraper '{item.ChildScraperId}' failed: {ex.Message}");
                     }
 
                     foreach (var res in childResults)
@@ -182,8 +194,14 @@ public class ScrapeExecutor(
                         childResults.Add(childEvent);
                     }
                 }
-                catch (Exception)
+                catch (OperationCanceledException)
                 {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    context.AddLog(ScraperAttemptLogLevel.Warning,
+                        $"Child scraper '{item.ChildScraperId}' failed: {ex.Message}");
                 }
 
                 foreach (var res in childResults)
