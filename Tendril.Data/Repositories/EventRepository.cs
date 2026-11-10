@@ -25,7 +25,7 @@ public class EventRepository(TendrilDbContext _context) : IEventRepository
         var query = _context.Events
             .Include(x => x.Category)
             .Include(x => x.Venue)
-            .Where(x => x.Status != EventStatus.Suppressed)
+            .Where(x => x.Status == EventStatus.Published)
             .AsNoTracking();
 
         if (filter.Title is not null)
