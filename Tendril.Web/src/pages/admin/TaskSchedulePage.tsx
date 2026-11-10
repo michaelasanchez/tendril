@@ -11,7 +11,7 @@ import { FormCheck, FormInput, FormSelect, FormText } from '../../components/for
 import { FormDropdown } from '../../components/form/FormDropdown';
 import formStyles from '../../styles/Form.module.css';
 import type { Guid, ScheduledTask, ScraperDefinition } from '../../types/api';
-import styles from './AutomatePage.module.css';
+import styles from './TaskSchedulePage.module.css';
 
 const cronPresets = [
   { value: '*/15 * * * *', label: 'Every 15 minutes', description: 'Runs at 0, 15, 30, and 45 minutes past each hour.' },
@@ -37,7 +37,7 @@ interface Sort {
   direction: SortDirection;
 }
 
-export const AutomatePage: React.FC = () => {
+export const TaskSchedulePage: React.FC = () => {
   const [tasks, setTasks] = useState<ScheduledTask[]>([]);
   const [scrapers, setScrapers] = useState<ScraperDefinition[]>([]);
   const [editing, setEditing] = useState<Partial<ScheduledTask>>({});
@@ -654,4 +654,4 @@ function formatDateTime(value?: string | null): string {
   return Number.isNaN(date.getTime()) ? 'Not scheduled' : date.toLocaleString();
 }
 
-export default AutomatePage;
+export default TaskSchedulePage;

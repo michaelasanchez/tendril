@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
-import { ArrowUpRight, ChevronDown, ChevronRight, Clock3, RefreshCw } from 'lucide-react';
+import { ArrowUpRight, ChevronDown, ChevronRight, Clock3, FileText, PencilLine, Plus, RefreshCw } from 'lucide-react';
 import { Alert, Badge, Button, Spinner, Table } from 'react-bootstrap';
 import { Link } from 'react-router';
 import { ScheduledTaskRunsApi } from '../../api/scheduledTaskRuns';
 import type { ScheduledTaskRun } from '../../types/api';
-import styles from './TaskRunHistoryPage.module.css';
+import styles from './TaskRunPage.module.css';
 
 const RUN_LIMIT = 100;
 
-export const TaskRunHistoryPage: React.FC = () => {
+export const TaskRunPage: React.FC = () => {
   const [runs, setRuns] = useState<ScheduledTaskRun[]>([]);
   const [expandedRunIds, setExpandedRunIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -224,7 +224,22 @@ function RunRows({
                               {attemptActive && <Clock3 size={13} />}
                               {formatDuration(attempt.startTimeUtc, attempt.endTimeUtc, now)}
                             </td>
-                            <td>{attempt.extracted} extracted · {attempt.created} created</td>
+                            <td>
+                              <div className={styles.MetricGroup}>
+                                <span className={styles.Metric} title="Extracted">
+                                  <FileText size={14} />
+                                  {attempt.extracted}
+                                </span>
+                                <span className={styles.Metric} title="Created">
+                                  <Plus size={14} />
+                                  {attempt.created}
+                                </span>
+                                <span className={styles.Metric} title="Updated">
+                                  <PencilLine size={14} />
+                                  {attempt.updated}
+                                </span>
+                              </div>
+                            </td>
                             <td className={styles.IssueCell} title={attempt.errorMessage ?? undefined}>
                               {attempt.errorMessage || '—'}
                             </td>
@@ -285,4 +300,4 @@ function formatDuration(start: string, end: string | null, now: number): string 
   return `${Math.floor(seconds / 86400)}d ${Math.floor((seconds % 86400) / 3600)}h`;
 }
 
-export default TaskRunHistoryPage;
+export default TaskRunPage;

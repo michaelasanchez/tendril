@@ -14,8 +14,9 @@ export const FormSelect: React.FC<FormSelectProps> = ({
   clearable = false,
   disabled = false,
   pill = false,
+  inline = false,
 }) => (
-  <Form.Group className={cn(styles.FormSelect, pill && styles.Pill, className)}>
+  <Form.Group className={cn(styles.FormSelect, inline && styles.Inline, pill && styles.Pill, className)}>
     {!!label && <Form.Label>{label}</Form.Label>}
     <Form.Select
       value={value ?? ''}

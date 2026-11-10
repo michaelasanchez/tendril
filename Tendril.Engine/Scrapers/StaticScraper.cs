@@ -36,11 +36,10 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
             }
             catch (OperationCanceledException ex)
             {
-                if (!ct.IsCancellationRequested)
-                {
-                    context.AddLog(ScraperAttemptLogLevel.Warning,
-                        $"Timed out fetching scraper page '{currentUrl}': {ex.Message}");
-                }
+                var message = ct.IsCancellationRequested
+                    ? $"Fetching scraper page '{currentUrl}' was canceled."
+                    : $"Timed out fetching scraper page '{currentUrl}': {ex.Message}";
+                context.AddLog(ScraperAttemptLogLevel.Warning, message);
 
                 throw;
             }
@@ -326,7 +325,11 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
                     {
                         value = new Uri(new Uri(currentUrl), value).ToString();
                     }
-                    catch { /* fallback to original value if Uri fails */ }
+                    catch (Exception ex)
+                    {
+                        context.AddLog(ScraperAttemptLogLevel.Warning,
+                            $"Failed to resolve relative URL '{value}' against '{currentUrl}': {ex.Message}");
+                    }
                 }
             }
 

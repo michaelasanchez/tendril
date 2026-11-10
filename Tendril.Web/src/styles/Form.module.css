@@ -4,6 +4,12 @@
   gap: 0.5em;
 }
 
+.Inline {
+  display: flex;
+  align-items: baseline;
+  gap: 1em;
+}
+
 .inline {
   display: flex;
   gap: 0.5em;

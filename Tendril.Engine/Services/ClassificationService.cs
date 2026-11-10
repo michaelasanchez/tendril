@@ -26,6 +26,10 @@ public class ClassificationService(TendrilDbContext context) : IClassificationSe
             var valueToCompare = string.Empty;
             bool found = true;
 
+            var sourcePath = rule.SourceJsonPath.StartsWith("Fields.", StringComparison.OrdinalIgnoreCase)
+                ? rule.SourceJsonPath
+                : $"Fields.{rule.SourceJsonPath}";
+
             // Split the path by dots and traverse
             foreach (var part in rule.SourceJsonPath.Split('.'))
             {

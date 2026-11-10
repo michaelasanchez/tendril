@@ -17,14 +17,14 @@ import type {
   PendingEventReviewDto,
   ScraperDefinition,
 } from '../../types/api';
-import styles from './ReviewPage.module.css';
+import styles from './EventReviewPage.module.css';
 
 interface EventFilter {
   from: string | null;
   scraperId: Guid | null;
 }
 
-export const ReviewPage: React.FC = () => {
+export const EventReviewPage: React.FC = () => {
   // Use the updated TypeScript interface name representing the new C# DTO wrapper
   const [reviewPayloads, setReviewPayloads] = useState<PendingEventReviewDto[]>(
     [],
@@ -87,7 +87,7 @@ export const ReviewPage: React.FC = () => {
     <section className="container-fluid py-4">
       <div className={pageStyles.pageHeader}>
         <h2>
-          Pending Event Review (
+          Event Review (
           {loading ? (
             <Spinner animation="border" variant="light" size="sm" />
           ) : (
@@ -97,6 +97,7 @@ export const ReviewPage: React.FC = () => {
         </h2>
         <div className="d-flex gap-3">
           <FormSelect
+            inline
             label="Scraper"
             value={filter.scraperId ?? ''}
             onChange={(scraperId) => setFilter((f) => ({ ...f, scraperId }))}
@@ -124,7 +125,7 @@ export const ReviewPage: React.FC = () => {
               (!filter.from ||
                 (startDate &&
                   startOfDay(new Date(startDate)) >=
-                    new Date(filter.from ?? ''))) &&
+                  new Date(filter.from ?? ''))) &&
               (!filter.scraperId || r.scraperId === filter.scraperId)
             );
           })
@@ -236,15 +237,15 @@ export const ReviewPage: React.FC = () => {
                                 )}
                                 <div>
                                   {pendingEvent.scrapedAtUtc >
-                                  existingEvent.scrapedAtUtc
+                                    existingEvent.scrapedAtUtc
                                     ? `${differenceInDays(
-                                        pendingEvent.scrapedAtUtc,
-                                        existingEvent.scrapedAtUtc,
-                                      )} day(s) earlier`
+                                      pendingEvent.scrapedAtUtc,
+                                      existingEvent.scrapedAtUtc,
+                                    )} day(s) earlier`
                                     : `${differenceInDays(
-                                        existingEvent.scrapedAtUtc,
-                                        pendingEvent.scrapedAtUtc,
-                                      )} day(s) later`}
+                                      existingEvent.scrapedAtUtc,
+                                      pendingEvent.scrapedAtUtc,
+                                    )} day(s) later`}
                                 </div>
                               </small>
                             </div>
@@ -330,4 +331,4 @@ export const ReviewPage: React.FC = () => {
   );
 };
 
-export default ReviewPage;
+export default EventReviewPage;

@@ -197,6 +197,27 @@
   gap: 0.55rem;
 }
 
+.MetricGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+
+.Metric {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--foreground);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.Metric svg {
+  flex-shrink: 0;
+}
+
 .SuccessCount,
 .FailureCount,
 .ActiveCount {

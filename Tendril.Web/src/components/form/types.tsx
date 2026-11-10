@@ -71,4 +71,5 @@ export interface FormSelectProps {
   disabled?: boolean;
   placeholder?: string;
   pill?: boolean;
+  inline?: boolean;
 }

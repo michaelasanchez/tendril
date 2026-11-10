@@ -28,6 +28,9 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
         }
         catch (Exception ex)
         {
+            context.AddLog(ScraperAttemptLogLevel.Error,
+                $"Failed to navigate to scraper URL '{definition.BaseUrl}': {ex.Message}");
+
             throw new Exception($"Failed to navigate to {definition.BaseUrl}: {ex.Message}", ex);
         }
 
@@ -305,6 +308,8 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
         }
         catch (OperationCanceledException)
         {
+            context.AddLog(ScraperAttemptLogLevel.Warning,
+                $"Processing selector '{step.Selector}' at '{page.Url}' was canceled.");
             throw;
         }
         catch (TimeoutException ex)
@@ -343,6 +348,8 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
             }
             catch (OperationCanceledException)
             {
+                context.AddLog(ScraperAttemptLogLevel.Warning,
+                    $"Infinite-scroll pagination on page '{pageUrl}' was canceled.");
                 throw;
             }
             catch (Exception ex)
@@ -374,6 +381,8 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
             }
             catch (OperationCanceledException)
             {
+                context.AddLog(ScraperAttemptLogLevel.Warning,
+                    $"Next-button pagination on page '{pageUrl}' was canceled.");
                 throw;
             }
             catch (Exception ex)

@@ -12,13 +12,13 @@ import { EventsPage } from './pages';
 
 const AttemptHistoryPage = lazy(() => import('./pages/admin/AttemptHistoryPage'));
 const AttemptDetailPage = lazy(() => import('./scrapers/AttemptDetailTab'));
-const AutomatePage = lazy(() => import('./pages/admin/AutomatePage'));
+const AutomatePage = lazy(() => import('./pages/admin/TaskSchedulePage'));
 const CategoriesPage = lazy(() => import('./pages/admin/CategoriesPage'));
-const ReviewPage = lazy(() => import('./pages/admin/ReviewPage'));
+const ReviewPage = lazy(() => import('./pages/admin/EventReviewPage'));
 const ScraperEditorPage = lazy(() => import('./pages/admin/ScraperEditorPage'));
 const ScrapersPage = lazy(() => import('./pages/admin/ScrapersPage'));
 const TagsPage = lazy(() => import('./pages/admin/TagsPage'));
-const TaskRunHistoryPage = lazy(() => import('./pages/admin/TaskRunHistoryPage'));
+const TaskRunHistoryPage = lazy(() => import('./pages/admin/TaskRunPage'));
 const VenuesPage = lazy(() => import('./pages/admin/VenuesPage'));
 const WorkerPage = lazy(() => import('./pages/admin/WorkerPage'));
 
