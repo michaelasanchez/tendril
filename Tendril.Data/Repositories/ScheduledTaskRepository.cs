@@ -13,6 +13,7 @@ public class ScheduledTaskRepository(TendrilDbContext db) : IScheduledTaskReposi
     public async Task<List<ScheduledTask>> GetAllAsync(CancellationToken ct = default)
     {
         return await db.ScheduledTasks
+            .Include(x => x.ScraperDefinitions)
             .AsNoTracking()
             .ToListAsync(ct);
     }

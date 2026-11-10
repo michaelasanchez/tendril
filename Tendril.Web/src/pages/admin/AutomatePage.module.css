@@ -153,6 +153,13 @@
   white-space: nowrap;
 }
 
+.ScheduleAccordionItem:global(.accordion-item) {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+}
+
 .ScheduleTable th {
   color: var(--muted-foreground);
   font-family: var(--font-mono);
@@ -187,6 +194,93 @@
   display: block;
   font-size: var(--text-sm);
   font-weight: 600;
+}
+
+.TaskNameCell {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.ExpandAction {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--muted-foreground);
+  box-shadow: none;
+}
+
+.ExpandAction::after {
+  display: none;
+}
+
+.ExpandAction:not(.collapsed) {
+  background: transparent;
+  color: var(--muted-foreground);
+  box-shadow: none;
+}
+
+.ExpandAction:hover {
+  background: var(--card);
+  color: var(--foreground);
+}
+
+.ExpandedRow > td {
+  padding: 0.6rem 1rem 0.8rem 3.2rem !important;
+  border-top: 0;
+  background: var(--card);
+}
+
+.AssignedScrapers {
+  display: grid;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+.AssignedScraper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 2.5rem;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.3rem 0.45rem 0.3rem 0.7rem;
+  border-left: 2px solid var(--accent-secondary);
+  background: var(--background);
+  white-space: normal;
+}
+
+.AssignedScraper > span {
+  overflow-wrap: anywhere;
+}
+
+.AssignedScraper :global(.form-group) {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.AssignedScraper :global(.dropdown-toggle) {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border-color: var(--border);
+  background: transparent;
+  color: var(--foreground);
+}
+
+.NoAssignedScrapers,
+.AllTargets {
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
 }
 
 .TaskNotes {
@@ -277,6 +371,30 @@
   border: 1px solid var(--border);
   border-radius: 4px;
   background: var(--card);
+}
+
+.TargetPicker {
+  margin-block: 1.5rem;
+}
+
+.TargetGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.TargetOption {
+  min-width: 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--background);
+}
+
+.NoTargets {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
 }
 
 .CronEditor {
@@ -424,6 +542,10 @@
   }
 
   .CronEditor {
+    grid-template-columns: 1fr;
+  }
+
+  .TargetGrid {
     grid-template-columns: 1fr;
   }
 

@@ -49,6 +49,7 @@ public class ApiMappingProfile : Profile
 
         CreateMap<Venue, VenueDto>();
 
-        CreateMap<ScheduledTask, ScheduledTaskDto>();
+        CreateMap<ScheduledTask, ScheduledTaskDto>()
+            .ForMember(d => d.ScraperIds, opt => opt.MapFrom(s => s.ScraperDefinitions.Select(x => x.Id)));
     }
 }

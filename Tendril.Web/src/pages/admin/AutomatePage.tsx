@@ -1,13 +1,14 @@
 // src/pages/ScheduledTasksPage.tsx
 import cn from 'classnames';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Badge, Card, Form, Table } from 'react-bootstrap';
-import { CalendarClock, Eye, EyeOff, Pencil, Play, Plus, Power, Trash2 } from 'lucide-react';
 import cronstrue from 'cronstrue';
+import { CalendarClock, ChevronDown, ChevronRight, Eye, EyeOff, MoreHorizontal, Pencil, Play, Plus, Power, Trash2 } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Accordion, Alert, Badge, Card, Form } from 'react-bootstrap';
 import { ScheduledTasksApi } from '../../api/scheduledTasks';
 import { ScrapersApi } from '../../api/scrapers';
 import { SquareButton as Button } from '../../components/button';
 import { FormCheck, FormInput, FormSelect, FormText } from '../../components/form';
+import { FormDropdown } from '../../components/form/FormDropdown';
 import formStyles from '../../styles/Form.module.css';
 import type { Guid, ScheduledTask, ScraperDefinition } from '../../types/api';
 import styles from './AutomatePage.module.css';
@@ -48,6 +49,7 @@ export const AutomatePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const [showDisabled, setShowDisabled] = useState(true);
+  const [expandedTaskIds, setExpandedTaskIds] = useState<Guid[]>([]);
   const [sort, setSort] = useState<Sort | null>({
     key: 'name',
     direction: 'asc',
@@ -118,6 +120,7 @@ export const AutomatePage: React.FC = () => {
     });
   }, [tasks, sort, showDisabled]);
 
+  const activeEventFeeds = scrapers.filter((scraper) => scraper.isEventFeed && !scraper.disabled);
   const enabledCount = tasks.filter((task) => !task.isDisabled).length;
   const runningCount = tasks.filter((task) => task.status === 'Running').length;
   const disabledCount = tasks.filter((task) => task.isDisabled).length;
@@ -226,6 +229,33 @@ export const AutomatePage: React.FC = () => {
     }
   };
 
+  const removeScraperFromTask = async (task: ScheduledTask, scraperId: Guid) => {
+    try {
+      await ScheduledTasksApi.updateScrapers(task.id, { remove: [scraperId] });
+      await load();
+    } catch (e: any) {
+      alert(e.message ?? 'Failed to remove scraper from schedule.');
+    }
+  };
+
+  const transferScraper = async (
+    sourceTask: ScheduledTask,
+    destinationTask: ScheduledTask,
+    scraperId: Guid,
+    mode: 'copy' | 'move',
+  ) => {
+    try {
+      await ScheduledTasksApi.transferScrapers(destinationTask.id, {
+        sourceTaskId: sourceTask.id,
+        scraperIds: [scraperId],
+        mode,
+      });
+      await load();
+    } catch (e: any) {
+      alert(e.message ?? `Failed to ${mode} scraper to schedule.`);
+    }
+  };
+
   return (
     <main className={styles.Page}>
       <header className={styles.PageHeader}>
@@ -260,12 +290,22 @@ export const AutomatePage: React.FC = () => {
       </section>
 
       <section className={styles.TableSection}>
-          <div className={styles.TableHeading}>
-            <div><h2>All schedules</h2><span>{processedTasks.length} shown</span></div>
-            <span className={styles.TableHint}>Select a column heading to sort</span>
-          </div>
-          <div className={styles.TableWrap}>
-          <Table className={styles.ScheduleTable} hover responsive>
+        <div className={styles.TableHeading}>
+          <div><h2>All schedules</h2><span>{processedTasks.length} shown</span></div>
+          <span className={styles.TableHint}>Select a column heading to sort</span>
+        </div>
+        <div className={styles.TableWrap}>
+          <Accordion
+            as="table"
+            className={cn('table', 'table-hover', styles.ScheduleTable)}
+            alwaysOpen
+            activeKey={expandedTaskIds}
+            onSelect={(eventKey) =>
+              setExpandedTaskIds(
+                Array.isArray(eventKey) ? eventKey : eventKey ? [eventKey] : [],
+              )
+            }
+          >
             <thead>
               <tr>
                 <th onClick={() => onSort('name')} className={styles.Sortable}>
@@ -287,53 +327,131 @@ export const AutomatePage: React.FC = () => {
                 <th />
               </tr>
             </thead>
-            <tbody>
-              {processedTasks.map((t) => (
-                <tr
+            {processedTasks.map((t) => {
+              const isExpanded = expandedTaskIds.includes(t.id);
+              const selectedScrapers = (t.scraperIds ?? []).map((scraperId) =>
+                scrapers.find((scraper) => scraper.id === scraperId),
+              );
+
+              return (
+                <Accordion.Item
                   key={t.id}
-                  className={cn(t.isDisabled && styles.DisabledRow)}
+                  as="tbody"
+                  eventKey={t.id}
+                  className={styles.ScheduleAccordionItem}
                 >
-                  <td>
-                    <strong className={styles.TaskName}>{t.name}</strong>
-                    {t.notes && <small className={styles.TaskNotes}>{t.notes}</small>}
-                  </td>
-                  <td>
-                    <strong className={styles.CronDescription}>{describeCron(t.cronExpression)}</strong>
-                    <code className={styles.CronCode}>{t.cronExpression}</code>
-                  </td>
-                  <td><Badge bg="light" text="dark" className={styles.Badge}>{t.selectionStrategy === 'All' ? 'All active' : 'Selected'}</Badge></td>
-                  <td><TaskStatus status={t.status} disabled={t.isDisabled} /></td>
-                  <td>
-                    <strong className={styles.NextRun}>{formatDateTime(t.nextRunAtUtc)}</strong>
-                  </td>
-                  <td>
-                    <span className={styles.TargetCount}>
-                      {t.selectionStrategy === 'All'
-                        ? `${scrapers.filter((scraper) => !scraper.disabled && scraper.isEventFeed).length} feeds`
-                        : `${t.scraperIds?.length ?? 0} selected`}
-                    </span>
-                  </td>
-                  <td className={styles.TableActions}>
-                    <button type="button" className={styles.IconAction} onClick={() => startEdit(t)} title={`Edit ${t.name}`} aria-label={`Edit ${t.name}`}>
-                      <Pencil size={15} />
-                    </button>
-                    <button type="button" className={styles.IconAction} onClick={() => toggleDisable(t)} title={t.isDisabled ? `Enable ${t.name}` : `Disable ${t.name}`} aria-label={t.isDisabled ? `Enable ${t.name}` : `Disable ${t.name}`}>
-                      <Power size={15} />
-                    </button>
-                    <button type="button" className={cn(styles.IconAction, styles.DangerAction)} onClick={() => remove(t)} title={`Delete ${t.name}`} aria-label={`Delete ${t.name}`}>
-                      <Trash2 size={15} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {processedTasks.length === 0 && !loading && (
+                  <tr className={cn(t.isDisabled && styles.DisabledRow)}>
+                    <td>
+                      <div className={styles.TaskNameCell}>
+                        <Accordion.Button
+                          as="button"
+                          className={styles.ExpandAction}
+                          aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${t.name} details`}
+                        >
+                          {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                        </Accordion.Button>
+                        <div>
+                          <strong className={styles.TaskName}>{t.name}</strong>
+                          {t.notes && <small className={styles.TaskNotes}>{t.notes}</small>}
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <strong className={styles.CronDescription}>{describeCron(t.cronExpression)}</strong>
+                      <code className={styles.CronCode}>{t.cronExpression}</code>
+                    </td>
+                    <td><Badge bg="light" text="dark" className={styles.Badge}>{t.selectionStrategy === 'All' ? 'All active' : 'Selected'}</Badge></td>
+                    <td><TaskStatus status={t.status} disabled={t.isDisabled} /></td>
+                    <td>
+                      <strong className={styles.NextRun}>{formatDateTime(t.nextRunAtUtc)}</strong>
+                    </td>
+                    <td>
+                      <span className={styles.TargetCount}>
+                        {t.selectionStrategy === 'All'
+                          ? `${activeEventFeeds.length} feeds`
+                          : `${t.scraperIds?.length ?? 0} selected`}
+                      </span>
+                    </td>
+                    <td className={styles.TableActions}>
+                      <button type="button" className={styles.IconAction} onClick={() => startEdit(t)} title={`Edit ${t.name}`} aria-label={`Edit ${t.name}`}>
+                        <Pencil size={15} />
+                      </button>
+                      <button type="button" className={styles.IconAction} onClick={() => toggleDisable(t)} title={t.isDisabled ? `Enable ${t.name}` : `Disable ${t.name}`} aria-label={t.isDisabled ? `Enable ${t.name}` : `Disable ${t.name}`}>
+                        <Power size={15} />
+                      </button>
+                      <button type="button" className={cn(styles.IconAction, styles.DangerAction)} onClick={() => remove(t)} title={`Delete ${t.name}`} aria-label={`Delete ${t.name}`}>
+                        <Trash2 size={15} />
+                      </button>
+                    </td>
+                  </tr>
+
+                  {isExpanded && (
+                    <tr className={styles.ExpandedRow}>
+                      <td colSpan={7}>
+                        {t.selectionStrategy === 'Selected' ? (
+                          <div className={styles.AssignedScrapers}>
+                            {selectedScrapers.length > 0 ? selectedScrapers.map((scraper, index) => (
+                              <div className={styles.AssignedScraper} key={t.scraperIds[index]}>
+                                <span>{scraper?.name ?? `Unknown scraper (${t.scraperIds[index]})`}</span>
+                                <FormDropdown
+                                  id={`schedule-${t.id}-scraper-${t.scraperIds[index]}-actions`}
+                                  title={<MoreHorizontal size={17} />}
+                                  options={[
+                                    ...tasks
+                                      .filter((destination) =>
+                                        destination.id !== t.id &&
+                                        destination.selectionStrategy === 'Selected',
+                                      )
+                                      .flatMap((destination) => [
+                                        {
+                                          value: `move-${destination.id}`,
+                                          label: `Move to ${destination.name}`,
+                                          action: () => transferScraper(
+                                            t,
+                                            destination,
+                                            t.scraperIds[index],
+                                            'move',
+                                          ),
+                                        },
+                                        {
+                                          value: `copy-${destination.id}`,
+                                          label: `Copy to ${destination.name}`,
+                                          action: () => transferScraper(
+                                            t,
+                                            destination,
+                                            t.scraperIds[index],
+                                            'copy',
+                                          ),
+                                        },
+                                      ]),
+                                    {
+                                      value: 'remove',
+                                      label: 'Remove from schedule',
+                                      action: () => removeScraperFromTask(t, t.scraperIds[index]),
+                                    },
+                                  ]}
+                                />
+                              </div>
+                            )) : <span className={styles.NoAssignedScrapers}>No scrapers selected.</span>}
+                          </div>
+                        ) : (
+                          <span className={styles.AllTargets}>All active event feeds are included.</span>
+                        )}
+                      </td>
+                    </tr>
+                  )}
+                </Accordion.Item>
+              );
+            })}
+            {processedTasks.length === 0 && !loading && (
+              <tbody>
                 <tr>
                   <td colSpan={7} className={styles.Empty}>No schedules match this view.</td>
                 </tr>
-              )}
-            </tbody>
-          </Table>
-            </div>
+              </tbody>
+            )}
+          </Accordion>
+        </div>
       </section>
 
       {/* Inline Management Editor Block */}
@@ -343,9 +461,9 @@ export const AutomatePage: React.FC = () => {
             <div>
               <p className={styles.Eyebrow}>SCHEDULE CONFIGURATION</p>
               <h2>
-            {isNew
-              ? 'New schedule'
-              : `Edit ${editing.name}`}
+                {isNew
+                  ? 'New schedule'
+                  : `Edit ${editing.name}`}
               </h2>
               <p>Times are interpreted as UTC by the worker.</p>
             </div>
@@ -450,49 +568,28 @@ export const AutomatePage: React.FC = () => {
                   onChange={(notes) => setEditing({ ...editing, notes })}
                 />
 
-                {/* Scraper Checkbox List Graph (renders conditionally if strategy is 'Selected') */}
                 {editing.selectionStrategy === 'Selected' && (
-                  <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
-                    <label
-                      className="form-label"
-                      style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}
-                    >
-                      Scraper Targets Assignment
-                    </label>
-                    <div
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: '1fr 1fr',
-                        gap: '0.75rem',
-                      }}
-                    >
-                      {scrapers.map((scraper) => {
-                        const isChecked =
-                          editing.scraperIds?.includes(scraper.id) ?? false;
-                        return (
-                          <div
-                            key={scraper.id}
-                            style={{
-                              padding: '0.5rem 0.75rem',
-                              border: '1px solid #333',
-                              borderRadius: '4px',
-                              background: scraper.disabled
-                                ? '#1a1a1a'
-                                : 'transparent',
-                              opacity: scraper.disabled ? 0.5 : 1,
-                            }}
-                          >
-                            <FormCheck
-                              label={`${scraper.name} ${scraper.disabled ? '(Disabled)' : ''}`}
-                              checked={isChecked}
-                              onChange={(checked: boolean) =>
-                                handleScraperToggle(scraper.id, checked)
-                              }
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
+                  <div className={styles.TargetPicker}>
+                    <label className="form-label">Active event feed targets</label>
+                    {activeEventFeeds.length > 0 ? (
+                      <div className={styles.TargetGrid}>
+                        {activeEventFeeds.map((scraper) => {
+                          const isChecked =
+                            editing.scraperIds?.includes(scraper.id) ?? false;
+                          return (
+                            <div className={styles.TargetOption} key={scraper.id}>
+                              <FormCheck
+                                label={scraper.name}
+                                checked={isChecked}
+                                onChange={(checked: boolean) =>
+                                  handleScraperToggle(scraper.id, checked)
+                                }
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : <p className={styles.NoTargets}>No active event feeds available.</p>}
                   </div>
                 )}
 

@@ -49,7 +49,7 @@ public class ScheduledTasksController(
             IsDisabled = request.IsDisabled,
             CronExpression = request.CronExpression,
             SelectionStrategy = strategy,
-            Status = Core.Domain.Entities.ScheduledTaskStatus.Idle,
+            Status = ScheduledTaskStatus.Idle,
             // Worker or a backing service can evaluate the initial NextRunAtUtc based on the CronExpression,
             // default it to immediate execution check for now.
             NextRunAtUtc = DateTimeOffset.UtcNow
@@ -171,6 +171,128 @@ public class ScheduledTasksController(
         if (task is null) return NotFound();
 
         await tasks.DeleteAsync(task, cancellationToken);
+        return NoContent();
+    }
+
+    [HttpPatch("{id:guid}/scrapers")]
+    public async Task<IActionResult> UpdateScrapers(
+        Guid id,
+        UpdateScheduledTaskScrapersRequest request,
+        CancellationToken cancellationToken)
+    {
+        var task = await tasks.GetByIdWithScrapersAsync(id, cancellationToken);
+        if (task is null) return NotFound();
+        if (task.SelectionStrategy != SelectionStrategy.Selected)
+        {
+            return Conflict("Scraper assignments can only be changed for schedules using the Selected strategy.");
+        }
+
+        var scraperIdsToAdd = (request.Add ?? []).Distinct().ToList();
+        var scraperIdsToRemove = (request.Remove ?? []).Distinct().ToList();
+        if (scraperIdsToAdd.Intersect(scraperIdsToRemove).Any())
+        {
+            return BadRequest("A scraper cannot be added and removed in the same request.");
+        }
+
+        var scraperDefinitions = new Dictionary<Guid, ScraperDefinition>();
+        foreach (var scraperId in scraperIdsToAdd)
+        {
+            var scraper = await scrapers.GetByIdAsync(scraperId, cancellationToken);
+            if (scraper is null) return NotFound($"Scraper '{scraperId}' was not found.");
+            scraperDefinitions.Add(scraperId, scraper);
+        }
+
+        foreach (var scraperId in scraperIdsToRemove)
+        {
+            if (await scrapers.GetByIdAsync(scraperId, cancellationToken) is null)
+            {
+                return NotFound($"Scraper '{scraperId}' was not found.");
+            }
+        }
+
+        var existingScraperIds = task.ScraperDefinitions.Select(scraper => scraper.Id).ToHashSet();
+        foreach (var scraperId in scraperIdsToAdd)
+        {
+            if (existingScraperIds.Add(scraperId))
+            {
+                task.ScraperDefinitions.Add(scraperDefinitions[scraperId]);
+            }
+        }
+
+        foreach (var scraper in task.ScraperDefinitions
+                     .Where(scraper => scraperIdsToRemove.Contains(scraper.Id))
+                     .ToList())
+        {
+            task.ScraperDefinitions.Remove(scraper);
+        }
+
+        await tasks.UpdateAsync(task, cancellationToken);
+        return NoContent();
+    }
+
+    [HttpPost("{destinationTaskId:guid}/scrapers/transfer")]
+    public async Task<IActionResult> TransferScrapers(
+        Guid destinationTaskId,
+        TransferScheduledTaskScrapersRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (request.SourceTaskId == destinationTaskId)
+        {
+            return BadRequest("Source and destination schedules must be different.");
+        }
+
+        if (!string.Equals(request.Mode, "copy", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(request.Mode, "move", StringComparison.OrdinalIgnoreCase))
+        {
+            return BadRequest("Mode must be 'copy' or 'move'.");
+        }
+
+        var scraperIds = request.ScraperIds?.Distinct().ToList();
+        if (scraperIds is null || scraperIds.Count == 0)
+        {
+            return BadRequest("At least one scraper ID is required.");
+        }
+
+        var sourceTask = await tasks.GetByIdWithScrapersAsync(request.SourceTaskId, cancellationToken);
+        if (sourceTask is null) return NotFound($"Source schedule '{request.SourceTaskId}' was not found.");
+
+        var destinationTask = await tasks.GetByIdWithScrapersAsync(destinationTaskId, cancellationToken);
+        if (destinationTask is null) return NotFound($"Destination schedule '{destinationTaskId}' was not found.");
+
+        if (sourceTask.SelectionStrategy != SelectionStrategy.Selected ||
+            destinationTask.SelectionStrategy != SelectionStrategy.Selected)
+        {
+            return Conflict("Both schedules must use the Selected strategy to transfer scraper assignments.");
+        }
+
+        var sourceScrapers = sourceTask.ScraperDefinitions
+            .Where(scraper => scraperIds.Contains(scraper.Id))
+            .ToDictionary(scraper => scraper.Id);
+        if (sourceScrapers.Count != scraperIds.Count)
+        {
+            return BadRequest("One or more scraper IDs are not assigned to the source schedule.");
+        }
+
+        var destinationScraperIds = destinationTask.ScraperDefinitions
+            .Select(scraper => scraper.Id)
+            .ToHashSet();
+        foreach (var scraperId in scraperIds)
+        {
+            if (destinationScraperIds.Add(scraperId))
+            {
+                destinationTask.ScraperDefinitions.Add(sourceScrapers[scraperId]);
+            }
+        }
+
+        if (string.Equals(request.Mode, "move", StringComparison.OrdinalIgnoreCase))
+        {
+            foreach (var scraperId in scraperIds)
+            {
+                sourceTask.ScraperDefinitions.Remove(sourceScrapers[scraperId]);
+            }
+        }
+
+        await tasks.UpdateAsync(destinationTask, cancellationToken);
         return NoContent();
     }
 }

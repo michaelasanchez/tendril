@@ -32,3 +32,12 @@ public record UpdateScheduledTaskRequest(
     string? SelectionStrategy,
     Core.Domain.Entities.ScheduledTaskStatus? Status,
     List<Guid>? ScraperIds);
+
+public record UpdateScheduledTaskScrapersRequest(
+    List<Guid>? Add,
+    List<Guid>? Remove);
+
+public record TransferScheduledTaskScrapersRequest(
+    Guid SourceTaskId,
+    List<Guid>? ScraperIds,
+    string? Mode);
