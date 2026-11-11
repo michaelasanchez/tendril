@@ -24,3 +24,139 @@
   z-index: 10;
   opacity: 0.85;
 }
+
+.reviewControls {
+  margin-bottom: 1.5rem;
+  border-color: var(--border);
+  background: var(--card);
+  color: var(--foreground);
+}
+
+.reviewControlsHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.reviewControlsHeader h3 {
+  margin: 0;
+  font-family: var(--font-slab);
+  font-size: var(--text-base);
+}
+
+.reviewControlsHeader p {
+  margin: 0.25rem 0 0;
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
+}
+
+.reviewCounts,
+.reviewToggles {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.reviewCounts {
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}
+
+.reviewCounts strong {
+  color: var(--foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+.reviewToggles {
+  flex-wrap: wrap;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.reviewToggles :global(.form-check) {
+  margin: 0;
+}
+
+.emptyState {
+  padding: 2rem;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  color: var(--muted-foreground);
+  text-align: center;
+}
+
+.conflictComparisons {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+}
+
+.eventComparison {
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--card);
+}
+
+.comparisonHeading {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: var(--text-sm);
+}
+
+.comparisonFields {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.comparisonField {
+  min-width: 0;
+  color: #23734d;
+  font-size: var(--text-xs);
+}
+
+.comparisonField[data-different='true'] {
+  color: #9a6715;
+}
+
+.comparisonLabel,
+.comparisonField > strong,
+.comparisonValues span {
+  display: block;
+}
+
+.comparisonLabel {
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+}
+
+.comparisonValues {
+  margin-top: 0.2rem;
+  color: var(--foreground);
+}
+
+.comparisonValues span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .reviewControlsHeader {
+    flex-direction: column;
+  }
+
+  .reviewCounts {
+    flex-wrap: wrap;
+    white-space: normal;
+  }
+
+  .comparisonFields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

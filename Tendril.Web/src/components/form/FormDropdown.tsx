@@ -14,6 +14,7 @@ interface FormDropdownProps {
   options: DropdownOption[];
   title?: string | JSX.Element;
   pill?: boolean;
+  hideCaret?: boolean;
 }
 
 export const FormDropdown: React.FC<FormDropdownProps> = ({
@@ -21,9 +22,16 @@ export const FormDropdown: React.FC<FormDropdownProps> = ({
   options,
   title,
   pill,
+  hideCaret,
 }) => {
   return (
-    <Form.Group className={cn(pill && styles.Pill)}>
+    <Form.Group
+      className={cn(
+        styles.FormDropdown,
+        pill && styles.Pill,
+        hideCaret && styles.HideCaret,
+      )}
+    >
       <Dropdown>
         <Dropdown.Toggle variant="success" id={id}>
           {title}

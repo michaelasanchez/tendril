@@ -153,11 +153,8 @@
   white-space: nowrap;
 }
 
-.ScheduleAccordionItem:global(.accordion-item) {
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  color: inherit;
+.ScheduleTable tbody > tr:not(.ExpandedRow) {
+  border-bottom: 1px solid var(--border);
 }
 
 .ScheduleTable th {
@@ -205,22 +202,12 @@
 .ExpandAction {
   display: grid;
   place-items: center;
-  width: 1.75rem;
+  width: 1.75rem !important;
   height: 1.75rem;
   flex: 0 0 auto;
   padding: 0;
   border: 0;
   border-radius: 3px;
-  background: transparent;
-  color: var(--muted-foreground);
-  box-shadow: none;
-}
-
-.ExpandAction::after {
-  display: none;
-}
-
-.ExpandAction:not(.collapsed) {
   background: transparent;
   color: var(--muted-foreground);
   box-shadow: none;
@@ -237,36 +224,40 @@
   background: var(--card);
 }
 
-.AssignedScrapers {
-  display: grid;
-  gap: 0.4rem;
+.AssignedScraperTable {
   width: 100%;
-}
-
-.AssignedScraper {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  min-height: 2.5rem;
-  width: 100%;
-  box-sizing: border-box;
-  padding: 0.3rem 0.45rem 0.3rem 0.7rem;
-  border-left: 2px solid var(--accent-secondary);
-  background: var(--background);
+  margin: 0;
   white-space: normal;
 }
 
-.AssignedScraper > span {
+.AssignedScraperTable th {
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.AssignedScraperTable th,
+.AssignedScraperTable td {
+  padding: 0.45rem 0.6rem;
+  background: transparent;
+}
+
+.AssignedScraperTable td:first-child {
   overflow-wrap: anywhere;
 }
 
-.AssignedScraper :global(.form-group) {
-  flex: 0 0 auto;
+.AssignedScraperTable td:last-child {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.AssignedScraperTable :global(.form-group) {
   margin: 0;
 }
 
-.AssignedScraper :global(.dropdown-toggle) {
+.AssignedScraperTable :global(.dropdown-toggle) {
   display: grid;
   place-items: center;
   width: 2rem;

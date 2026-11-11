@@ -47,6 +47,12 @@
   }
 }
 
+.FormDropdown {
+  &.HideCaret button::after {
+    display: none;
+  }
+}
+
 .FormInputSelect {
   input {
     border-top-right-radius: 0;

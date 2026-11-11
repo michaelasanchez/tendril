@@ -1,5 +1,6 @@
 import cn from 'classnames';
 import { format } from 'date-fns';
+import { useState } from 'react';
 import { Card } from 'react-bootstrap';
 import NoImage from '../assets/no-image.svg';
 import { SquareButton as Button } from '../components/button';
@@ -8,12 +9,14 @@ import type { Event } from '../types/api';
 
 // TODO: GENERALZIE !!
 import styles from '../scrapers/Tab.module.css';
+import { Badge } from '../components/badge';
 
 interface Props {
   e: Event;
 }
 
 export const ReviewEventCard: React.FC<Props> = ({ e }) => {
+  const [showDescription, setShowDescription] = useState(false);
   return (
     <Card
       style={{
@@ -36,6 +39,7 @@ export const ReviewEventCard: React.FC<Props> = ({ e }) => {
             maxWidth: '120px',
             borderTopRightRadius: 0,
             borderBottomRightRadius: 0,
+            alignSelf: showDescription ? 'flex-start' : 'stretch',
           }}
         />
       }
@@ -48,7 +52,14 @@ export const ReviewEventCard: React.FC<Props> = ({ e }) => {
       >
         <div>
           <h3>{e.title}</h3>
-          <p className={cn(styles.Clamp, !e.description && styles.Muted)}>
+          <Badge>{e.categoryName}</Badge>
+          <p
+            className={cn(
+              !showDescription && styles.Clamp,
+              !e.description && styles.Muted,
+            )}
+            onClick={() => setShowDescription(!showDescription)}
+          >
             {e.description ?? 'No description available'}
           </p>
           <label>

@@ -1,15 +1,15 @@
 import type { FormCheckType } from "react-bootstrap/esm/FormCheck";
 
-type CommonFormProps = {
-  className?: string;
-  label?: string;
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-  clearable?: boolean;
-  disabled?: boolean;
-  autoFocus?: boolean;
-};
+// type CommonFormProps = {
+//   className?: string;
+//   label?: string;
+//   value: string;
+//   onChange: (value: string) => void;
+//   placeholder?: string;
+//   clearable?: boolean;
+//   disabled?: boolean;
+//   autoFocus?: boolean;
+// };
 
 export interface FormInputProps {
   className?: string;

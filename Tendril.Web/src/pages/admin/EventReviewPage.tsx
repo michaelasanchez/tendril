@@ -1,7 +1,7 @@
 import cn from 'classnames';
 import { differenceInDays, format, startOfDay } from 'date-fns';
-import React, { useCallback, useEffect, useState } from 'react';
-import { Badge, Col, Row, Spinner } from 'react-bootstrap';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Badge, Card, Col, Form, Row, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
 import { CategoriesApi } from '../../api/categories';
 import { EventsApi } from '../../api/events';
@@ -13,6 +13,7 @@ import { ReviewEventCard } from '../../events';
 import { pageStyles } from '../../styles';
 import type {
   Category,
+  Event,
   Guid,
   PendingEventReviewDto,
   ScraperDefinition,
@@ -22,6 +23,8 @@ import styles from './EventReviewPage.module.css';
 interface EventFilter {
   from: string | null;
   scraperId: Guid | null;
+  conflictsOnly: boolean;
+  hidePublished: boolean;
 }
 
 export const EventReviewPage: React.FC = () => {
@@ -36,9 +39,35 @@ export const EventReviewPage: React.FC = () => {
   const [filter, setFilter] = useState<EventFilter>({
     from: format(new Date(), 'yyyy-MM-dd'),
     scraperId: null,
+    conflictsOnly: false,
+    hidePublished: false,
   });
 
   const navigate = useNavigate();
+
+  const filteredReviewPayloads = useMemo(
+    () =>
+      reviewPayloads.filter(({ pendingEvent, potentialMatches, scraperId }) => {
+        const startDate = pendingEvent.startDateTime ?? pendingEvent.startDate;
+
+        return (
+          (!filter.from ||
+            (startDate &&
+              startOfDay(new Date(startDate)) >= new Date(filter.from))) &&
+          (!filter.scraperId || scraperId === filter.scraperId) &&
+          (!filter.conflictsOnly || (potentialMatches?.length ?? 0) > 0) &&
+          (!filter.hidePublished || pendingEvent.status !== 'Published')
+        );
+      }),
+    [reviewPayloads, filter],
+  );
+
+  const conflictCount = reviewPayloads.filter(
+    ({ potentialMatches }) => (potentialMatches?.length ?? 0) > 0,
+  ).length;
+  const publishedCount = reviewPayloads.filter(
+    ({ pendingEvent }) => pendingEvent.status === 'Published',
+  ).length;
 
   const loadData = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
@@ -115,21 +144,62 @@ export const EventReviewPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="d-flex flex-column gap-4">
-        {reviewPayloads
-          .filter((r) => {
-            const startDate =
-              r.pendingEvent.startDateTime ?? r.pendingEvent.startDate;
+      <Card className={styles.reviewControls}>
+        <Card.Body>
+          <div className={styles.reviewControlsHeader}>
+            <div>
+              <h3>Review filters</h3>
+              <p>Focus the queue on events that need a closer look.</p>
+            </div>
+            <div className={styles.reviewCounts} aria-live="polite">
+              <span>
+                <strong>{filteredReviewPayloads.length}</strong> shown
+              </span>
+              <span>
+                <strong>{conflictCount}</strong> conflicts
+              </span>
+              <span>
+                <strong>{publishedCount}</strong> published
+              </span>
+            </div>
+          </div>
+          <div className={styles.reviewToggles}>
+            <Form.Check
+              id="event-review-conflicts-only"
+              type="switch"
+              label="Only show events with conflicts"
+              checked={filter.conflictsOnly}
+              onChange={(event) =>
+                setFilter((current) => ({
+                  ...current,
+                  conflictsOnly: event.target.checked,
+                }))
+              }
+            />
+            <Form.Check
+              id="event-review-hide-published"
+              type="switch"
+              label="Hide published events"
+              checked={filter.hidePublished}
+              onChange={(event) =>
+                setFilter((current) => ({
+                  ...current,
+                  hidePublished: event.target.checked,
+                }))
+              }
+            />
+          </div>
+        </Card.Body>
+      </Card>
 
-            return (
-              (!filter.from ||
-                (startDate &&
-                  startOfDay(new Date(startDate)) >=
-                  new Date(filter.from ?? ''))) &&
-              (!filter.scraperId || r.scraperId === filter.scraperId)
-            );
-          })
-          .map(({ pendingEvent, potentialMatches, scraperId }) => {
+      <div className="d-flex flex-column gap-4">
+        {!loading && filteredReviewPayloads.length === 0 && (
+          <div className={styles.emptyState} role="status">
+            No events match the current review filters.
+          </div>
+        )}
+        {filteredReviewPayloads.map(
+          ({ pendingEvent, potentialMatches, scraperId }) => {
             const hasConflict = potentialMatches && potentialMatches.length > 0;
             const isPending = pendingEvent.status === 'Pending';
             const isSuppressed = pendingEvent.status === 'Suppressed';
@@ -208,9 +278,8 @@ export const EventReviewPage: React.FC = () => {
                     <Col lg={6}>
                       <div className="d-flex flex-column gap-2 h-100 justify-content-center">
                         {potentialMatches.map((existingEvent) => (
-                          <>
+                          <React.Fragment key={existingEvent.id}>
                             <div
-                              key={existingEvent.id}
                               className="position-relative opacity-75"
                             >
                               <Badge
@@ -249,15 +318,58 @@ export const EventReviewPage: React.FC = () => {
                                 </div>
                               </small>
                             </div>
-                          </>
+                          </React.Fragment>
                         ))}
                       </div>
                     </Col>
                   )}
                 </Row>
 
+                {hasConflict && (
+                  <div className={styles.conflictComparisons}>
+                    {potentialMatches.map((existingEvent) => (
+                      <div
+                        key={existingEvent.id}
+                        className={styles.eventComparison}
+                      >
+                        <strong className={styles.comparisonHeading}>
+                          Compared with “{existingEvent.title}”
+                        </strong>
+                        <div className={styles.comparisonFields}>
+                          {compareReviewFields(pendingEvent, existingEvent).map(
+                            (comparison) => (
+                              <div
+                                key={comparison.label}
+                                className={styles.comparisonField}
+                                data-different={!comparison.matches}
+                              >
+                                <span className={styles.comparisonLabel}>
+                                  {comparison.label}
+                                </span>
+                                <strong>
+                                  {comparison.matches ? 'Matches' : 'Different'}
+                                </strong>
+                                {!comparison.matches && (
+                                  <div className={styles.comparisonValues}>
+                                    <span title={comparison.incoming}>
+                                      Incoming: {comparison.incoming}
+                                    </span>
+                                    <span title={comparison.existing}>
+                                      Existing: {comparison.existing}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            ),
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 {/* Universal Action Toolbar positioned cleanly underneath the cards */}
-                <div className="d-flex justify-content-between align-items-center mt-3 pt-2 border-top border-secondary">
+                <div className="d-flex justify-content-between align-items-center mt-3 pt-2 gap-2 border-top border-secondary">
                   <div style={{ width: '200px' }}>
                     <FormSelect
                       value={
@@ -325,10 +437,61 @@ export const EventReviewPage: React.FC = () => {
                 </div>
               </div>
             );
-          })}
+          },
+        )}
       </div>
     </section>
   );
 };
 
 export default EventReviewPage;
+
+function compareReviewFields(incoming: Event, existing: Event) {
+  const comparisons = [
+    {
+      label: 'Title',
+      incoming: incoming.title || '(empty)',
+      existing: existing.title || '(empty)',
+    },
+    {
+      label: 'Start time',
+      incoming: formatReviewStart(incoming),
+      existing: formatReviewStart(existing),
+    },
+    {
+      label: 'Description',
+      incoming: incoming.description || '(empty)',
+      existing: existing.description || '(empty)',
+    },
+    {
+      label: 'Category',
+      incoming: incoming.categoryName || '(none)',
+      existing: existing.categoryName || '(none)',
+    },
+  ];
+
+  return comparisons.map((comparison) => ({
+    ...comparison,
+    matches: comparison.label === 'Description'
+      ? normalizeReviewValue(comparison.incoming) ===
+        normalizeReviewValue(comparison.existing)
+      : normalizeReviewValue(comparison.incoming).toLocaleLowerCase() ===
+        normalizeReviewValue(comparison.existing).toLocaleLowerCase(),
+  }));
+}
+
+function normalizeReviewValue(value: string) {
+  return value.trim().replace(/\s+/g, ' ');
+}
+
+function formatReviewStart(event: Event) {
+  const value = event.showStartTime
+    ? event.startDateTime ?? event.startDate
+    : event.startDate ?? event.startDateTime;
+  if (!value) return '(not set)';
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return format(date, event.showStartTime ? 'MMM d, yyyy h:mm aa' : 'MMM d, yyyy');
+}

@@ -19,7 +19,7 @@ export const FormInputSelect: React.FC<FormSelectProps> = ({
     <div>
       <Dropdown as={ButtonGroup} className="w-100">
         <Form.Control
-          value={value}
+          value={value ?? ''}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           disabled={disabled}
