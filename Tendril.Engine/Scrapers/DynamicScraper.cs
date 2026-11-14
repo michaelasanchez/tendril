@@ -99,9 +99,10 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
         {
             ct.ThrowIfCancellationRequested();
 
-            var pageEventCount = 0;
             var pageUrl = page.Url;
             var items = await page.QuerySelectorAllAsync($"{container.Selector}:not(.{ProcessedClass})");
+
+            context.AddLog(ScraperAttemptLogLevel.Information, $"Selected {items.Count} items(s) on page '{pageUrl}';");
 
             foreach (var item in items)
             {
@@ -171,7 +172,6 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
 
                 if (processedSignatures.Add(signature) && !partial)
                 {
-                    pageEventCount++;
                     yield return preResult.Merge(result);
                 }
             }
@@ -181,7 +181,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
             {
                 hasMore = false;
                 context.AddLog(ScraperAttemptLogLevel.Information,
-                    $"Located {pageEventCount} event(s) on page '{pageUrl}'; no more items found.");
+                    $"no more items found.");
 
                 if (context.ParentItem?.AllowEmptyResult == true)
                 {
@@ -190,11 +190,12 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
             }
             else
             {
-                hasMore = await PerformPagination(page, definition, context, pageUrl, pageEventCount);
+                hasMore = await PerformPagination(page, definition, context, pageUrl);
+
                 if (!hasMore)
                 {
-                    context.AddLog(ScraperAttemptLogLevel.Information,
-                        $"Located {pageEventCount} event(s) on page '{pageUrl}'; pagination did not advance.");
+                    context.AddLog(ScraperAttemptLogLevel.Warning,
+                        $"Pagination attempt did not succeed. ({definition.PaginationType})");
                 }
             }
 
@@ -324,12 +325,11 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
         }
     }
 
-    private static async Task<bool> PerformPagination(
+    private async Task<bool> PerformPagination(
         IPage page,
         ScraperDefinition def,
         ScrapeContext context,
-        string pageUrl,
-        int pageEventCount)
+        string pageUrl)
     {
         if (def.PaginationType == PaginationType.None) return false;
 
@@ -337,11 +337,11 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
         {
             try
             {
-                var advanced = await PerformScroll(page);
+                var advanced = await RobustAutoScrollAsync(page);
+
                 if (advanced)
                 {
-                    context.AddLog(ScraperAttemptLogLevel.Information,
-                        $"Located {pageEventCount} event(s) on page '{pageUrl}'; advanced infinite-scroll pagination.");
+                    context.AddLog(ScraperAttemptLogLevel.Information, $"advanced infinite-scroll pagination.");
                 }
 
                 return advanced;
@@ -355,7 +355,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
             catch (Exception ex)
             {
                 context.AddLog(ScraperAttemptLogLevel.Warning,
-                    $"Located {pageEventCount} event(s) on page '{pageUrl}', but failed to advance infinite-scroll pagination: {ex.Message}");
+                    $"Failed to advance infinite-scroll pagination: {ex.Message}");
                 throw;
             }
         }
@@ -376,7 +376,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
                 await PerformWait(page, nextBtnDef.Delay);
 
                 context.AddLog(ScraperAttemptLogLevel.Information,
-                    $"Located {pageEventCount} event(s) on page '{pageUrl}'; advanced next-button pagination.");
+                    $"advanced next-button pagination.");
                 return true;
             }
             catch (OperationCanceledException)
@@ -388,7 +388,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
             catch (Exception ex)
             {
                 context.AddLog(ScraperAttemptLogLevel.Warning,
-                    $"Located {pageEventCount} event(s) on page '{pageUrl}', but failed to advance pagination: {ex.Message}");
+                    $"Failed to advance next-button pagination: {ex.Message}");
                 return false;
             }
         }
@@ -442,6 +442,84 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
 
         return false; // We gave it 3 tries and ~4.5 seconds; nothing happened.
     }
+
+
+    public async Task<bool> RobustAutoScrollAsync(IPage page, IElementHandle targetElement = null)
+    {
+        int attempts = 0;
+        int maxAttempts = 15;
+
+        // Ensure the page thinks it's active and focused
+        await page.EvaluateAsync(@"() => {
+        window.focus();
+        Object.defineProperty(document, 'hidden', { value: false, configurable: true });
+        Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+    }");
+
+        // Helper function to get the current height
+        async Task<double> GetHeightAsync()
+        {
+            if (targetElement != null)
+            {
+                return await targetElement.EvaluateAsync<double>("el => el.scrollHeight");
+            }
+            return await page.EvaluateAsync<double>("() => document.body.scrollHeight");
+        }
+
+        double initialHeight = await GetHeightAsync();
+        double previousHeight = initialHeight;
+        double currentHeight = initialHeight;
+
+        while (attempts < maxAttempts)
+        {
+            if (targetElement != null)
+            {
+                await targetElement.HoverAsync();
+                await page.Mouse.WheelAsync(0, 3000);
+            }
+            else
+            {
+                await page.Mouse.WheelAsync(0, 3000);
+                await page.EvaluateAsync("() => window.scrollTo(0, document.body.scrollHeight)");
+            }
+
+            // Wait for network requests to settle, with a fallback timeout
+            try
+            {
+                await page.WaitForLoadStateAsync(LoadState.NetworkIdle, new() { Timeout = 2000 });
+            }
+            catch (TimeoutException)
+            {
+                await Task.Delay(1500);
+            }
+
+            currentHeight = await GetHeightAsync();
+
+            if (currentHeight == previousHeight)
+            {
+                attempts++;
+
+                // Wake up stuck IntersectionObservers or event listeners
+                if (targetElement != null)
+                {
+                    await targetElement.EvaluateAsync("el => { el.dispatchEvent(new Event('scroll')); el.dispatchEvent(new Event('resize')); }");
+                }
+                else
+                {
+                    await page.EvaluateAsync("() => { window.dispatchEvent(new Event('scroll')); window.dispatchEvent(new Event('resize')); }");
+                }
+            }
+            else
+            {
+                attempts = 0; // Reset counter if content rendered and height grew
+                previousHeight = currentHeight;
+            }
+        }
+
+        // Returns true if scrolling successfully increased the scrollable height
+        return currentHeight > initialHeight;
+    }
+
 
     private static async Task PerformWait(IPage page, int? delay)
     {

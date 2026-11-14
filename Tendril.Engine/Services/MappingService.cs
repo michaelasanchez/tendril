@@ -96,6 +96,11 @@ public class MappingService : IMappingService
             }
         }
 
+        if (rule.PreserveExisting && intermediate.TryGetValue(rule.TargetField, out var existing) && existing.Value is not null)
+        {
+            return;
+        }
+
         // Transform
         intermediate[rule.TargetField] = ApplyRuleTransform(
             rule,

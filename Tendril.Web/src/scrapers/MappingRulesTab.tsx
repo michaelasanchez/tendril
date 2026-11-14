@@ -63,9 +63,7 @@ export const MappingRulesTab: React.FC<Props> = ({ scraperId, actions }) => {
   const [isNew, setIsNew] = useState(false);
   const [showDisabled, setShowDisabled] = useState(true);
 
-  const [sourceFieldOptions, setSourceFieldOptions] = useState<Option[]>(
-    [],
-  );
+  const [sourceFieldOptions, setSourceFieldOptions] = useState<Option[]>([]);
 
   const load = async () => {
     if (scraperId !== 'new') {
@@ -132,6 +130,7 @@ export const MappingRulesTab: React.FC<Props> = ({ scraperId, actions }) => {
         combineWithField: editing.combineWithField ?? null,
         order: editing.order ?? 0,
         transformType: editing.transformType,
+        preserveExisting: editing.preserveExisting ?? false,
         constantValue: editing.constantValue ?? null,
         format: editing.format ?? null,
         regexPattern: editing.regexPattern ?? null,
@@ -146,6 +145,7 @@ export const MappingRulesTab: React.FC<Props> = ({ scraperId, actions }) => {
         combineWithField: editing.combineWithField,
         order: editing.order,
         transformType: editing.transformType,
+        preserveExisting: editing.preserveExisting ?? false,
         constantValue: editing.constantValue ?? null,
         format: editing.format ?? null,
         regexPattern: editing.regexPattern ?? null,
@@ -189,7 +189,10 @@ export const MappingRulesTab: React.FC<Props> = ({ scraperId, actions }) => {
           <div>
             Remaining:{' '}
             {targetFieldOptions
-              .filter((o) => !rules.some((r) => !r.disabled && r.targetField === o.value))
+              .filter(
+                (o) =>
+                  !rules.some((r) => !r.disabled && r.targetField === o.value),
+              )
               .map((o) => <em key={o.value}>{o.label}</em>)
               .reduce(
                 (acc, cur, i) =>
@@ -228,6 +231,7 @@ export const MappingRulesTab: React.FC<Props> = ({ scraperId, actions }) => {
                 <th>Combine With</th>
                 <th>Order</th>
                 <th>Transform</th>
+                <th>Preserve Existing</th>
                 <th>Format</th>
                 <th>Constant</th>
                 <th>Regex Pattern</th>
@@ -250,6 +254,7 @@ export const MappingRulesTab: React.FC<Props> = ({ scraperId, actions }) => {
                     <td>{emphasizeDynamicFields(r.combineWithField ?? '-')}</td>
                     <td>{r.order}</td>
                     <td>{r.transformType}</td>
+                    <td>{r.preserveExisting ? 'Yes' : ''}</td>
                     <td>{r.constantValue}</td>
                     <td>{r.format}</td>
                     <td>{r.regexPattern}</td>
@@ -409,6 +414,13 @@ export const MappingRulesTab: React.FC<Props> = ({ scraperId, actions }) => {
                   label="Disabled"
                   checked={editing.disabled ?? false}
                   onChange={(disabled) => setEditing({ ...editing, disabled })}
+                />
+                <FormCheck
+                  label="Preserve Existing"
+                  checked={editing.preserveExisting ?? false}
+                  onChange={(preserveExisting) =>
+                    setEditing({ ...editing, preserveExisting })
+                  }
                 />
                 <div className={formStyles.buttonRow}>
                   <Button variant="primary" onClick={save}>

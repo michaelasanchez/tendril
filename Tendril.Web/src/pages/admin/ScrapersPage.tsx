@@ -2,11 +2,12 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Table } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
 import { ScrapersApi } from '../../api/scrapers';
-import { SquareButton } from '../../components/button';
+import { IconButton, SquareButton } from '../../components/button';
 import { Icon } from '../../components/Icon';
 import { useLocalStorage } from '../../hooks';
 import { pageStyles, tableStyles } from '../../styles';
 import type { ScraperDefinition } from '../../types/api';
+import styles from './ScrapersPage.module.css';
 
 type SortKey =
   | 'name'
@@ -286,8 +287,8 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({}) => {
                 >
                   <td>{s.name}</td>
                   <td>
-                    <a href={s.baseUrl} target="_blank">
-                      {s.baseUrl}
+                    <a className={styles.Truncate} href={s.baseUrl} target="_blank">
+                      {s.baseUrl} <Icon name="external" />
                     </a>
                   </td>
                   <td>

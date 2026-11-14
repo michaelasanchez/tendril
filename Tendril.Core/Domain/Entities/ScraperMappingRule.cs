@@ -17,6 +17,7 @@ public class ScraperMappingRule
 
     public int Order { get; set; } = 0;
     public TransformType TransformType { get; set; }
+    public bool PreserveExisting { get; set; } = false;
 
     public string? ConstantValue { get; set; }
     public string? Format { get; set; }

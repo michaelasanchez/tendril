@@ -344,7 +344,7 @@
 .RunningDuration {
   display: block;
   margin-top: 0.2rem;
-  color: #23734d;
+  color: var(--warning);
   font-variant-numeric: tabular-nums;
 }
 

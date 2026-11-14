@@ -137,6 +137,7 @@ export interface ScraperMappingRule {
   combineWithField: string | null;
   order: number;
   transformType: TransformType;
+  preserveExisting: boolean;
   constantValue: string | null;
   format: string | null;
   regexPattern: string | null;
@@ -202,17 +203,17 @@ export interface ScraperAttemptHistory {
 }
 
 export interface ScheduledTask {
-    id: Guid ,
-    name: string ,
-    notes: string | null ,
-    isDisabled: boolean ,
-    cronExpression: string ,
-    nextRunAtUtc: string ,
-    selectionStrategy: string ,
-    status: string ,
-    lastRunStartedAtUtc: string | null ,
-    lastRunCompletedAtUtc: string | null ,
-    scraperIds: Guid[] ,
+  id: Guid;
+  name: string;
+  notes: string | null;
+  isDisabled: boolean;
+  cronExpression: string;
+  nextRunAtUtc: string;
+  selectionStrategy: string;
+  status: string;
+  lastRunStartedAtUtc: string | null;
+  lastRunCompletedAtUtc: string | null;
+  scraperIds: Guid[];
 }
 
 export interface ScheduledTaskRun {
@@ -337,9 +338,18 @@ export interface PendingEventReviewDto {
   scraperId: Guid;
 }
 
+export type LogLevel = 'Information' | 'Warning' | 'Error';
+
+export interface ScrapeRunLog {
+  timestampUtc: string;
+  level: LogLevel;
+  message: string;
+}
+
 export interface ScrapeRunResponse {
   success: boolean;
   error?: string | null;
-  raw?: unknown;
-  mapped?: unknown;
+  raw?: { fields: {} }[];
+  mapped?: {}[];
+  logs?: ScrapeRunLog[];
 }

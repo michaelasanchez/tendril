@@ -23,6 +23,7 @@ public class MappingRulesController(IMappingRuleRepository rules) : ControllerBa
             r.CombineWithField,
             r.Order,
             r.TransformType,
+            r.PreserveExisting,
             r.ConstantValue,
             r.Format,
             r.RegexPattern,
@@ -46,6 +47,7 @@ public class MappingRulesController(IMappingRuleRepository rules) : ControllerBa
             CombineWithField = request.CombineWithField,
             Order = request.Order,
             TransformType = request.TransformType,
+            PreserveExisting = request.PreserveExisting,
             ConstantValue = request.ConstantValue,
             Format = request.Format,
             RegexPattern = request.RegexPattern,
@@ -63,6 +65,7 @@ public class MappingRulesController(IMappingRuleRepository rules) : ControllerBa
             rule.CombineWithField,
             rule.Order,
             rule.TransformType,
+            rule.PreserveExisting,
             rule.ConstantValue,
             rule.Format,
             rule.RegexPattern,
@@ -85,6 +88,7 @@ public class MappingRulesController(IMappingRuleRepository rules) : ControllerBa
         if (request.CombineWithField is not null) rule.CombineWithField = request.CombineWithField;
         if (request.Order is not null) rule.Order = request.Order.Value;
         if (request.TransformType is not null) rule.TransformType = request.TransformType.Value;
+        if (request.PreserveExisting is not null) rule.PreserveExisting = request.PreserveExisting.Value;
         if (request.Format is not null) rule.Format = request.Format;
         if (request.ConstantValue is not null) rule.ConstantValue = request.ConstantValue;
         if (request.RegexPattern is not null) rule.RegexPattern = request.RegexPattern;
