@@ -337,7 +337,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
         {
             try
             {
-                var advanced = await RobustAutoScrollAsync(page);
+                var advanced = await ScrollPageAsync(page);
 
                 if (advanced)
                 {
@@ -443,83 +443,73 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
         return false; // We gave it 3 tries and ~4.5 seconds; nothing happened.
     }
 
-
-    public async Task<bool> RobustAutoScrollAsync(IPage page, IElementHandle targetElement = null)
+    public async Task<bool> ScrollPageAsync(
+    IPage page,
+    IElementHandle? container = null,
+    int growthTimeoutMs = 8000,
+    int settleMs = 600)
     {
-        int attempts = 0;
-        int maxAttempts = 15;
+        const string heightJs = "el => (el ?? document.scrollingElement).scrollHeight";
+        // Scrolls one step and reports whether we're at the (live) bottom
+        const string stepJs = @"el => {
+        const e = el ?? document.scrollingElement;
+        e.scrollBy({ top: e.clientHeight * 0.9 });
+        return e.scrollTop + e.clientHeight >= e.scrollHeight - 2;
+    }";
+        const string nudgeJs = @"el => {
+        const e = el ?? document.scrollingElement;
+        e.scrollBy({ top: -400 });
+        setTimeout(() => e.scrollTo({ top: e.scrollHeight }), 150);
+    }";
 
-        // Ensure the page thinks it's active and focused
-        await page.EvaluateAsync(@"() => {
-        window.focus();
-        Object.defineProperty(document, 'hidden', { value: false, configurable: true });
-        Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
-    }");
+        Task<double> Height() => page.EvaluateAsync<double>(heightJs, container);
 
-        // Helper function to get the current height
-        async Task<double> GetHeightAsync()
+        var vp = page.ViewportSize;
+        await page.Mouse.MoveAsync((vp?.Width ?? 1280) / 2, (vp?.Height ?? 720) / 2);
+
+        double start = await Height();
+
+        // 1. Walk to the current bottom so everything already on the page renders
+        for (int i = 0; i < 100; i++)
         {
-            if (targetElement != null)
-            {
-                return await targetElement.EvaluateAsync<double>("el => el.scrollHeight");
-            }
-            return await page.EvaluateAsync<double>("() => document.body.scrollHeight");
+            await page.Mouse.WheelAsync(0, 600);
+            bool atBottom = await page.EvaluateAsync<bool>(stepJs, container);
+            await Task.Delay(100);
+            if (atBottom) break;
         }
 
-        double initialHeight = await GetHeightAsync();
-        double previousHeight = initialHeight;
-        double currentHeight = initialHeight;
+        // 2. Wait for the page to grow, nudging the bottom if nothing happens
+        var deadline = DateTime.UtcNow.AddMilliseconds(growthTimeoutMs);
+        double height = await Height();
+        int polls = 0;
 
-        while (attempts < maxAttempts)
+        while (height <= start && DateTime.UtcNow < deadline)
         {
-            if (targetElement != null)
-            {
-                await targetElement.HoverAsync();
-                await page.Mouse.WheelAsync(0, 3000);
-            }
-            else
-            {
-                await page.Mouse.WheelAsync(0, 3000);
-                await page.EvaluateAsync("() => window.scrollTo(0, document.body.scrollHeight)");
-            }
+            await Task.Delay(200);
+            height = await Height();
 
-            // Wait for network requests to settle, with a fallback timeout
-            try
-            {
-                await page.WaitForLoadStateAsync(LoadState.NetworkIdle, new() { Timeout = 2000 });
-            }
-            catch (TimeoutException)
-            {
-                await Task.Delay(1500);
-            }
+            if (height <= start && ++polls % 8 == 0)   // roughly every 1.6s
+                await page.EvaluateAsync(nudgeJs, container);
+        }
 
-            currentHeight = await GetHeightAsync();
+        if (height <= start)
+            return false;
 
-            if (currentHeight == previousHeight)
+        // 3. Grew: wait until it stops changing so the caller sees a stable page
+        var lastChange = DateTime.UtcNow;
+        while ((DateTime.UtcNow - lastChange).TotalMilliseconds < settleMs)
+        {
+            await Task.Delay(100);
+            double h = await Height();
+            if (h != height)
             {
-                attempts++;
-
-                // Wake up stuck IntersectionObservers or event listeners
-                if (targetElement != null)
-                {
-                    await targetElement.EvaluateAsync("el => { el.dispatchEvent(new Event('scroll')); el.dispatchEvent(new Event('resize')); }");
-                }
-                else
-                {
-                    await page.EvaluateAsync("() => { window.dispatchEvent(new Event('scroll')); window.dispatchEvent(new Event('resize')); }");
-                }
-            }
-            else
-            {
-                attempts = 0; // Reset counter if content rendered and height grew
-                previousHeight = currentHeight;
+                height = h;
+                lastChange = DateTime.UtcNow;
             }
         }
 
-        // Returns true if scrolling successfully increased the scrollable height
-        return currentHeight > initialHeight;
+        return true;
     }
-
 
     private static async Task PerformWait(IPage page, int? delay)
     {
