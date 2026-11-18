@@ -62,10 +62,10 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
 
         // 3. PRE-SCRAPE PHASE
         // Run any interactions (like typing zip code) required BEFORE the list appears.
-        var container = definition.Actions.Single(x => x.Type == ActionType.Container);
+        var containerAction = definition.Actions.Single(x => x.Type == ActionType.Container);
 
         var preSelectors = definition.Actions
-            .Where(x => x.Order < container.Order && x.Type != ActionType.Container)
+            .Where(x => x.Order < containerAction.Order && x.Type != ActionType.Container)
             .OrderBy(x => x.Order);
 
         var preResult = (context.ParentItem ?? new ScrapeYieldItem()) with
@@ -82,12 +82,12 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
         // 4. WAIT FOR CONTENT
         try
         {
-            await page.WaitForSelectorAsync(container.Selector, new() { Timeout = 10000 });
+            await page.WaitForSelectorAsync(containerAction.Selector, new() { Timeout = containerAction.Delay ?? 10000 });
         }
         catch (TimeoutException)
         {
             context.AddLog(ScraperAttemptLogLevel.Warning,
-                $"Timed out waiting for container selector '{container.Selector}' at '{page.Url}'.");
+                $"Timed out waiting for container selector '{containerAction.Selector}' at '{page.Url}'.");
             yield break;
         }
 
@@ -100,7 +100,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
             ct.ThrowIfCancellationRequested();
 
             var pageUrl = page.Url;
-            var items = await page.QuerySelectorAllAsync($"{container.Selector}:not(.{ProcessedClass})");
+            var items = await page.QuerySelectorAllAsync($"{containerAction.Selector}:not(.{ProcessedClass})");
 
             context.AddLog(ScraperAttemptLogLevel.Information, $"Selected {items.Count} items(s) on page '{pageUrl}';");
 
