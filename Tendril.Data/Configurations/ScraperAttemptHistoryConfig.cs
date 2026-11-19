@@ -12,6 +12,9 @@ public class ScraperAttemptHistoryConfig : IEntityTypeConfiguration<ScraperAttem
 
         builder.HasKey(x => x.Id);
 
+        builder.Property(x => x.Status)
+            .HasConversion<string>();
+
         builder.Property(x => x.ErrorMessage)
             .HasMaxLength(2000);
     }

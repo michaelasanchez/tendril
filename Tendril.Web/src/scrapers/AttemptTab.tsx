@@ -16,6 +16,7 @@ import { SquareButton as Button } from '../components/button';
 import { ElapsedClock } from '../components/ElapsedClock';
 import styles from './RunsTab.module.css';
 
+import { AttemptStatusBadge } from '../components/AttemptStatusBadge';
 import type {
   Guid,
   ScraperAttemptHistory,
@@ -228,23 +229,7 @@ export const RunsTab: React.FC<Props> = ({
                         </Badge>
                       </td>
                       <td>
-                        <Badge
-                          bg={
-                            isRunning
-                              ? 'warning'
-                              : attempt.success
-                                ? 'success'
-                                : 'danger'
-                          }
-                          text={isRunning ? 'dark' : undefined}
-                          className={styles.Badge}
-                        >
-                          {isRunning
-                            ? 'Running'
-                            : attempt.success
-                              ? 'Succeeded'
-                              : 'Failed'}
-                        </Badge>
+                        <AttemptStatusBadge status={attempt.status} />
                       </td>
                       <td>{attempt.extracted}</td>
                       <td>{attempt.mapped}</td>

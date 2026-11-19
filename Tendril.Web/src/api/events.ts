@@ -1,9 +1,9 @@
 import type {
-    Event,
-    EventResponse,
-    EventStatus,
-    Guid,
-    PendingEventReviewDto,
+  Event,
+  EventResponse,
+  EventStatus,
+  Guid,
+  PendingEventReviewDto,
 } from '../types/api';
 import { apiGet, apiPatch, apiPost } from './client';
 
@@ -83,11 +83,14 @@ export const EventsApi = {
 
   supersedeAndPublish(
     pendingId: Guid,
-    existingId: Guid,
+    existingIds: Guid[],
     signal?: AbortSignal,
   ): Promise<void> {
-    console.log('lksdjf"0')
-    return apiPost(`/events/${existingId}/supersede/${pendingId}`, null, signal);
+    return apiPost(
+      `/events/${pendingId}/supersede?existingId=${existingIds.join('&existingId=')}`,
+      null,
+      signal,
+    );
   },
 
   patch(eventId: Guid, request: PatchEventRequest): Promise<void> {
@@ -96,5 +99,5 @@ export const EventsApi = {
 
   patchMany(ids: Guid[], patch: PatchEventRequest): Promise<void> {
     return apiPatch(`/events`, { ids, patch });
-  }
+  },
 };

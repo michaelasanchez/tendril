@@ -184,6 +184,12 @@ export interface AttemptLogEntry {
   message: string;
 }
 
+export type AttemptStatus =
+  | 'Running'
+  | 'Succeeded'
+  | 'Warning'
+  | 'Failed';
+
 export interface ScraperAttemptHistory {
   id: Guid;
   scraperDefinitionId: Guid;
@@ -191,7 +197,7 @@ export interface ScraperAttemptHistory {
   scraperName: string | null;
   startTimeUtc: string;
   endTimeUtc: string | null;
-  success: boolean;
+  status: AttemptStatus;
   extracted: number;
   mapped: number;
   created: number;

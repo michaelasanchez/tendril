@@ -1,5 +1,13 @@
 ﻿namespace Tendril.Core.Domain.Entities;
 
+public enum AttemptStatus
+{
+    Running,
+    Succeeded,
+    Warning,
+    Failed
+}
+
 public class ScraperAttemptHistory
 {
     public Guid Id { get; set; }
@@ -17,7 +25,7 @@ public class ScraperAttemptHistory
     public DateTimeOffset StartTimeUtc { get; set; }
     public DateTimeOffset EndTimeUtc { get; set; }
 
-    public bool Success { get; set; }
+    public AttemptStatus Status { get; set; }
     public int Extracted { get; set; }
     public int Mapped { get; set; }
     public int Created { get; set; }

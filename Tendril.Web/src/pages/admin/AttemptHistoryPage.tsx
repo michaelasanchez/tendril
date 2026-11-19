@@ -16,6 +16,7 @@ import {
 import cn from 'classnames';
 import { Link } from 'react-router';
 import { ScrapersApi } from '../../api/scrapers';
+import { AttemptStatusBadge } from '../../components/AttemptStatusBadge';
 import { FormSelect } from '../../components/form';
 import type {
   EventRevision,
@@ -152,12 +153,6 @@ export const AttemptHistoryPage: React.FC = () => {
     }
   };
 
-  const renderStatusBadge = (success: boolean) => (
-    <Badge bg={success ? 'success' : 'danger'}>
-      {success ? 'SUCCESS' : 'FAILED'}
-    </Badge>
-  );
-
   return (
     <div className="p-4">
       <h2 className="mb-4">Scraper Attempt History</h2>
@@ -226,13 +221,7 @@ export const AttemptHistoryPage: React.FC = () => {
                       Open
                     </Link>
                   </Stack>
-                  {a.errorMessage === 'Running...' ? (
-                    <Badge bg="warning" text="dark">
-                      RUNNING
-                    </Badge>
-                  ) : (
-                    renderStatusBadge(a.success)
-                  )}
+                  <AttemptStatusBadge status={a.status} />
                 </ListGroup.Item>
               ))}
               {loading.attempts && (

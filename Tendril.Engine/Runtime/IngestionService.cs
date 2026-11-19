@@ -44,8 +44,7 @@ public class IngestionService(
             ScraperDefinitionId = scraper.Id,
             ScheduledTaskRunId = scheduledTaskRunId,
             StartTimeUtc = start,
-            Success = false,
-            ErrorMessage = "Running..."
+            Status = AttemptStatus.Running,
         };
 
         await attemptHistories.Add(attempt, cancellationToken);
@@ -144,21 +143,21 @@ public class IngestionService(
             }
 
             // 3. Success Completion
-
             if (extracted == 0)
             {
+                attempt.Status = AttemptStatus.Warning;
+
                 scraper.State = ScraperState.Warning;
                 scraper.StateMessage = "Scraper completed with no events extracted";
             }
             else
             {
+                attempt.Status = AttemptStatus.Succeeded;
+
                 scraper.State = ScraperState.Healthy;
                 scraper.StateMessage = string.Empty;
                 scraper.LastSuccessUtc = DateTimeOffset.UtcNow;
             }
-
-            attempt.Success = true;
-            attempt.ErrorMessage = null;
         }
         catch (Exception ex)
         {
@@ -201,7 +200,7 @@ public class IngestionService(
                 scraper.LastErrorMessage = failure;
             }
 
-            attempt.Success = false;
+            attempt.Status = AttemptStatus.Failed;
             attempt.ErrorMessage = wasCanceled ? "Ingestion canceled." : failure;
         }
         finally
@@ -216,7 +215,7 @@ public class IngestionService(
             attempt.Skipped = skipped;
             attempt.Errored = errored;
 
-            if (attempt.Success)
+            if (attempt.Status is not AttemptStatus.Failed)
             {
                 var level = extracted == 0 || errored > 0
                     ? ScraperAttemptLogLevel.Warning
@@ -241,7 +240,6 @@ public class IngestionService(
         return new IngestResult
         {
             Attempt = attempt,
-            Success = attempt.Success,
             Errors = errors,
 
             // TODO: these need to be DTOs...

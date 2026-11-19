@@ -1,4 +1,6 @@
-﻿namespace Tendril.Api.Dtos;
+﻿using Tendril.Core.Domain.Entities;
+
+namespace Tendril.Api.Dtos;
 
 public class AttemptHistoryDto
 {
@@ -10,7 +12,7 @@ public class AttemptHistoryDto
     public DateTimeOffset StartTimeUtc { get; init; }
     public DateTimeOffset? EndTimeUtc { get; init; }
 
-    public bool Success { get; init; } = default!;
+    public AttemptStatus Status { get; init; } = default!;
     public int Extracted { get; init; }
     public int Mapped { get; set; }
     public int Created { get; set; }

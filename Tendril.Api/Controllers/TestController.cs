@@ -5,6 +5,7 @@ using Tendril.Api.Dtos;
 using Tendril.Core.Domain.Entities;
 using Tendril.Core.Interfaces.Repositories;
 using Tendril.Engine.Abstractions;
+using Tendril.Engine.Interfaces;
 using Tendril.Engine.Models;
 using Tendril.Engine.Utils;
 
@@ -18,6 +19,7 @@ public class ScraperRunsController(
     IRawEventRepository rawEvents,
     IScrapeExecutor executor,
     IMappingService mapper,
+    IClassificationService classifier,
     IIngestionService ingestionService) : ControllerBase
 {
     // 1) Test selectors only (Stream -> List in memory)
@@ -99,6 +101,8 @@ public class ScraperRunsController(
                     mapped.EndUtc = mapped.EndUtc.Value.AddYears(diff);
             }
         }
+
+        classifier.ClassifyEvent(scraper, raw, mapped);
 
         return Ok(new
         {
@@ -200,7 +204,7 @@ public class ScraperRunsController(
         return Ok(new IngestResultDto
         {
             Attempt = null,
-            Success = result.Success,
+            Status = result.Status,
             Errors = result.Errors,
             Raw = null,
             Mapped = null,

@@ -1,4 +1,3 @@
-import { useEffect, useState, type ReactNode } from 'react';
 import {
   Activity,
   ArrowUpRight,
@@ -8,12 +7,13 @@ import {
   Clock3,
   RefreshCw,
 } from 'lucide-react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Alert, Badge, Button, Spinner, Table } from 'react-bootstrap';
 import { Link } from 'react-router';
 import { ScheduledTaskRunsApi } from '../../api/scheduledTaskRuns';
 import { ScheduledTasksApi } from '../../api/scheduledTasks';
-import { WorkerApi, type WorkerStatus } from '../../api/worker';
 import { ScrapersApi } from '../../api/scrapers';
+import { WorkerApi, type WorkerStatus } from '../../api/worker';
 import type {
   PagedResponse,
   ScheduledTask,
@@ -104,7 +104,7 @@ export const WorkerPage: React.FC = () => {
     (attempt) => attempt.errorMessage !== 'Running...',
   );
   const successfulAttempts = completedAttempts.filter(
-    (attempt) => attempt.success,
+    (attempt) => attempt.status === 'Succeeded',
   ).length;
   const failedAttempts = completedAttempts.length - successfulAttempts;
   const successRate = completedAttempts.length
@@ -373,15 +373,7 @@ export const WorkerPage: React.FC = () => {
                       />
                     </td>
                     <td>
-                      <StatusBadge
-                        status={
-                          running
-                            ? 'Running'
-                            : attempt.success
-                              ? 'Succeeded'
-                              : 'Failed'
-                        }
-                      />
+                      <StatusBadge status={attempt.status} />
                       {running && (
                         <small className={styles.RunningDuration}>
                           {formatElapsed(attempt.startTimeUtc, clockNow)}

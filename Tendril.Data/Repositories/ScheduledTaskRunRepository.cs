@@ -79,7 +79,7 @@ public class ScheduledTaskRunRepository(TendrilDbContext db) : IScheduledTaskRun
             .AsNoTracking()
             .Where(r => r.Id == runId)
             .SelectMany(r => r.AttemptHistories)
-            .Where(a => a.Success)
+            .Where(a => a.Status == AttemptStatus.Succeeded)
             .Select(a => a.ScraperDefinitionId)
             .Distinct()
             .ToListAsync(ct);
@@ -91,7 +91,7 @@ public class ScheduledTaskRunRepository(TendrilDbContext db) : IScheduledTaskRun
         db.AttemptHistory
             .Where(a => a.ScheduledTaskRunId != null && a.ErrorMessage == "Running...")
             .ExecuteUpdateAsync(s => s
-                .SetProperty(a => a.Success, false)
+                .SetProperty(a => a.Status, AttemptStatus.Failed)
                 .SetProperty(a => a.EndTimeUtc, now)
                 .SetProperty(a => a.ErrorMessage, (string?)"Interrupted: the worker stopped before this attempt finished."), ct);
 

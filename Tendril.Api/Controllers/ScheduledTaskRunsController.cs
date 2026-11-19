@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Tendril.Api.Dtos;
+using Tendril.Core.Domain.Entities;
 using Tendril.Core.Interfaces.Repositories;
 
 namespace Tendril.Api.Controllers;
@@ -19,10 +20,6 @@ public sealed class ScheduledTaskRunsController(IScheduledTaskRunRepository runs
 
         return Ok(result.Select(run =>
         {
-            var completedAttempts = run.AttemptHistories
-                .Where(attempt => attempt.ErrorMessage != "Running...")
-                .ToList();
-
             return new ScheduledTaskRunDto(
                 run.Id,
                 run.ScheduledTaskId,
@@ -32,18 +29,17 @@ public sealed class ScheduledTaskRunsController(IScheduledTaskRunRepository runs
                 run.EndTimeUtc,
                 run.RetryCount,
                 run.AttemptHistories.Count,
-                completedAttempts.Count(attempt => attempt.Success),
-                completedAttempts.Count(attempt => !attempt.Success),
-                run.AttemptHistories.Count(attempt => attempt.ErrorMessage == "Running..."),
+                run.AttemptHistories.Count(attempt => attempt.Status == AttemptStatus.Succeeded),
+                run.AttemptHistories.Count(attempt => attempt.Status == AttemptStatus.Warning),
+                run.AttemptHistories.Count(attempt => attempt.Status == AttemptStatus.Failed),
+                run.AttemptHistories.Count(attempt => attempt.Status == AttemptStatus.Running),
                 run.AttemptHistories
                     .OrderBy(attempt => attempt.StartTimeUtc)
                     .Select(attempt => new ScheduledTaskRunAttemptDto(
                         attempt.Id,
                         attempt.ScraperDefinitionId,
                         attempt.ScraperDefinition.Name,
-                        attempt.ErrorMessage == "Running..."
-                            ? "Running"
-                            : attempt.Success ? "Succeeded" : "Failed",
+                        attempt.Status,
                         attempt.StartTimeUtc,
                         attempt.ErrorMessage == "Running..." ? null : attempt.EndTimeUtc,
                         attempt.Extracted,

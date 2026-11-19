@@ -494,8 +494,9 @@ namespace Tendril.Data.Migrations
                     b.Property<DateTimeOffset>("StartTimeUtc")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<bool>("Success")
-                        .HasColumnType("bit");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Updated")
                         .HasColumnType("int");

@@ -148,36 +148,39 @@ public class EventsController(IEventRepository events, IEventRevisionRepository 
         });
     }
 
-    [HttpPost("{existingId}/supersede/{pendingId}")]
+    [HttpPost("{pendingId}/supersede")]
     public async Task<ActionResult> SupersedeAndPublish(
-        [FromRoute] Guid existingId,
         [FromRoute] Guid pendingId,
+        [FromQuery(Name = "existingId")] Guid[] existingIds,
         CancellationToken cancellationToken)
     {
-        var existing = await events.GetById(existingId, cancellationToken);
         var pending = await events.GetById(pendingId, cancellationToken);
+        var existing = await events.GetByIds([.. existingIds], cancellationToken);
 
-        if (existing is null || pending is null)
+        if (pending is null || existing.Count == 0)
             return NotFound();
-
-        existing.Status = EventStatus.Suppressed;
-        existing.StatusAtUtc = DateTime.UtcNow;
 
         pending.Status = EventStatus.Published;
         pending.StatusAtUtc = DateTime.UtcNow;
         pending.UpdatedAtUtc = DateTime.UtcNow;
 
-        await eventRevisions.AddAsync(new EventRevision
+        foreach (var e in existing)
         {
-            Id = Guid.NewGuid(),
-            EventId = existing.Id,
-            AttemptHistoryId = null,
-            RawEventId = null,
-            RelatedId = pending.Id,
-            Reason = EventRevisionReason.Superseded,
-            ChangedAtUtc = DateTimeOffset.UtcNow,
-            ChangedFieldsJson = null
-        }, cancellationToken);
+            e.Status = EventStatus.Suppressed;
+            e.StatusAtUtc = DateTime.UtcNow;
+
+            await eventRevisions.AddAsync(new EventRevision
+            {
+                Id = Guid.NewGuid(),
+                EventId = e.Id,
+                AttemptHistoryId = null,
+                RawEventId = null,
+                RelatedId = pending.Id,
+                Reason = EventRevisionReason.Superseded,
+                ChangedAtUtc = DateTimeOffset.UtcNow,
+                ChangedFieldsJson = null
+            }, cancellationToken);
+        }
 
         return Ok();
     }

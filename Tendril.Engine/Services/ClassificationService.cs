@@ -30,8 +30,10 @@ public class ClassificationService(TendrilDbContext context) : IClassificationSe
                 ? rule.SourceJsonPath
                 : $"Fields.{rule.SourceJsonPath}";
 
+            var parts = rule.SourceJsonPath.Split('.');
+
             // Split the path by dots and traverse
-            foreach (var part in rule.SourceJsonPath.Split('.'))
+            foreach (var part in parts)
             {
                 if (root.TryGetProperty(part, out var nextElement))
                 {

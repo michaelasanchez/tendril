@@ -279,9 +279,7 @@ export const EventReviewPage: React.FC = () => {
                       <div className="d-flex flex-column gap-2 h-100 justify-content-center">
                         {potentialMatches.map((existingEvent) => (
                           <React.Fragment key={existingEvent.id}>
-                            <div
-                              className="position-relative opacity-75"
-                            >
+                            <div className="position-relative opacity-75">
                               <Badge
                                 bg={
                                   existingEvent.status === 'Suppressed'
@@ -306,15 +304,15 @@ export const EventReviewPage: React.FC = () => {
                                 )}
                                 <div>
                                   {pendingEvent.scrapedAtUtc >
-                                    existingEvent.scrapedAtUtc
+                                  existingEvent.scrapedAtUtc
                                     ? `${differenceInDays(
-                                      pendingEvent.scrapedAtUtc,
-                                      existingEvent.scrapedAtUtc,
-                                    )} day(s) earlier`
+                                        pendingEvent.scrapedAtUtc,
+                                        existingEvent.scrapedAtUtc,
+                                      )} day(s) earlier`
                                     : `${differenceInDays(
-                                      existingEvent.scrapedAtUtc,
-                                      pendingEvent.scrapedAtUtc,
-                                    )} day(s) later`}
+                                        existingEvent.scrapedAtUtc,
+                                        pendingEvent.scrapedAtUtc,
+                                      )} day(s) later`}
                                 </div>
                               </small>
                             </div>
@@ -333,7 +331,8 @@ export const EventReviewPage: React.FC = () => {
                         className={styles.eventComparison}
                       >
                         <strong className={styles.comparisonHeading}>
-                          Compared with “{existingEvent.title}”
+                          Compared with “{existingEvent.title}” [
+                          {existingEvent.status}]
                         </strong>
                         <div className={styles.comparisonFields}>
                           {compareReviewFields(pendingEvent, existingEvent).map(
@@ -410,12 +409,14 @@ export const EventReviewPage: React.FC = () => {
                         onClick={() =>
                           EventsApi.supersedeAndPublish(
                             pendingEvent.id,
-                            potentialMatches[0].id,
+                            potentialMatches.map((m) => m.id),
                           )
                             // TODO: error is thrown because no JSON is returned from the API
                             .finally(() => {
-                              potentialMatches[0].status = 'Suppressed';
                               reloadEvent(pendingEvent.id);
+                              potentialMatches.every(
+                                (m) => (m.status = 'Suppressed'),
+                              );
                             })
                         }
                       >
@@ -472,11 +473,12 @@ function compareReviewFields(incoming: Event, existing: Event) {
 
   return comparisons.map((comparison) => ({
     ...comparison,
-    matches: comparison.label === 'Description'
-      ? normalizeReviewValue(comparison.incoming) ===
-        normalizeReviewValue(comparison.existing)
-      : normalizeReviewValue(comparison.incoming).toLocaleLowerCase() ===
-        normalizeReviewValue(comparison.existing).toLocaleLowerCase(),
+    matches:
+      comparison.label === 'Description'
+        ? normalizeReviewValue(comparison.incoming) ===
+          normalizeReviewValue(comparison.existing)
+        : normalizeReviewValue(comparison.incoming).toLocaleLowerCase() ===
+          normalizeReviewValue(comparison.existing).toLocaleLowerCase(),
   }));
 }
 
@@ -486,12 +488,15 @@ function normalizeReviewValue(value: string) {
 
 function formatReviewStart(event: Event) {
   const value = event.showStartTime
-    ? event.startDateTime ?? event.startDate
-    : event.startDate ?? event.startDateTime;
+    ? (event.startDateTime ?? event.startDate)
+    : (event.startDate ?? event.startDateTime);
   if (!value) return '(not set)';
 
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
 
-  return format(date, event.showStartTime ? 'MMM d, yyyy h:mm aa' : 'MMM d, yyyy');
+  return format(
+    date,
+    event.showStartTime ? 'MMM d, yyyy h:mm aa' : 'MMM d, yyyy',
+  );
 }

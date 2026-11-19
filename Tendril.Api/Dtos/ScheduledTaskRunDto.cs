@@ -1,3 +1,5 @@
+using Tendril.Core.Domain.Entities;
+
 namespace Tendril.Api.Dtos;
 
 public record ScheduledTaskRunDto(
@@ -10,6 +12,7 @@ public record ScheduledTaskRunDto(
     int RetryCount,
     int AttemptCount,
     int SuccessfulAttemptCount,
+    int WarningAttemptCount,
     int FailedAttemptCount,
     int InProgressAttemptCount,
     IReadOnlyList<ScheduledTaskRunAttemptDto> Attempts);
@@ -18,7 +21,7 @@ public record ScheduledTaskRunAttemptDto(
     Guid Id,
     Guid ScraperDefinitionId,
     string ScraperName,
-    string Status,
+    AttemptStatus Status,
     DateTimeOffset StartTimeUtc,
     DateTimeOffset? EndTimeUtc,
     int Extracted,

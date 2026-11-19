@@ -267,9 +267,10 @@ public class EventRepository(TendrilDbContext _context) : IEventRepository
                     x.Title.Contains(mappedEvent.Title) ||
                     mappedEvent.Title.Contains(x.Title)
                 ) &&
-                ((x.StartPrecision == DatePrecision.Day || mappedEvent.StartPrecision == DatePrecision.Day)
-                    ? x.StartUtc.Date == mappedEvent.StartUtc.Date
-                    : x.StartUtc == mappedEvent.StartUtc) &&
+                (
+                    (x.StartPrecision == DatePrecision.Day || mappedEvent.StartPrecision == DatePrecision.Day)
+                        ? x.StartUtc.Date == mappedEvent.StartUtc.Date
+                        : x.StartUtc == mappedEvent.StartUtc) &&
                 x.Status != EventStatus.Suppressed, ct);
     }
 }

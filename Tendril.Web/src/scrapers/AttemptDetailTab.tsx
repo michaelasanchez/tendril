@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Alert, Badge, Col, Row, Spinner, Tab, Table, Tabs } from 'react-bootstrap';
 import { Link, useParams } from 'react-router';
 import { ScrapersApi } from '../api/scrapers';
+import { AttemptStatusBadge } from '../components/AttemptStatusBadge';
 import type { EventRevision, PagedResponse, ScrapedEventRaw, ScraperAttemptHistory } from '../types/api';
 
 export const AttemptDetailPage: React.FC = () => {
@@ -58,7 +59,7 @@ export const AttemptDetailPage: React.FC = () => {
     return () => controller.abort();
   }, [scraperId, runId]);
 
-  const isRunning = attempt?.errorMessage === 'Running...';
+  const isRunning = attempt?.status === 'Running';
   const originLabel = attempt?.scheduledTaskRunId ? 'Scheduled task run' : 'Manual run';
 
   return (
@@ -70,8 +71,7 @@ export const AttemptDetailPage: React.FC = () => {
           <div className="d-flex flex-wrap align-items-center gap-2 text-muted">
             <span>{attempt ? new Date(attempt.startTimeUtc).toLocaleString() : 'Loading attempt details'}</span>
             {attempt && <Badge bg={attempt.scheduledTaskRunId ? 'primary' : 'secondary'}>{originLabel}</Badge>}
-            {isRunning && <Badge bg="warning" text="dark">Running</Badge>}
-            {attempt && !isRunning && <Badge bg={attempt.success ? 'success' : 'danger'}>{attempt.success ? 'Succeeded' : 'Failed'}</Badge>}
+            {attempt && <AttemptStatusBadge status={attempt.status} />}
           </div>
         </div>
         {attempt?.scheduledTaskRunId && (
@@ -111,7 +111,7 @@ export const AttemptDetailPage: React.FC = () => {
             <dd className="col-sm-9">{formatDuration(attempt.startTimeUtc, attempt.endTimeUtc, clockNow)}</dd>
           </dl>
 
-          {attempt.errorMessage && !isRunning && <Alert variant={attempt.success ? 'info' : 'danger'}>{attempt.errorMessage}</Alert>}
+          {attempt.errorMessage && !isRunning && <Alert variant={attempt.status === 'Succeeded' ? 'info' : 'danger'}>{attempt.errorMessage}</Alert>}
 
           <Tabs defaultActiveKey="logs" className="mb-3">
             <Tab eventKey="logs" title={`Logs (${attempt.logEntries.length})`}>

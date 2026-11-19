@@ -191,7 +191,6 @@ export const ScrapersApi = {
 
     const query = params.toString() ? `?${params.toString()}` : '';
 
-    console.log('QUERY', query);
     return apiGet(`/attempt-histories/paged${query}`, signal);
   },
 

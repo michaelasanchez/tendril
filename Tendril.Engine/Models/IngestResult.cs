@@ -6,7 +6,7 @@ namespace Tendril.Engine.Models;
 public class IngestResult
 {
     public ScraperAttemptHistory? Attempt { get; set; }
-    public bool Success { get; set; }
+    public AttemptStatus Status { get; set; }
     public List<string>? Errors { get; set; }
 
     public List<ScrapedEventRaw>? Raw { get; set; }
