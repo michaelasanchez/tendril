@@ -19,7 +19,7 @@ public interface IScheduledTaskRunRepository
     /// Scrapers with at least one successful attempt in the run. Always reads fresh from the
     /// database, because attempts are written by other (per-scraper) contexts.
     /// </summary>
-    Task<HashSet<Guid>> GetSucceededScraperIdsAsync(Guid runId, CancellationToken ct = default);
+    Task<HashSet<Guid>> GetPassingScraperIdsAsync(Guid runId, CancellationToken ct = default);
 
     /// <summary>
     /// Startup recovery: closes task-run attempts that were still "Running..." when the worker

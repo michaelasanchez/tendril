@@ -73,13 +73,15 @@ public class ScheduledTaskRunRepository(TendrilDbContext db) : IScheduledTaskRun
             .Take(limit)
             .ToListAsync(ct);
 
-    public async Task<HashSet<Guid>> GetSucceededScraperIdsAsync(Guid runId, CancellationToken ct = default)
+    public async Task<HashSet<Guid>> GetPassingScraperIdsAsync(Guid runId, CancellationToken ct = default)
     {
         var ids = await db.ScheduledTaskRuns
             .AsNoTracking()
             .Where(r => r.Id == runId)
             .SelectMany(r => r.AttemptHistories)
-            .Where(a => a.Status == AttemptStatus.Succeeded)
+            .Where(a =>
+                a.Status == AttemptStatus.Succeeded ||
+                a.Status == AttemptStatus.Warning)
             .Select(a => a.ScraperDefinitionId)
             .Distinct()
             .ToListAsync(ct);

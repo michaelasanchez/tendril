@@ -150,7 +150,7 @@ public sealed class Worker(
                     task.SelectionStrategy);
             }
 
-            var alreadySucceeded = await runRepo.GetSucceededScraperIdsAsync(run.Id, ct);
+            var alreadySucceeded = await runRepo.GetPassingScraperIdsAsync(run.Id, ct);
             var pending = scraperIds.Where(id => !alreadySucceeded.Contains(id)).ToList();
 
             logger.LogInformation("{Total} scrapers total, {Pending} pending execution.",
@@ -297,8 +297,8 @@ public sealed class Worker(
         var now = time.GetUtcNow();
 
         // Fresh read: attempts were written by the per-scraper contexts.
-        var succeeded = await runRepo.GetSucceededScraperIdsAsync(run.Id, ct);
-        var failed = scraperIds.Where(id => !succeeded.Contains(id) && !missing.Contains(id)).ToList();
+        var passing = await runRepo.GetPassingScraperIdsAsync(run.Id, ct);
+        var failed = scraperIds.Where(id => !passing.Contains(id) && !missing.Contains(id)).ToList();
 
         if (failed.Count == 0)
         {
