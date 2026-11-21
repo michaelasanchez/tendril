@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Table } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
 import { ScrapersApi } from '../../api/scrapers';
-import { IconButton, SquareButton } from '../../components/button';
+import { SquareButton } from '../../components/button';
 import { Icon } from '../../components/Icon';
 import { useLocalStorage } from '../../hooks';
 import { pageStyles, tableStyles } from '../../styles';

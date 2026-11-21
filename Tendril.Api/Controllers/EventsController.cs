@@ -33,7 +33,7 @@ public class EventsController(IEventRepository events, IEventRevisionRepository 
             VenueIds = venueIds
         };
 
-        var result = await events.GetAllAsync(filter, limit, cursor, cancellationToken);
+        var result = await events.GetPublished(filter, limit, cursor, cancellationToken);
 
         return Ok(new EventResponse
         {

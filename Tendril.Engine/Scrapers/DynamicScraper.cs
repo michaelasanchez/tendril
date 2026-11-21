@@ -37,25 +37,12 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
         // 2. CHECK STRATEGY
         if (definition.ExtractionStrategy is ExtractionStrategy.JsonLd)
         {
-            try
-            {
-                await page.WaitForSelectorAsync("script[type='application/ld+json']", new PageWaitForSelectorOptions
-                {
-                    State = WaitForSelectorState.Attached,
-                    Timeout = 5000
-                });
-            }
-            catch (TimeoutException)
-            {
-                context.AddLog(ScraperAttemptLogLevel.Warning,
-                    $"Timed out waiting for JSON-LD content at '{page.Url}'; extraction will continue.");
-            }
+            context.AddLog(ScraperAttemptLogLevel.Information, "Using JSON-LD extraction strategy.");
 
-            var content = await page.ContentAsync();
-            var targetType = definition.Actions.FirstOrDefault()?.Selector ?? "Event";
-
-            foreach (var data in jsonLd.ExtractAll(content, targetType))
-                yield return new ScrapeYieldItem { Data = data };
+            await foreach (var item in RunJsonLdExtraction(page, definition, context, ct))
+            {
+                yield return item;
+            }
 
             yield break;
         }
@@ -205,12 +192,13 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
     private static async Task ProcessSelector(
         IPage page,
         IElementHandle? item,
-        ScraperAction step,
+        ScraperAction action,
         RawScrapedData? scrapedData,
-        ScrapeContext context)
+        ScrapeContext context
+    )
     {
         // 1. Exclusions
-        if (step.Type is ActionType.Container or ActionType.FollowLink) return;
+        if (action.Type is ActionType.Container or ActionType.FollowLink) return;
 
         try
         {
@@ -218,50 +206,55 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
             IElementHandle? targetElement;
 
             // Logic: If explicitly Root OR if we have no item scope (Pre-Scrape), query the Page.
-            if (step.Root || item == null)
+            if (action.Root || item == null)
             {
-                targetElement = await page.QuerySelectorAsync(step.Selector);
+                targetElement = await page.QuerySelectorAsync(action.Selector);
             }
             else
             {
                 // Scoped: Look inside the provided list item
-                targetElement = string.IsNullOrWhiteSpace(step.Selector)
+                targetElement = string.IsNullOrWhiteSpace(action.Selector)
                     ? item
-                    : await item.QuerySelectorAsync(step.Selector);
+                    : await item.QuerySelectorAsync(action.Selector);
             }
 
-            if (targetElement == null) return;
+            if (targetElement == null)
+            {
+                return;
+            }
 
             // 3. Handle Interactions (Click, Input, Scroll, Hover)
-            switch (step.Type)
+            switch (action.Type)
             {
                 case ActionType.Click:
                 {
                     await targetElement.ClickAsync();
-                    await PerformWait(page, step.Delay);
+                    await PerformWait(page, action.Delay);
+
+                    context.AddLog(ScraperAttemptLogLevel.Information, $"Click on {action.Selector} succeeded.");
                     return;
                 }
 
                 case ActionType.Hover:
                 {
                     await targetElement.HoverAsync();
-                    await PerformWait(page, step.Delay);
+                    await PerformWait(page, action.Delay);
                     return;
                 }
 
                 case ActionType.Input:
                 {
-                    if (!string.IsNullOrEmpty(step.InteractionValue))
+                    if (!string.IsNullOrEmpty(action.InteractionValue))
                     {
-                        await targetElement.FillAsync(step.InteractionValue);
-                        await PerformWait(page, step.Delay);
+                        await targetElement.FillAsync(action.InteractionValue);
+                        await PerformWait(page, action.Delay);
                     }
                     return;
                 }
 
                 case ActionType.Scroll:
                 {
-                    await PerformScroll(page, targetElement, step.Delay);
+                    await PerformScroll(page, targetElement);
                     return;
                 }
             }
@@ -272,56 +265,127 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
 
             string? value = null;
 
-            if (step.Type == ActionType.CaptureLink)
+            if (action.Type == ActionType.CaptureLink)
             {
                 // TODO: Looks like this was only ever implemented in StaticScraper
                 // [Insert your existing CaptureLink logic here]
                 // value = popupPage.Url;
             }
-            else if (step.Type == ActionType.Text)
+            else if (action.Type == ActionType.Text)
             {
                 value = await targetElement.InnerTextAsync();
             }
-            else if (step.Type == ActionType.Attribute)
+            else if (action.Type == ActionType.Attribute)
             {
                 // FIX: If we are grabbing an 'href' or 'src', ask the browser for the computed property
-                if (step.AttributeName is "href" or "src")
+                if (action.AttributeName is "href" or "src")
                 {
                     // "el.href" returns the full absolute URL (http://...)
                     // "el.getAttribute('href')" returns the relative string (/ticket/...)
-                    value = await targetElement.EvaluateAsync<string>($"el => el.{step.AttributeName}");
+                    value = await targetElement.EvaluateAsync<string>($"el => el.{action.AttributeName}");
                 }
                 else
                 {
-                    value = await targetElement.GetAttributeAsync(step.AttributeName ?? "");
+                    value = await targetElement.GetAttributeAsync(action.AttributeName ?? "");
                 }
             }
-            else if (step.Type == ActionType.ConstantValue)
+            else if (action.Type == ActionType.ConstantValue)
             {
-                value = step.ConstantValue;
+                value = action.ConstantValue;
             }
 
             // 5. Assign to Event
-            if (!string.IsNullOrWhiteSpace(value) && !string.IsNullOrWhiteSpace(step.OutputField))
+            if (!string.IsNullOrWhiteSpace(value) && !string.IsNullOrWhiteSpace(action.OutputField))
             {
-                scrapedData.Fields[step.OutputField] = value.Trim();
+                scrapedData.Fields[action.OutputField] = value.Trim();
             }
         }
         catch (OperationCanceledException)
         {
             context.AddLog(ScraperAttemptLogLevel.Warning,
-                $"Processing selector '{step.Selector}' at '{page.Url}' was canceled.");
+                $"Processing selector '{action.Selector}' at '{page.Url}' was canceled.");
             throw;
         }
         catch (TimeoutException ex)
         {
             context.AddLog(ScraperAttemptLogLevel.Warning,
-                $"Timed out processing selector '{step.Selector}' at '{page.Url}': {ex.Message}");
+                $"Timed out processing selector '{action.Selector}' at '{page.Url}': {ex.Message}");
         }
         catch (Exception ex)
         {
             context.AddLog(ScraperAttemptLogLevel.Warning,
-                $"Failed to process selector '{step.Selector}' at '{page.Url}': {ex.Message}");
+                $"Failed to process selector '{action.Selector}' at '{page.Url}': {ex.Message}");
+        }
+    }
+
+    private async IAsyncEnumerable<ScrapeYieldItem> RunJsonLdExtraction(
+        IPage page,
+        ScraperDefinition definition,
+        ScrapeContext context,
+        [EnumeratorCancellation] CancellationToken ct)
+    {
+        var allowedActions = new HashSet<ActionType>
+        {
+            ActionType.Click,
+            ActionType.Hover,
+            ActionType.Input,
+            ActionType.Scroll
+        };
+
+        var actions = definition.Actions
+            .Where(x => allowedActions.Contains(x.Type) && !x.IsPaginationTrigger)
+            .OrderBy(x => x.Order);
+
+        foreach (var action in actions)
+        {
+            ct.ThrowIfCancellationRequested();
+
+            await ProcessSelector(page, null, action, null, context);
+        }
+
+        var targetType = /*definition.Actions.FirstOrDefault()?.Selector ?? */"Event";
+        var processedSignatures = new HashSet<string>();
+
+        while (true)
+        {
+            ct.ThrowIfCancellationRequested();
+
+            try
+            {
+                await page.WaitForSelectorAsync("script[type='application/ld+json']", new PageWaitForSelectorOptions
+                {
+                    State = WaitForSelectorState.Attached,
+                    Timeout = 5000
+                });
+            }
+            catch (TimeoutException)
+            {
+                context.AddLog(ScraperAttemptLogLevel.Warning,
+                    $"Timed out waiting for JSON-LD content at '{page.Url}'; extraction will continue.");
+            }
+
+            var content = await page.ContentAsync();
+
+            foreach (var data in jsonLd.ExtractAll(content, targetType))
+            {
+                ct.ThrowIfCancellationRequested();
+
+                if (processedSignatures.Add(data.GetSignature()))
+                    yield return new ScrapeYieldItem { Data = data };
+            }
+
+            if (definition.PaginationType == PaginationType.None)
+                yield break;
+
+            var pageUrl = page.Url;
+            var hasMore = await PerformPagination(page, definition, context, pageUrl);
+
+            if (!hasMore)
+            {
+                context.AddLog(ScraperAttemptLogLevel.Warning,
+                    $"Pagination attempt did not succeed. ({definition.PaginationType})");
+                yield break;
+            }
         }
     }
 
@@ -329,7 +393,8 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
         IPage page,
         ScraperDefinition def,
         ScrapeContext context,
-        string pageUrl)
+        string pageUrl
+    )
     {
         if (def.PaginationType == PaginationType.None) return false;
 
@@ -337,7 +402,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
         {
             try
             {
-                var advanced = await ScrollPageAsync(page);
+                var advanced = await PerformScroll(page);
 
                 if (advanced)
                 {
@@ -396,58 +461,12 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
         return false;
     }
 
-    private static async Task<bool> PerformScroll(IPage page, IElementHandle? element = null, int? delay = null)
-    {
-        // 1. Capture the height BEFORE we scroll
-        long initialHeight = element != null
-            ? await element.EvaluateAsync<long>("el => el.scrollHeight")
-            : await page.EvaluateAsync<long>("() => document.body.scrollHeight");
-
-        // 2. Trigger the scroll action
-        if (element != null)
-        {
-            await element.EvaluateAsync("el => el.scrollTo(0, el.scrollHeight)");
-        }
-        else
-        {
-            await page.EvaluateAsync("() => window.scrollTo(0, document.body.scrollHeight)");
-        }
-
-        // 3. The "Verification Loop"
-        // We check up to 3 times to see if the height increases.
-        int attempts = 0;
-        while (attempts < 3)
-        {
-            // Use your passed-in delay, or default to 1.5s for "hot" runs
-            await page.WaitForTimeoutAsync(delay ?? 1500);
-
-            long currentHeight = element != null
-                ? await element.EvaluateAsync<long>("el => el.scrollHeight")
-                : await page.EvaluateAsync<long>("() => document.body.scrollHeight");
-
-            if (currentHeight > initialHeight)
-            {
-                return true; // The page grew! More items should be visible now.
-            }
-
-            // If it didn't grow, try one more nudge. 
-            // Sometimes the first scroll doesn't trigger the "onScroll" listener if it was too fast.
-            if (element != null)
-                await element.EvaluateAsync("el => el.scrollTo(0, el.scrollHeight)");
-            else
-                await page.EvaluateAsync("() => window.scrollTo(0, document.body.scrollHeight)");
-
-            attempts++;
-        }
-
-        return false; // We gave it 3 tries and ~4.5 seconds; nothing happened.
-    }
-
-    public async Task<bool> ScrollPageAsync(
+    private static async Task<bool> PerformScroll(
     IPage page,
     IElementHandle? container = null,
     int growthTimeoutMs = 8000,
-    int settleMs = 600)
+    int settleMs = 600
+    )
     {
         const string heightJs = "el => (el ?? document.scrollingElement).scrollHeight";
         // Scrolls one step and reports whether we're at the (live) bottom
@@ -518,5 +537,4 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
             await page.WaitForTimeoutAsync(delay.Value);
         }
     }
-
 }

@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Form } from 'react-bootstrap';
+import { Alert, Card, Form } from 'react-bootstrap';
 import { ActionsCard, type ScraperOption } from '.';
 import { ScrapersApi } from '../api/scrapers';
 import { SquareButton as Button } from '../components/button';
 import { FormCheck, FormInput, FormSelect } from '../components/form';
 import { Icon } from '../components/Icon';
 import { cardStyles, formStyles, pageStyles } from '../styles';
-import type {
-  ActionType,
-  Guid,
-  ScraperAction,
-  ScraperDefinition,
+import {
+  type ActionType,
+  type Guid,
+  type ScraperAction,
+  type ScraperDefinition,
 } from '../types/api';
 
 interface Props {
@@ -146,11 +146,11 @@ export const ActionsTab: React.FC<Props> = ({
     await load();
   };
 
-  // const remove = async (sel: ScraperAction) => {
-  //   if (!window.confirm(`Delete selector "${sel.fieldName}"?`)) return;
-  //   await ScrapersApi.deleteAction(scraper.id, sel.id);
-  //   await load();
-  // };
+  const remove = async (sel: ScraperAction) => {
+    if (!window.confirm(`Delete selector "${sel.fieldName}"?`)) return;
+    await ScrapersApi.deleteAction(scraper.id, sel.id);
+    await load();
+  };
 
   return (
     <>
@@ -180,13 +180,18 @@ export const ActionsTab: React.FC<Props> = ({
         />
       )}
 
+      {scraper.extractionStrategy === 'JsonLd' && (
+        <Alert variant="warning">
+          The following actions are allowed and occur before JSON-LD extraction: Click, Hover, Input, Scroll
+        </Alert>
+      )}
       <ActionsCard
         scraperOptions={scraperOptions}
         actions={actions}
         showDisabled={showDisabled}
         onDisable={toggleDisable}
         onEdit={startEdit}
-        // onRemove={remove}
+        onRemove={remove}
       />
 
       {editing.fieldName !== undefined && (
@@ -237,8 +242,8 @@ export const ActionsTab: React.FC<Props> = ({
                     />
                   )}
                 <div className={formStyles.formGroup}>
-                  {(editing.type != 'CallApi' &&
-                    editing.type != 'ConstantValue') && (
+                  {editing.type != 'CallApi' &&
+                    editing.type != 'ConstantValue' && (
                       <FormCheck
                         label="Root"
                         checked={editing.root ?? false}

@@ -12,6 +12,8 @@ namespace Tendril.Engine.Scrapers;
 
 public class StaticScraper(IJsonLdProcessor jsonLd)
 {
+
+
     // CHANGED: We now accept HttpClient instead of "string html"
     public async IAsyncEnumerable<ScrapeYieldItem> ExecuteAsync(
         HttpClient client,
@@ -55,10 +57,10 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
             // 2. STRATEGY: JSON-LD
             if (def.ExtractionStrategy == ExtractionStrategy.JsonLd)
             {
-                foreach (var data in jsonLd.ExtractAll(html, def.Actions.FirstOrDefault()?.Selector ?? "Event"))
+                foreach (var item in RunJsonLdExtraction(def, html))
                 {
                     pageEventCount++;
-                    yield return new ScrapeYieldItem { Data = data };
+                    yield return item;
                 }
 
                 context.AddLog(ScraperAttemptLogLevel.Information,
@@ -283,7 +285,8 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
         RawScrapedData rawEvent,
         ExtractionStrategy strategy,
         string currentUrl,
-        ScrapeContext context)
+        ScrapeContext context
+        )
     {
         try
         {
@@ -342,6 +345,19 @@ public class StaticScraper(IJsonLdProcessor jsonLd)
         {
             context.AddLog(ScraperAttemptLogLevel.Warning,
                 $"Failed to extract selector '{step.Selector}' from '{currentUrl}': {ex.Message}");
+        }
+    }
+
+    // JSON-LD IMPLEMENTATION
+    private IEnumerable<ScrapeYieldItem> RunJsonLdExtraction(ScraperDefinition def, string content)
+    {
+        var targetType = def.Actions.FirstOrDefault()?.Selector ?? "Event";
+
+        var jsonLdResults = jsonLd.ExtractAll(content, targetType);
+
+        foreach (var data in jsonLdResults)
+        {
+            yield return new ScrapeYieldItem { Data = data };
         }
     }
 

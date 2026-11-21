@@ -144,7 +144,7 @@ export const ActionsCard: React.FC<Props> = ({
               ))}
             {actions.length === 0 && (
               <tr>
-                <td colSpan={5}>No actions defined.</td>
+                <td colSpan={13}>No actions defined.</td>
               </tr>
             )}
           </tbody>

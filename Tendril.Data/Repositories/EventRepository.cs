@@ -16,7 +16,7 @@ public class EventRepository(TendrilDbContext _context) : IEventRepository
     private const double endMatchWeight = 0.1;
     private const double potentialMatchThreshold = 0.65;
 
-    public async Task<PagedResponse<Event>> GetAllAsync(
+    public async Task<PagedResponse<Event>> GetPublished(
         EventFilter filter,
         int? limit,
         Guid? cursor,

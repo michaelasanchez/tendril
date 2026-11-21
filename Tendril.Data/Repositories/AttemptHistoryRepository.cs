@@ -83,7 +83,7 @@ public class AttemptHistoryRepository(TendrilDbContext db) : IAttemptHistoryRepo
     {
         return await db.AttemptHistory
             .Include(x => x.ScraperDefinition)
-            .Include(x => x.LogEntries)
+            .Include(x => x.LogEntries.OrderBy(y => y.TimestampUtc))
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == id, ct);
     }
@@ -92,7 +92,7 @@ public class AttemptHistoryRepository(TendrilDbContext db) : IAttemptHistoryRepo
     {
         return db.AttemptHistory
             .Include(x => x.ScraperDefinition)
-            .Include(x => x.LogEntries)
+            .Include(x => x.LogEntries.OrderBy(y => y.TimestampUtc))
             .AsNoTracking()
             .Where(a => a.ScraperDefinitionId == scraperId)
             .OrderByDescending(a => a.StartTimeUtc)
