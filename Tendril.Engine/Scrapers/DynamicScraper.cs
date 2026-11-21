@@ -63,7 +63,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
 
         foreach (var step in preSelectors)
         {
-            await ProcessSelector(page, null, step, preResult.Data, context);
+            await PerformAction(page, null, step, preResult.Data, context);
         }
 
         // 4. WAIT FOR CONTENT
@@ -99,34 +99,37 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
 
                 var partial = false;
 
-                var fieldSelectors = definition.Actions
+                var itemActions = definition.Actions
                     .Where(x => x.Type != ActionType.Container && !x.IsPaginationTrigger)
                     .OrderBy(x => x.Order);
 
-                foreach (var step in fieldSelectors)
+                foreach (var action in itemActions)
                 {
-                    // Check if this step triggers a child scraper (Deep Dive)
-                    if (step.Type == ActionType.FollowLink && step.ChildScraperDefinitionId.HasValue)
+                    if (action.Type is ActionType.Synchronize)
                     {
-                        var linkEl = string.IsNullOrEmpty(step.Selector)
+                        await PerformSynchronization(page, item, action, result.Data, context);
+                    }
+                    else if (action.Type == ActionType.FollowLink && action.ChildScraperDefinitionId.HasValue)
+                    {
+                        var linkEl = string.IsNullOrEmpty(action.Selector)
                             ? item
-                            : await item.QuerySelectorAsync(step.Selector);
+                            : await item.QuerySelectorAsync(action.Selector);
 
                         if (linkEl is not null)
                         {
                             var url = await linkEl.GetAttributeAsync("href");
 
-                            result.Data.Fields[step.OutputField] = url;
+                            result.Data.Fields[action.OutputField] = url;
 
-                            if (!string.IsNullOrWhiteSpace(url) && (step.AllowDuplicateUrls is true || !context.HasVisited(url)))
+                            if (!string.IsNullOrWhiteSpace(url) && (action.AllowDuplicateUrls is true || !context.HasVisited(url)))
                             {
                                 context.MarkVisited(url); // Claim it now so subsequent items skip it
 
                                 result = result with
                                 {
-                                    ChildScraperId = step.ChildScraperDefinitionId,
+                                    ChildScraperId = action.ChildScraperDefinitionId,
                                     ChildUrl = url,
-                                    AllowEmptyResult = step.AllowDuplicateUrls
+                                    AllowEmptyResult = action.AllowDuplicateUrls
                                 };
                             }
                             else
@@ -136,19 +139,18 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
                             }
                         }
                     }
-                    else if (step.Type == ActionType.CallApi && step.ChildScraperDefinitionId.HasValue)
+                    else if (action.Type == ActionType.CallApi && action.ChildScraperDefinitionId.HasValue)
                     {
                         result = result with
                         {
-                            ChildScraperId = step.ChildScraperDefinitionId,
-                            AllowDuplicateUrls = step.AllowDuplicateUrls,
-                            AllowEmptyResult = step.AllowEmptyResult
+                            ChildScraperId = action.ChildScraperDefinitionId,
+                            AllowDuplicateUrls = action.AllowDuplicateUrls,
+                            AllowEmptyResult = action.AllowEmptyResult
                         };
                     }
                     else
                     {
-                        // Standard data extraction
-                        await ProcessSelector(page, item, step, result.Data, context);
+                        await PerformAction(page, item, action, result.Data, context);
                     }
                 }
 
@@ -189,7 +191,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
         } while (hasMore);
     }
 
-    private static async Task ProcessSelector(
+    private static async Task PerformAction(
         IPage page,
         IElementHandle? item,
         ScraperAction action,
@@ -326,6 +328,7 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
     {
         var allowedActions = new HashSet<ActionType>
         {
+            ActionType.Synchronize,
             ActionType.Click,
             ActionType.Hover,
             ActionType.Input,
@@ -340,7 +343,14 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
         {
             ct.ThrowIfCancellationRequested();
 
-            await ProcessSelector(page, null, action, null, context);
+            if (action.Type is ActionType.Synchronize)
+            {
+                await PerformSynchronization(page, null, action, null, context);
+            }
+            else
+            {
+                await PerformAction(page, null, action, null, context);
+            }
         }
 
         var targetType = /*definition.Actions.FirstOrDefault()?.Selector ?? */"Event";
@@ -387,6 +397,111 @@ public class DynamicScraper(IJsonLdProcessor jsonLd)
                 yield break;
             }
         }
+    }
+
+    private static async Task PerformSynchronization(
+        IPage page,
+        IElementHandle? item,
+        ScraperAction action,
+        RawScrapedData? scrapedData,
+        ScrapeContext context
+    )
+    {
+        if (action.Type != ActionType.Synchronize) return;
+
+        try
+        {
+            switch (action.Synchronization)
+            {
+                case SynchronizationCondition.Delay:
+                    await PerformWait(page, action.Delay);
+                    break;
+
+                case SynchronizationCondition.SelectorAttached:
+                case SynchronizationCondition.SelectorVisible:
+                case SynchronizationCondition.SelectorHidden:
+                {
+                    if (string.IsNullOrWhiteSpace(action.Selector))
+                    {
+                        context.AddLog(ScraperAttemptLogLevel.Warning,
+                            $"Synchronization condition '{action.Synchronization}' requires a selector.");
+                        return;
+                    }
+
+                    var state = action.Synchronization switch
+                    {
+                        SynchronizationCondition.SelectorAttached => WaitForSelectorState.Attached,
+                        SynchronizationCondition.SelectorVisible => WaitForSelectorState.Visible,
+                        _ => WaitForSelectorState.Hidden
+                    };
+                    var timeout = action.Delay ?? 10000;
+
+                    if (action.Root || item is null)
+                    {
+                        await page.WaitForSelectorAsync(action.Selector, new PageWaitForSelectorOptions
+                        {
+                            State = state,
+                            Timeout = timeout
+                        });
+                    }
+                    else
+                    {
+                        await item.WaitForSelectorAsync(action.Selector, new ElementHandleWaitForSelectorOptions
+                        {
+                            State = state,
+                            Timeout = timeout
+                        });
+                    }
+
+                    break;
+                }
+
+                case SynchronizationCondition.DomContentLoaded:
+                    await page.WaitForLoadStateAsync(LoadState.DOMContentLoaded,
+                        new PageWaitForLoadStateOptions { Timeout = action.Delay ?? 10000 });
+                    break;
+
+                case SynchronizationCondition.Load:
+                    await page.WaitForLoadStateAsync(LoadState.Load,
+                        new PageWaitForLoadStateOptions { Timeout = action.Delay ?? 10000 });
+                    break;
+
+                case SynchronizationCondition.NetworkIdle:
+                    await page.WaitForLoadStateAsync(LoadState.NetworkIdle,
+                        new PageWaitForLoadStateOptions { Timeout = action.Delay ?? 10000 });
+                    break;
+
+                case SynchronizationCondition.JsonLdPresent:
+                    await page.WaitForSelectorAsync("script[type='application/ld+json']", new PageWaitForSelectorOptions
+                    {
+                        State = WaitForSelectorState.Attached,
+                        Timeout = action.Delay ?? 10000
+                    });
+                    break;
+
+                default:
+                    context.AddLog(ScraperAttemptLogLevel.Warning,
+                        $"Unsupported synchronization condition '{action.Synchronization}'.");
+                    break;
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            context.AddLog(ScraperAttemptLogLevel.Warning,
+                $"Synchronization '{action.Synchronization}' at '{page.Url}' was canceled.");
+            throw;
+        }
+        catch (TimeoutException ex)
+        {
+            context.AddLog(ScraperAttemptLogLevel.Warning,
+                $"Timed out waiting for synchronization '{action.Synchronization}' at '{page.Url}': {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            context.AddLog(ScraperAttemptLogLevel.Warning,
+                $"Failed synchronization '{action.Synchronization}' at '{page.Url}': {ex.Message}");
+        }
+
     }
 
     private async Task<bool> PerformPagination(

@@ -83,6 +83,7 @@ export type ActionType =
   | 'Container'
   | 'Text'
   | 'Attribute'
+  | 'Synchronize'
   | 'Click'
   | 'Hover'
   | 'Scroll'
@@ -92,16 +93,27 @@ export type ActionType =
   | 'ConstantValue'
   | 'CallApi';
 
+export type SynchronizationCondition =
+  | 'Delay'
+  | 'SelectorAttached'
+  | 'SelectorVisible'
+  | 'SelectorHidden'
+  | 'DomContentLoaded'
+  | 'Load'
+  | 'NetworkIdle'
+  | 'JsonLdPresent';
+
 export interface ScraperAction {
   id: Guid;
   scraperDefinitionId: Guid;
   name: string;
   fieldName: string;
-  selector: string;
   order: number;
   root: boolean;
   type: ActionType;
+  selector: string;
   attribute: string | null;
+  synchronization: SynchronizationCondition | null;
   delay: number | null;
   constantValue: string | null;
   interactionValue: string | null;

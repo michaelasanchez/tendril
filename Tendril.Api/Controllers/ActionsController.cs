@@ -26,11 +26,12 @@ public class ActionsController : ControllerBase
             s.Id,
             s.Name,
             s.FieldName,
-            s.Selector,
             s.Order,
             s.Root,
             s.Type.ToString(),
+            s.Selector,
             s.AttributeName,
+            s.Synchronization,
             s.Delay,
             s.ConstantValue,
             s.InteractionValue,
@@ -50,11 +51,12 @@ public class ActionsController : ControllerBase
             ScraperDefinitionId = scraperId,
             Name = request.Name,
             FieldName = request.FieldName,
-            Selector = request.Selector,
             Order = request.Order,
             Root = request.Root,
             Type = request.Type,
+            Selector = request.Selector,
             AttributeName = request.Attribute,
+            Synchronization = request.Synchronization,
             Delay = request.Delay,
             ConstantValue = request.ConstantValue,
             InteractionValue = request.InteractionValue,
@@ -78,11 +80,12 @@ public class ActionsController : ControllerBase
 
         action.Name = request.Name ?? action.Name;
         action.FieldName = request.FieldName ?? action.FieldName;
-        action.Selector = request.Selector ?? action.Selector;
         action.Order = request.Order ?? action.Order;
         action.Root = request.Root ?? action.Root;
         action.Type = request.Type ?? action.Type;
+        action.Selector = request.Selector ?? action.Selector;
         action.AttributeName = request.Attribute;
+        action.Synchronization = request.Synchronization;
         action.Delay = request.Delay;
         action.ConstantValue = request.ConstantValue;
         action.InteractionValue = request.InteractionValue;

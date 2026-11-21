@@ -1,14 +1,17 @@
-﻿namespace Tendril.Api.Dtos;
+﻿using Tendril.Core.Domain.Enums;
+
+namespace Tendril.Api.Dtos;
 
 public record ScraperActionDto(
     Guid Id,
     string Name,
     string FieldName,
-    string Selector,
     int Order,
     bool Root,
     string Type,
+    string Selector,
     string? Attribute,
+    SynchronizationCondition? Synchronization,
     int? Delay,
     string? ConstantValue,
     string? InteractionValue,

@@ -12,13 +12,14 @@ public class ScraperAction
     public string Name { get; set; } = null!;
     public string FieldName { get; set; } = null!;
     public string OutputField => string.IsNullOrEmpty(FieldName) ? Name : FieldName;
-    public string Selector { get; set; } = null!;
 
     public int Order { get; set; } = 0;
     public bool Root { get; set; } = false;
     public ActionType Type { get; set; } = ActionType.Text;
 
+    public string Selector { get; set; } = null!;
     public string? AttributeName { get; set; }
+    public SynchronizationCondition? Synchronization { get; set; }
     public int? Delay { get; set; }
 
     public string? ConstantValue { get; set; }

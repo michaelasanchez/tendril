@@ -17,12 +17,15 @@ public class ScraperActionConfig : IEntityTypeConfiguration<ScraperAction>
             .IsRequired()
             .HasMaxLength(200);
 
-        builder.Property(x => x.Selector)
-            .IsRequired();
-
         builder.Property(x => x.Type)
             .HasConversion<string>()
             .IsRequired();
+
+        builder.Property(x => x.Selector)
+            .IsRequired();
+
+        builder.Property(x => x.Synchronization)
+            .HasConversion<string>();
 
         builder.HasOne<ScraperDefinition>()
             .WithMany(x => x.ParentSelectors)

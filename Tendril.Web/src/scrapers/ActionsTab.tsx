@@ -11,6 +11,7 @@ import {
   type Guid,
   type ScraperAction,
   type ScraperDefinition,
+  type SynchronizationCondition,
 } from '../types/api';
 
 interface Props {
@@ -24,11 +25,12 @@ interface Props {
 const toOptions = (arr: string[]) =>
   arr.map((item) => ({ value: item, label: item }));
 
-const selectorTypeOptions = toOptions([
+const actionTypeOptions = toOptions([
   'ConstantValue',
   'Container',
   'Text',
   'Attribute',
+  'Synchronize',
   'Click',
   'Hover',
   'Scroll',
@@ -36,6 +38,17 @@ const selectorTypeOptions = toOptions([
   'CaptureLink',
   'FollowLink',
   'CallApi',
+]);
+
+const synchronizationConditionOptions = toOptions([
+  'Delay',
+  'SelectorAttached',
+  'SelectorVisible',
+  'SelectorHidden',
+  'DomContentLoaded',
+  'Load', 
+  'NetworkIdle',
+  'JsonLdPresent'
 ]);
 
 export const ActionsTab: React.FC<Props> = ({
@@ -97,14 +110,15 @@ export const ActionsTab: React.FC<Props> = ({
       await ScrapersApi.createAction(scraper.id, {
         name: editing.name ?? '',
         fieldName: editing.fieldName ?? '',
-        selector: editing.selector ?? '',
         order: editing.order ?? actions.length,
         root: editing.root ?? false,
         type: editing.type,
+        selector: editing.selector ?? '',
         attribute:
           editing.type == 'Attribute' && !!editing.attribute
             ? editing.attribute
             : null,
+        synchronization: editing.synchronization ?? null,
         delay: editing.delay ?? null,
         constantValue: editing.constantValue ?? null,
         interactionValue: editing.interactionValue ?? null,
@@ -117,14 +131,15 @@ export const ActionsTab: React.FC<Props> = ({
       await ScrapersApi.updateAction(scraper.id, editing.id, {
         name: editing.name,
         fieldName: editing.fieldName,
-        selector: editing.selector,
         order: editing.order,
         root: editing.root,
         type: editing.type,
+        selector: editing.selector,
         attribute:
           editing.type == 'Attribute' && !!editing.attribute
             ? editing.attribute
             : null,
+        synchronization: editing.synchronization ?? null,
         delay: editing.delay ?? null,
         constantValue: editing.constantValue ?? null,
         interactionValue: editing.interactionValue ?? null,
@@ -182,7 +197,7 @@ export const ActionsTab: React.FC<Props> = ({
 
       {scraper.extractionStrategy === 'JsonLd' && (
         <Alert variant="warning">
-          The following actions are allowed and occur before JSON-LD extraction: Click, Hover, Input, Scroll
+          The following actions are allowed and occur before JSON-LD extraction: Synchronize, Click, Hover, Input, Scroll
         </Alert>
       )}
       <ActionsCard
@@ -228,8 +243,18 @@ export const ActionsTab: React.FC<Props> = ({
                   onChange={(value) =>
                     setEditing({ ...editing, type: value as ActionType })
                   }
-                  options={selectorTypeOptions}
+                  options={actionTypeOptions}
                 />
+                {editing.type == 'Synchronize' && (
+                  <FormSelect
+                    label="Synchronization Condition"
+                    value={editing.synchronization ?? 'Delay'}
+                    onChange={(value) =>
+                      setEditing({ ...editing, synchronization: value as SynchronizationCondition | null })
+                    }
+                    options={synchronizationConditionOptions}
+                  />
+                )}
                 {editing.type != 'CallApi' &&
                   editing.type != 'ConstantValue' && (
                     <FormInput

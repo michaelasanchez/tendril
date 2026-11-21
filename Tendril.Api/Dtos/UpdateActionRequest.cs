@@ -6,11 +6,12 @@ public class UpdateActionRequest
 {
     public string? Name { get; set; }
     public string? FieldName { get; set; }
-    public string? Selector { get; set; }
     public int? Order { get; set; }
     public bool? Root { get; set; }
     public ActionType? Type { get; set; }
+    public string? Selector { get; set; }
     public string? Attribute { get; set; }
+    public SynchronizationCondition? Synchronization { get; set; }
     public int? Delay { get; set; }
     public string? ConstantValue { get; set; }
     public string? InteractionValue { get; set; }
