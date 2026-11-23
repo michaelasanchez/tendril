@@ -121,6 +121,9 @@ namespace Tendril.Data.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<Guid?>("LastSeenAttemptId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Location")
                         .HasColumnType("nvarchar(max)");
 
@@ -173,6 +176,8 @@ namespace Tendril.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
+
+                    b.HasIndex("LastSeenAttemptId");
 
                     b.HasIndex("ScraperDefinitionId");
 
@@ -850,6 +855,11 @@ namespace Tendril.Data.Migrations
                         .WithMany("Events")
                         .HasForeignKey("CategoryId");
 
+                    b.HasOne("Tendril.Core.Domain.Entities.ScraperAttemptHistory", "LastSeenAttempt")
+                        .WithMany()
+                        .HasForeignKey("LastSeenAttemptId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("Tendril.Core.Domain.Entities.ScraperDefinition", "Scraper")
                         .WithMany("Events")
                         .HasForeignKey("ScraperDefinitionId")
@@ -861,6 +871,8 @@ namespace Tendril.Data.Migrations
                         .HasForeignKey("VenueId");
 
                     b.Navigation("Category");
+
+                    b.Navigation("LastSeenAttempt");
 
                     b.Navigation("Scraper");
 

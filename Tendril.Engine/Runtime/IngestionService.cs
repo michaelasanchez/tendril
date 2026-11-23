@@ -259,6 +259,8 @@ public class IngestionService(
     {
         var mappedEvent = mapper.MapEvent(scraper, rawEvent, scraper.UseYearTracking ? trackedYear : null);
 
+        mappedEvent.LastSeenAttemptId = attemptId;
+
         if (mappedEvent.StartUtc == default)
         {
             rawEvent.Outcome = ScrapedEventOutcome.Skipped;
@@ -272,6 +274,8 @@ public class IngestionService(
 
         if (existingEvent is not null)
         {
+            existingEvent.LastSeenAttemptId = attemptId;
+
             var revisions = ReviseEventFields(existingEvent, mappedEvent);
 
             if (revisions is { Count: > 0 })

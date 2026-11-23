@@ -12,6 +12,11 @@ public class EventConfig : IEntityTypeConfiguration<Event>
 
         builder.HasKey(x => x.Id);
 
+        builder.HasOne(x => x.LastSeenAttempt)
+            .WithMany()
+            .HasForeignKey(x => x.LastSeenAttemptId)
+            .OnDelete(DeleteBehavior.NoAction);
+
         builder.HasOne(x => x.Category)
             .WithMany(x => x.Events)
             .HasForeignKey(x => x.CategoryId);
