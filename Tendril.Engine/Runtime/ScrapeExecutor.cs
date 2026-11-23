@@ -7,6 +7,7 @@ using Tendril.Engine.Abstractions;
 using Tendril.Engine.Extensions;
 using Tendril.Engine.Models;
 using Tendril.Engine.Scrapers;
+using Tendril.Engine.Scrapers.Dynamic;
 
 namespace Tendril.Engine.Runtime;
 

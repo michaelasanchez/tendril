@@ -9,6 +9,9 @@ public class Event
     public Guid ScraperDefinitionId { get; set; }
     public ScraperDefinition Scraper { get; set; } = null!;
 
+    // TODO: FINISH
+    //public Guid CreatedAttemptId { get; set; }
+    //public Guid LastSeedAttemptId { get; set; }
     public ICollection<EventRevision> Revisions { get; set; } = [];
 
     public Guid? CategoryId { get; set; }

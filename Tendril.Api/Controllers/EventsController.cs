@@ -161,8 +161,8 @@ public class EventsController(IEventRepository events, IEventRevisionRepository 
             return NotFound();
 
         pending.Status = EventStatus.Published;
-        pending.StatusAtUtc = DateTime.UtcNow;
-        pending.UpdatedAtUtc = DateTime.UtcNow;
+        pending.StatusAtUtc = DateTimeOffset.UtcNow;
+        pending.UpdatedAtUtc = DateTimeOffset.UtcNow;
 
         foreach (var e in existing)
         {

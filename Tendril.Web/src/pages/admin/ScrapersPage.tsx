@@ -2,12 +2,11 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Table } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
 import { ScrapersApi } from '../../api/scrapers';
-import { SquareButton } from '../../components/button';
+import { Button, SquareButton } from '../../components/button';
 import { Icon } from '../../components/Icon';
 import { useLocalStorage } from '../../hooks';
 import { pageStyles, tableStyles } from '../../styles';
 import type { ScraperDefinition } from '../../types/api';
-import styles from './ScrapersPage.module.css';
 
 type SortKey =
   | 'name'
@@ -19,7 +18,7 @@ type SortKey =
 
 type SortDirection = 'asc' | 'desc';
 
-interface ScrapersPageProps {}
+interface ScrapersPageProps { }
 
 interface Sort {
   key: SortKey;
@@ -103,7 +102,7 @@ const TableHeader: React.FC<{
   );
 };
 
-export const ScrapersPage: React.FC<ScrapersPageProps> = ({}) => {
+export const ScrapersPage: React.FC<ScrapersPageProps> = ({ }) => {
   const [scrapers, setScrapers] = useState<ScraperDefinition[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -116,9 +115,9 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({}) => {
     sortStorage.exists()
       ? JSON.parse(sortStorage.fetch()!)
       : {
-          key: 'name',
-          direction: 'asc',
-        },
+        key: 'name',
+        direction: 'asc',
+      },
   );
 
   useEffect(() => {
@@ -237,12 +236,7 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({}) => {
                 sortKey="name"
                 onSort={onSort}
               />
-              <TableHeader
-                label="Base URL"
-                sort={sort}
-                sortKey="baseUrl"
-                onSort={onSort}
-              />
+              <th></th>
               <TableHeader
                 label="State"
                 sort={sort}
@@ -285,11 +279,12 @@ export const ScrapersPage: React.FC<ScrapersPageProps> = ({}) => {
                   className={tableStyles.Clickable}
                   onClick={() => navigate(`/admin/scrapers/${s.id}`)}
                 >
-                  <td>{s.name}</td>
+                  <td>{s.name}
+                  </td>
                   <td>
-                    <a className={styles.Truncate} href={s.baseUrl} target="_blank">
-                      {s.baseUrl} <Icon name="external" />
-                    </a>
+                    <Button href={s.baseUrl} target="_blank">
+                      <Icon name="external" />
+                    </Button>
                   </td>
                   <td>
                     <div>{s.isEventFeed ? s.state : '-'}</div>

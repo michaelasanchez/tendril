@@ -116,6 +116,7 @@ public class IngestionService(
                         if (scraper.RequiresReview)
                         {
                             mappedEvent.Status = EventStatus.Pending;
+                            mappedEvent.StatusAtUtc = DateTimeOffset.UtcNow;
                         }
 
                         mappedEntities.Add(mappedEvent);

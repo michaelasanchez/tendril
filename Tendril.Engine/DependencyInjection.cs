@@ -4,6 +4,7 @@ using Tendril.Engine.Interfaces;
 using Tendril.Engine.Playwright;
 using Tendril.Engine.Runtime;
 using Tendril.Engine.Scrapers;
+using Tendril.Engine.Scrapers.Dynamic;
 using Tendril.Engine.Services;
 
 namespace Tendril.Engine;
