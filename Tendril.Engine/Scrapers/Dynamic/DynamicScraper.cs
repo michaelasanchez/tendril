@@ -47,6 +47,18 @@ public partial class DynamicScraper(IJsonLdProcessor jsonLd)
             yield break;
         }
 
+        if (definition.ExtractionStrategy is ExtractionStrategy.XPath)
+        {
+            context.AddLog(ScraperAttemptLogLevel.Information, "Using XPath extraction strategy.");
+
+            await foreach (var item in RunXPathExtraction(page, definition, context, ct))
+            {
+                yield return item;
+            }
+
+            yield break;
+        }
+
         // 3. PRE-SCRAPE PHASE
         // Run any interactions (like typing zip code) required BEFORE the list appears.
         var containerAction = definition.Actions.Single(x => x.Type == ActionType.Container);
@@ -105,11 +117,6 @@ public partial class DynamicScraper(IJsonLdProcessor jsonLd)
 
                 foreach (var action in itemActions)
                 {
-                    switch (action.Type)
-                    {
-
-
-                    }
                     if (action.Type is ActionType.Synchronize)
                     {
                         await PerformSynchronization(page, item, action, result.Data, context);

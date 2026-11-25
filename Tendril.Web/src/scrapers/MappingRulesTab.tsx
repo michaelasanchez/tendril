@@ -61,7 +61,7 @@ export const MappingRulesTab: React.FC<Props> = ({ scraperId, actions }) => {
   const [rules, setRules] = useState<ScraperMappingRule[]>([]);
   const [editing, setEditing] = useState<Partial<ScraperMappingRule>>({});
   const [isNew, setIsNew] = useState(false);
-  const [showDisabled, setShowDisabled] = useState(true);
+  const [showDisabled, setShowDisabled] = useState(false);
 
   const [sourceFieldOptions, setSourceFieldOptions] = useState<Option[]>([]);
 
@@ -78,8 +78,17 @@ export const MappingRulesTab: React.FC<Props> = ({ scraperId, actions }) => {
   }, [scraperId]);
 
   useEffect(() => {
-    const sourceFields = actions.map((s) => s.fieldName);
-    const ruleTargetFields = rules.map((r) => r.targetField);
+    const sourceFields = actions
+      .filter(
+        (a) =>
+          !!a.fieldName &&
+          (a.type === 'Text' || a.type === 'Attribute') &&
+          !a.disabled,
+      )
+      .map((s) => s.fieldName);
+    const ruleTargetFields = rules
+      .filter((r) => !r.disabled)
+      .map((r) => r.targetField);
     const eventTargetFields = targetFieldOptions.map((o) => o.value);
 
     const dynamicFields = ruleTargetFields.filter(
@@ -181,6 +190,8 @@ export const MappingRulesTab: React.FC<Props> = ({ scraperId, actions }) => {
   //   await load();
   // };
 
+  const sourceFields = sourceFieldOptions.map((o) => o.value);
+
   return (
     <>
       <div className={pageStyles.pageHeader}>
@@ -250,8 +261,24 @@ export const MappingRulesTab: React.FC<Props> = ({ scraperId, actions }) => {
                     className={r.disabled ? tableStyles.Disabled : ''}
                   >
                     <td>{emphasizeDynamicFields(r.targetField)}</td>
-                    <td>{emphasizeDynamicFields(r.sourceField)}</td>
-                    <td>{emphasizeDynamicFields(r.combineWithField ?? '-')}</td>
+                    <td>
+                      {emphasizeDynamicFields(r.sourceField)}
+                      {r.sourceField &&
+                        !sourceFields.includes(r.sourceField) && (
+                          <div className="text-danger small">
+                            Invalid field.
+                          </div>
+                        )}
+                    </td>
+                    <td>
+                      {emphasizeDynamicFields(r.combineWithField ?? '-')}
+                      {r.combineWithField &&
+                        !sourceFields.includes(r.combineWithField) && (
+                          <div className="text-danger small">
+                            Invalid field.
+                          </div>
+                        )}
+                    </td>
                     <td>{r.order}</td>
                     <td>{r.transformType}</td>
                     <td>{r.preserveExisting ? 'Yes' : ''}</td>

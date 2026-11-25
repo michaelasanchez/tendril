@@ -60,7 +60,7 @@ export const ActionsTab: React.FC<Props> = ({
 }) => {
   const [editing, setEditing] = useState<Partial<ScraperAction>>({});
   const [isNew, setIsNew] = useState(false);
-  const [showDisabled, setShowDisabled] = useState(true);
+  const [showDisabled, setShowDisabled] = useState(false);
 
   const [scraperOptions, setScraperOptions] = useState<ScraperOption[]>([]);
 
