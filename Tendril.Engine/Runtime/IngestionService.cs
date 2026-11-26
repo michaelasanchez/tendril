@@ -268,6 +268,13 @@ public class IngestionService(
             return (mappedEvent, "skipped", "Skipped - Missing start date");
         }
 
+        if (mappedEvent.Title == "(unmapped)")
+        {
+            rawEvent.Outcome = ScrapedEventOutcome.Skipped;
+
+            return (mappedEvent, "skipped", "Skipped - Mapping failed");
+        }
+
         classifier.ClassifyEvent(scraper, rawEvent, mappedEvent);
 
         var existingEvent = await events.Find(mappedEvent);

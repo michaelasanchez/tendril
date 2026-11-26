@@ -74,6 +74,11 @@ public partial class DynamicScraper
                 ct.ThrowIfCancellationRequested();
 
                 var item = container.Nth(i);
+                if (await item.EvaluateAsync<bool>($"el => el.classList.contains('{ProcessedClass}')"))
+                {
+                    continue;
+                }
+
                 var result = new ScrapeYieldItem();
                 var partial = false;
 
@@ -143,6 +148,7 @@ public partial class DynamicScraper
                 var signature = result.Data.GetSignature();
                 if (!partial && processedSignatures.Add(signature))
                 {
+                    await item.EvaluateAsync($"el => el.classList.add('{ProcessedClass}')");
                     yield return preResult.Merge(result);
                 }
             }
