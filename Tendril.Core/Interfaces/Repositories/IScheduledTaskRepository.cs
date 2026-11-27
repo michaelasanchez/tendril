@@ -25,6 +25,7 @@ public interface IScheduledTaskRepository
 
     /// <summary>Startup recovery: tasks left Running by a crash become Retrying and due now.</summary>
     Task<int> RecoverOrphanedRunningTasksAsync(DateTimeOffset now, CancellationToken ct = default);
+    Task<int> ResetDisabledInFlightTasksAsync(CancellationToken ct = default);
 
     Task MarkRunStartedAsync(Guid id, DateTimeOffset startedAtUtc, CancellationToken ct = default);
     Task SaveScheduleAsync(Guid id, ScheduledTaskStatus status, DateTimeOffset nextRunAtUtc, DateTimeOffset completedAtUtc, CancellationToken ct = default);

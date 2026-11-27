@@ -81,18 +81,23 @@ public class ScheduledTasksController(
         var task = await tasks.GetByIdWithScrapersAsync(id, cancellationToken);
         if (task is null) return NotFound();
 
+
+        var enabling = task.IsDisabled && request.IsDisabled == false;
+        var cronChanged = request.CronExpression is not null &&
+            !string.Equals(request.CronExpression, task.CronExpression, StringComparison.Ordinal);
+
         DateTimeOffset? nextRunAtUtc = null;
-        if (request.CronExpression is not null &&
-            !string.Equals(request.CronExpression, task.CronExpression, StringComparison.Ordinal))
+        if (cronChanged || enabling)
         {
-            if (string.IsNullOrWhiteSpace(request.CronExpression))
+            var cronText = request.CronExpression ?? task.CronExpression;
+            if (string.IsNullOrWhiteSpace(cronText))
             {
                 return BadRequest("Cron expression cannot be empty.");
             }
 
             try
             {
-                var cron = CronExpression.Parse(request.CronExpression);
+                var cron = CronExpression.Parse(cronText);
                 var next = cron.GetNextOccurrence(DateTime.UtcNow);
                 if (next is null)
                 {
@@ -106,6 +111,18 @@ public class ScheduledTasksController(
                 return BadRequest("Cron expression is invalid.");
             }
         }
+
+        // scalar updates
+        if (request.Name is not null) task.Name = request.Name;
+        if (request.Notes is not null) task.Notes = request.Notes;
+        if (request.IsDisabled is not null) task.IsDisabled = request.IsDisabled.Value;
+        if (request.CronExpression is not null) task.CronExpression = request.CronExpression;
+        if (nextRunAtUtc.HasValue) task.NextRunAtUtc = nextRunAtUtc.Value;
+        if (enabling && task.Status != ScheduledTaskStatus.Running) task.Status = ScheduledTaskStatus.Idle;
+
+        // explicit overrides still win, as before
+        //if (request.NextRunAtUtc is not null) task.NextRunAtUtc = request.NextRunAtUtc.Value;
+        //if (request.Status is not null) task.Status = request.Status.Value;
 
         // Update Scalar values
         if (request.Name is not null) task.Name = request.Name;

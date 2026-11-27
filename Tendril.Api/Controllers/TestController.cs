@@ -72,44 +72,44 @@ public class ScraperRunsController(
     }
 
     // 2️) Test mapping only (No changes needed, uses DB)
-    [HttpPost("test-mapping")]
-    public async Task<ActionResult> TestMapping(Guid scraperId, [FromQuery] int? limit, CancellationToken ct)
-    {
-        var yearTracker = new YearTracker();
+    //[HttpPost("test-mapping")]
+    //public async Task<ActionResult> TestMapping(Guid scraperId, [FromQuery] int? limit, CancellationToken ct)
+    //{
+    //    var yearTracker = new YearTracker();
 
-        var scraper = await scrapers.GetByIdWithDetailsAsync(scraperId, ct);
-        if (scraper == null) return NotFound();
+    //    var scraper = await scrapers.GetByIdWithDetailsAsync(scraperId, ct);
+    //    if (scraper == null) return NotFound();
 
-        var raw = await rawEvents.GetMostRecentForScraperAsync(scraperId, ct);
+    //    var raw = await rawEvents.GetMostRecentForScraperAsync(scraperId, ct);
 
-        if (raw == null)
-            return BadRequest("No raw events available to test mapping.");
+    //    if (raw == null)
+    //        return BadRequest("No raw events available to test mapping.");
 
-        var mapped = mapper.MapEvent(scraper, raw, yearTracker.CurrentYear);
+    //    var mapped = mapper.MapEvent(scraper, raw, yearTracker.CurrentYear);
 
-        if (mapped?.StartUtc is not null)
-        {
-            int assignedYear = yearTracker.ProcessMonth(mapped.StartUtc.Month);
+    //    if (mapped?.StartUtc is not null)
+    //    {
+    //        int assignedYear = yearTracker.ProcessMonth(mapped.StartUtc.Month);
 
-            if (scraper.UseYearTracking && assignedYear != mapped.StartUtc.Year)
-            {
-                // If the tracker bumped the year, update the event objects
-                int diff = assignedYear - mapped.StartUtc.Year;
-                mapped.StartUtc = mapped.StartUtc.AddYears(diff);
+    //        if (scraper.UseYearTracking && assignedYear != mapped.StartUtc.Year)
+    //        {
+    //            // If the tracker bumped the year, update the event objects
+    //            int diff = assignedYear - mapped.StartUtc.Year;
+    //            mapped.StartUtc = mapped.StartUtc.AddYears(diff);
 
-                if (mapped.EndUtc is not null)
-                    mapped.EndUtc = mapped.EndUtc.Value.AddYears(diff);
-            }
-        }
+    //            if (mapped.EndUtc is not null)
+    //                mapped.EndUtc = mapped.EndUtc.Value.AddYears(diff);
+    //        }
+    //    }
 
-        classifier.ClassifyEvent(scraper, raw, mapped);
+    //    classifier.ClassifyEvent(scraper, raw, mapped);
 
-        return Ok(new
-        {
-            raw = raw.RawDataJson,
-            mapped
-        });
-    }
+    //    return Ok(new
+    //    {
+    //        raw = raw.RawDataJson,
+    //        mapped
+    //    });
+    //}
 
     // 3️) Full end-to-end test run (Stream -> Map -> Return JSON, no DB save)
     [HttpPost("test-run")]

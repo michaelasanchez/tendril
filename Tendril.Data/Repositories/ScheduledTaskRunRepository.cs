@@ -35,6 +35,13 @@ public class ScheduledTaskRunRepository(TendrilDbContext db) : IScheduledTaskRun
     #endregion
 
     #region Worker Specific Methods
+    public Task<int> AbandonIncompleteRunsForDisabledTasksAsync(DateTimeOffset now, CancellationToken ct = default) =>
+    db.ScheduledTaskRuns
+        .Where(r => (r.Status == RunStatus.Running || r.Status == RunStatus.Retrying)
+                    && r.ScheduledTask.IsDisabled)
+        .ExecuteUpdateAsync(s => s
+            .SetProperty(r => r.Status, RunStatus.Cancelled)
+            .SetProperty(r => r.EndTimeUtc, (DateTimeOffset?)now), ct);
 
     /// <summary>
     /// Locates an active or retrying run for a specific task. 

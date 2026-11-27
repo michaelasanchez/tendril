@@ -111,6 +111,12 @@ public class ScheduledTaskRepository(TendrilDbContext db) : IScheduledTaskReposi
             .ExecuteUpdateAsync(s => s
                 .SetProperty(t => t.Status, ScheduledTaskStatus.Retrying)
                 .SetProperty(t => t.NextRunAtUtc, now), ct);
+    public Task<int> ResetDisabledInFlightTasksAsync(CancellationToken ct = default) =>
+    db.ScheduledTasks
+        .Where(t => t.IsDisabled
+                    && (t.Status == ScheduledTaskStatus.Retrying || t.Status == ScheduledTaskStatus.Running))
+        .ExecuteUpdateAsync(s => s
+            .SetProperty(t => t.Status, ScheduledTaskStatus.Idle), ct);
 
     public Task MarkRunStartedAsync(Guid id, DateTimeOffset startedAtUtc, CancellationToken ct = default) =>
         db.ScheduledTasks

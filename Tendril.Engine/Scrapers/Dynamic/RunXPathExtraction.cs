@@ -172,7 +172,7 @@ public partial class DynamicScraper
                 }
                 else
                 {
-                    hasMore = await PerformXPathPagination(page, definition, context, pageUrl, ct);
+                    hasMore = await PerformXPathPagination(page, definition, containerAction, context, pageUrl, confirm: true, ct);
                     if (!hasMore)
                     {
                         context.AddLog(ScraperAttemptLogLevel.Warning,
@@ -197,7 +197,7 @@ public partial class DynamicScraper
         }
 
         ct.ThrowIfCancellationRequested();
-        
+
         if (action.Type == ActionType.Synchronize)
         {
             await PerformXPathSynchronization(page, item, action, context, ct);
@@ -403,8 +403,10 @@ public partial class DynamicScraper
     private static async Task<bool> PerformXPathPagination(
         IPage page,
         ScraperDefinition definition,
+        ScraperAction containerAction,
         ScrapeContext context,
         string pageUrl,
+        bool confirm,
         CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
@@ -414,12 +416,21 @@ public partial class DynamicScraper
             try
             {
                 var advanced = await PerformScroll(page);
-                if (advanced)
+
+                if (!advanced) return false;
+
+                var confirmed = await WaitForNewItems(page, containerAction.Selector, 10000);
+
+                if (!confirm || confirmed)
                 {
-                    context.AddLog(ScraperAttemptLogLevel.Information,
-                        "Advanced infinite-scroll pagination.");
+                    context.AddLog(ScraperAttemptLogLevel.Information, "Advanced infinite-scroll pagination.");
                 }
-                return advanced;
+                else
+                {
+                    context.AddLog(ScraperAttemptLogLevel.Warning, "Infinite-scroll pagination did not yield new items.");
+                }
+
+                return confirmed;
             }
             catch (OperationCanceledException)
             {
@@ -452,12 +463,20 @@ public partial class DynamicScraper
                 }
 
                 await nextButton.ClickAsync();
-                await page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
                 await PerformWait(page, nextButtonAction.Delay);
 
-                context.AddLog(ScraperAttemptLogLevel.Information,
-                    "Advanced next-button pagination.");
-                return true;
+                var confirmed = await WaitForNewItems(page, containerAction.Selector, nextButtonAction.Delay ?? 10000);
+
+                if (!confirm || confirmed)
+                {
+                    context.AddLog(ScraperAttemptLogLevel.Information, "Advanced next-button pagination.");
+                }
+                else
+                {
+                    context.AddLog(ScraperAttemptLogLevel.Warning, "Next-button pagination did not yield new items.");
+                }
+
+                return confirmed;
             }
             catch (OperationCanceledException)
             {
@@ -474,6 +493,30 @@ public partial class DynamicScraper
         }
 
         return false;
+    }
+    private static async Task<bool> WaitForNewItems(IPage page, string? containerSelector, int timeoutMs)
+    {
+        var raw = string.IsNullOrWhiteSpace(containerSelector) ? "//*" :
+            containerSelector.StartsWith("xpath=", StringComparison.OrdinalIgnoreCase)
+                ? containerSelector[6..]
+                : containerSelector;
+
+        var unprocessed =
+            $"xpath=({raw})[not(contains(concat(' ', normalize-space(@class), ' '), ' {ProcessedClass} '))]";
+
+        try
+        {
+            await page.Locator(unprocessed).First.WaitForAsync(new LocatorWaitForOptions
+            {
+                State = WaitForSelectorState.Attached,
+                Timeout = timeoutMs
+            });
+            return true;
+        }
+        catch (TimeoutException)
+        {
+            return false;
+        }
     }
 
     private static string ToXPathSelector(string? selector)

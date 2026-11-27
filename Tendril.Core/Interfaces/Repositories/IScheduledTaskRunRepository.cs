@@ -11,6 +11,7 @@ public interface IScheduledTaskRunRepository
     Task DeleteAsync(ScheduledTaskRun run, CancellationToken ct = default);
 
     // Worker Specific Methods
+    Task<int> AbandonIncompleteRunsForDisabledTasksAsync(DateTimeOffset now, CancellationToken ct = default);
     Task<ScheduledTaskRun?> GetIncompleteRunAsync(Guid scheduledTaskId, CancellationToken ct = default);
     Task<ScheduledTaskRun?> GetByIdWithAttemptsAsync(Guid id, CancellationToken ct = default);
     Task<List<ScheduledTaskRun>> GetRecentAsync(int limit, CancellationToken ct = default);

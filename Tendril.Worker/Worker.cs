@@ -97,7 +97,17 @@ public sealed class Worker(
         await using (var scope = scopeFactory.CreateAsyncScope())
         {
             var taskRepo = scope.ServiceProvider.GetRequiredService<IScheduledTaskRepository>();
-            dueIds = await taskRepo.GetDueTaskIdsAsync(time.GetUtcNow(), ct);
+            var runRepo = scope.ServiceProvider.GetRequiredService<IScheduledTaskRunRepository>();
+            var now = time.GetUtcNow();
+
+            var abandoned = await runRepo.AbandonIncompleteRunsForDisabledTasksAsync(now, ct);
+            var reset = await taskRepo.ResetDisabledInFlightTasksAsync(ct);
+
+            if (abandoned > 0 || reset > 0)
+                logger.LogWarning("Closed {Runs} run(s) and reset {Tasks} task(s) that were disabled in flight.",
+                    abandoned, reset);
+
+            dueIds = await taskRepo.GetDueTaskIdsAsync(now, ct);
         }
 
         foreach (var id in dueIds)
@@ -357,6 +367,16 @@ public sealed class Worker(
                     break;
 
                 case OutcomeKind.Retry:
+                    var current = await repo.GetSnapshotAsync(taskId, CancellationToken.None);
+                    if (current is null) return; // deleted while running
+
+                    if (current.IsDisabled)
+                    {
+                        // Disabled mid-run: no retry. The sweep below closes the run.
+                        await repo.SetStatusAsync(taskId, ScheduledTaskStatus.Idle, CancellationToken.None);
+                        break;
+                    }
+
                     await repo.SaveScheduleAsync(taskId, ScheduledTaskStatus.Retrying,
                         outcome.RetryAtUtc!.Value, now, CancellationToken.None);
                     break;

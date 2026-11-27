@@ -19,15 +19,15 @@ public class RawEventRepository : IRawEventRepository
         await _db.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<ScrapedEventRaw?> GetMostRecentForScraperAsync(
-        Guid scraperId,
-        CancellationToken cancellationToken = default)
-    {
-        return await _db.RawEvents
-            .Where(x => x.ScraperDefinitionId == scraperId)
-            .OrderByDescending(x => x.ScrapedAtUtc)
-            .FirstOrDefaultAsync(cancellationToken);
-    }
+    //public async Task<ScrapedEventRaw?> GetMostRecentForScraperAsync(
+    //    Guid scraperId,
+    //    CancellationToken cancellationToken = default)
+    //{
+    //    return await _db.RawEvents
+    //        .Where(x => x.ScraperDefinitionId == scraperId)
+    //        .OrderByDescending(x => x.ScrapedAtUtc)
+    //        .FirstOrDefaultAsync(cancellationToken);
+    //}
 
     public async Task<List<ScrapedEventRaw>> GetForScraperAsync(
         Guid scraperId,
