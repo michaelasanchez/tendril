@@ -2,11 +2,11 @@
 
 public enum RunStatus
 {
-    Cancelled,
     Running,
     Completed,
     Retrying,
-    Failed
+    Failed,
+    Cancelled,
 }
 
 
